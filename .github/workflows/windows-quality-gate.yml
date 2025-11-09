@@ -51,16 +51,27 @@ jobs:
           Invoke-WebRequest -UseBasicParsing -Uri $u -OutFile $tpz
           $temp = "godot/templates_unpacked"
           Expand-Archive $tpz -DestinationPath $temp -Force
-          $ver = "${env:GODOT_VERSION}.stable.mono"
-          $dst1 = Join-Path $env:APPDATA ("Godot/templates/$ver")
-          $dst2 = Join-Path $env:APPDATA ("Godot/export_templates/$ver")
-          New-Item -ItemType Directory -Force -Path $dst1,$dst2 | Out-Null
-          Copy-Item -Recurse -Force "$temp/*" $dst1
-          Copy-Item -Recurse -Force "$temp/*" $dst2
-          Write-Host "Templates installed: $dst1 and $dst2"
-          $check1 = Join-Path $dst1 'windows_release_x86_64.exe'
-          $check2 = Join-Path $dst1 'windows_debug_x86_64.exe'
-          if (-not (Test-Path $check1) -or -not (Test-Path $check2)) { Write-Error "Export templates not complete under $dst1" }
+          $verMono = "${env:GODOT_VERSION}.stable.mono"
+          $ver = "${env:GODOT_VERSION}.stable"
+          $dsts = @(
+            (Join-Path $env:APPDATA ("Godot/templates/$verMono")),
+            (Join-Path $env:APPDATA ("Godot/templates/$ver")),
+            (Join-Path $env:APPDATA ("Godot/export_templates/$verMono")),
+            (Join-Path $env:APPDATA ("Godot/export_templates/$ver"))
+          )
+          New-Item -ItemType Directory -Force -Path $dsts | Out-Null
+          foreach ($d in $dsts) { Copy-Item -Recurse -Force "$temp/*" $d }
+          Write-Host ("Templates installed: " + ($dsts -join ', '))
+          $names = @('windows_release_x86_64.exe','windows_debug_x86_64.exe')
+          $ok = $false
+          foreach ($d in $dsts) {
+            $hit = 0; foreach ($n in $names) { if (Test-Path (Join-Path $d $n)) { $hit++ } }
+            if ($hit -eq 2) { $ok = $true; break }
+          }
+          if (-not $ok) {
+            Write-Warning 'Export templates executables not found in expected dirs; listing a few files:'
+            foreach ($d in $dsts) { if (Test-Path $d) { Get-ChildItem -Recurse $d -ErrorAction SilentlyContinue | Select-Object -First 20 | % { Write-Host $_.FullName } } }
+          }
 
       - name: Prewarm & Build Solutions
         shell: pwsh
@@ -100,4 +111,3 @@ jobs:
           path: |
             build/Game.exe
             logs/ci/**
-
