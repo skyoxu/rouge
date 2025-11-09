@@ -7,11 +7,26 @@ name: Windows Quality Gate
 
 on:
   workflow_dispatch:
+    inputs:
+      with_export:
+        description: "Include export + EXE smoke"
+        type: choice
+        options: [ 'false', 'true' ]
+        default: 'false'
+      include_demo:
+        description: "Enable demo screens/tests (TEMPLATE_DEMO=1)"
+        type: choice
+        options: [ 'false', 'true' ]
+        default: 'false'
+      perf_p95_ms:
+        description: "Perf budget P95 (ms), 0 to skip"
+        type: number
+        default: 0
 
 jobs:
   quality:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,6 +61,12 @@ jobs:
           "GODOT_BIN=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "GODOT_BIN=$($exe.FullName)"
 
+      - name: Prewarm Godot C# build (first compile)
+        shell: pwsh
+        run: |
+          $env:Path = "$HOME\.dotnet;" + $env:Path
+          & "$env:GODOT_BIN" --headless --path . --quit
+
       - name: Install Export Templates (with fallback)
         shell: pwsh
         run: |
@@ -72,6 +93,12 @@ jobs:
           Copy-Item -Recurse -Force "$temp/*" $dst
           Write-Host "Export templates installed to $dst"
 
-      - name: Run Quality Gate (with export)
+      - name: Run Quality Gate
         shell: pwsh
-        run: ./scripts/ci/quality_gate.ps1 -GodotBin "$env:GODOT_BIN" -WithExport
+        run: |
+          $args = @()
+          if ('${{ inputs.with_export }}' -eq 'true') { $args += '-WithExport' }
+          if ('${{ inputs.include_demo }}' -eq 'true') { $args += '-IncludeDemo' }
+          $perf = '${{ inputs.perf_p95_ms }}'
+          if ($perf -and $perf -ne '0') { $args += '-PerfP95Ms'; $args += $perf }
+          ./scripts/ci/quality_gate.ps1 -GodotBin "$env:GODOT_BIN" @args
