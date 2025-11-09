@@ -1,7 +1,42 @@
-# Godot 4+ specific ignores
+﻿# Godot 4+ specific ignores
 .godot/
 /android/
 
 # Windows reserved names
 nul
 NUL
+CON
+con
+PRN
+prn
+AUX
+aux
+COM1
+COM2
+COM3
+COM4
+COM5
+COM6
+COM7
+COM8
+COM9
+LPT1
+LPT2
+LPT3
+LPT4
+LPT5
+LPT6
+LPT7
+LPT8
+LPT9
+
+# Build and test artifacts
+build/
+reports/
+logs/
+godot_local/
+tmp/
+**/bin/
+**/obj/
+.vs/
+TestResults/

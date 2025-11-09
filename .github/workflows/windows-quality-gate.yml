@@ -1,0 +1,53 @@
+name: Windows Quality Gate
+
+# Notes:
+# - Smoke markers recognized by scripts:
+#   [TEMPLATE_SMOKE_READY] (preferred), [DB] opened (fallback)
+# - Export templates are installed before export; headless smoke runs regardless.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  quality:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Download Godot .NET (mono)
+        shell: pwsh
+        run: |
+          $Version = '4.5.1'
+          $Uri = "https://downloads.tuxfamily.org/godotengine/$Version/mono/Godot_v$Version-stable_mono_win64.zip"
+          New-Item -ItemType Directory -Force -Path godot | Out-Null
+          Invoke-WebRequest -Uri $Uri -OutFile godot\godot.zip
+          Expand-Archive godot\godot.zip -DestinationPath godot -Force
+          $exe = Get-ChildItem godot -Recurse -Filter *win64*.exe | Select-Object -First 1
+          if (-not $exe) { throw 'Godot exe not found after download.' }
+          "GODOT_BIN=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "GODOT_BIN=$($exe.FullName)"
+
+      - name: Install Export Templates
+        shell: pwsh
+        run: |
+          $Version = '4.5.1'
+          $tpz = "godot/export_templates.tpz"
+          Invoke-WebRequest -UseBasicParsing -Uri "https://downloads.tuxfamily.org/godotengine/$Version/Godot_v$Version-stable_export_templates.tpz" -OutFile $tpz
+          $temp = "godot/templates_unpacked"
+          Expand-Archive $tpz -DestinationPath $temp -Force
+          $ver = "$Version.stable.mono"
+          $dst = Join-Path $env:APPDATA ("Godot/templates/$ver")
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          Copy-Item -Recurse -Force "$temp/*" $dst
+          Write-Host "Export templates installed to $dst"
+
+      - name: Run Quality Gate (with export)
+        shell: pwsh
+        run: ./scripts/ci/quality_gate.ps1 -GodotBin "$env:GODOT_BIN" -WithExport

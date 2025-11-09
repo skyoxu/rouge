@@ -1,0 +1,74 @@
+name: Windows CI (Godot + GdUnit4)
+
+# Notes:
+# - Smoke markers recognized by scripts:
+#   [TEMPLATE_SMOKE_READY] (preferred), [DB] opened (fallback)
+# - Export templates are installed before export (see Install Export Templates step).
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test-export:
+    runs-on: windows-latest
+    env:
+      GODOT_VERSION: 4.5.1
+      GODOT_BIN: ${{ github.workspace }}\godot\Godot_v4.5.1-stable_mono_win64.exe
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Download Godot .NET (Windows)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path godot | Out-Null
+          Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/godotengine/godot/releases/download/${env:GODOT_VERSION}-stable/Godot_v${env:GODOT_VERSION}-stable_mono_win64.zip" -OutFile godot\godot.zip
+          Expand-Archive godot\godot.zip -DestinationPath godot -Force
+
+      - name: Install Export Templates
+        shell: pwsh
+        run: |
+          $tpz = "godot/export_templates.tpz"
+          Invoke-WebRequest -UseBasicParsing -Uri "https://downloads.tuxfamily.org/godotengine/${env:GODOT_VERSION}/Godot_v${env:GODOT_VERSION}-stable_export_templates.tpz" -OutFile $tpz
+          $temp = "godot/templates_unpacked"
+          Expand-Archive $tpz -DestinationPath $temp -Force
+          $ver = "${env:GODOT_VERSION}.stable.mono"
+          $dst = Join-Path $env:APPDATA ("Godot/templates/$ver")
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          Copy-Item -Recurse -Force "$temp/*" $dst
+          Write-Host "Export templates installed to $dst"
+
+      - name: Cache .dotnet tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\Temp\NuGetScratch
+            ~\.nuget\packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+
+      - name: Run GdUnit4 tests
+        shell: pwsh
+        run: |
+          $env:Path = "$HOME\.dotnet;" + $env:Path
+          .\scripts\ci\run_gdunit_tests.ps1 -GodotBin "$env:GODOT_BIN"
+
+      - name: Export Windows build
+        shell: pwsh
+        run: |
+          .\scripts\ci\export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Game.exe
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: |
+            build\Game.exe
+            logs\ci\**\*

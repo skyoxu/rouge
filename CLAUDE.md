@@ -15,6 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 设计原则：
 
+- 本项目是 Windows only 的 Godot + C# 游戏模板，开箱即用、可复制。以下规范用于保障一致性与可维护性。
 - AI 优先 + arc42/C4 思维：按 不可回退 → 跨切面 → 运行时骨干 → 功能纵切 顺序
 
 ## 0 Scope & Intent
@@ -322,6 +323,13 @@ This template comes pre-configured with the following technology stack:
 - 契约统一：事件/端口/DTO 仅落盘 Scripts/Core/Contracts/**，各章节/用例引用路径，不得复制粘贴以免口径漂移
 - 技术债占位规范：如必须引入动态执行/非白名单 DllImport/临时放宽安全策略，需同步添加 TODO（owner | due | Issue 链接 | 回迁计划），并在 PR 中说明
 
+### 6.0 目录与命名（SSoT）
+- Contracts：Scripts/Core/Contracts/**（领域 SSoT，不依赖 Godot）
+- 领域实现：Scripts/Core/**（仅 .NET 标准库依赖）
+- 适配层：Scripts/Adapters/**（封装 Godot API，通过接口注入至 Core）
+- 场景与资源：Scenes/**、Assets/**
+- 审计与日志：见 6.3 日志与工件（SSoT）
+
 ### 6.1 契约模板（Contracts Template，C#）
 - 放置：Scripts/Core/Contracts/<Module>/
 - 要求：不可引用 Godot API（保持可单测）、命名清晰、不可暴露实现细节
@@ -386,13 +394,6 @@ This template comes pre-configured with the following technology stack:
       scene.member_joined.connect(func(_u, _g): emitted = true)
       scene.simulate_join("u1", "g1") # 你的模拟方法
       assert_bool(emitted).is_true()
-
-### 6.3 目录与命名（SSoT）
-- Contracts：Scripts/Core/Contracts/**（领域 SSoT，不依赖 Godot）
-- 领域实现：Scripts/Core/**（仅 .NET 标准库依赖）
-- 适配层：Scripts/Adapters/**（封装 Godot API，通过接口注入至 Core）
-- 场景与资源：Scenes/**、Assets/**
-- 审计与日志：见 6.3 日志与工件（SSoT）
 
 ### 6.3 日志与工件（SSoT）
 
@@ -465,7 +466,7 @@ This template comes pre-configured with the following technology stack:
   - 仅当以上 Required checks 全绿方可合并
   - 受保护分支需启用 “Require status checks”
 
-作业分解（Jobs）
+**作业分解（Jobs）**
 - dotnet-typecheck-lint（Windows）
   - 恢复依赖与分析器：dotnet restore
   - 类型检查/编译门禁：dotnet build -warnaserror
@@ -500,14 +501,14 @@ This template comes pre-configured with the following technology stack:
   - NuGet：~\.nuget\packages
   - Godot export templates：~\AppData\Roaming\Godot\export_templates\4.5.*
 
-命令清单（Windows 友好，Python 驱动）
+**命令清单（Windows 友好，Python 驱动）**
 - 单元：dotnet test --collect:"XPlat Code Coverage"
 - E2E（headless）：py -3 scripts/python/godot_tests.py --headless --suite smoke,security,perf
 - 任务/回链：py -3 scripts/python/task_links_validate.py
 - 发布健康：py -3 scripts/python/release_health_gate.py --project <sentry_project> --env <env>
 - 导出：godot.exe --headless --export-release "Windows Desktop" build/Game.exe
 
-分支保护与开关
+**分支保护与开关**
 - 受保护分支启用 Required checks：godot-e2e、dotnet-unit、task-links-validate、release-health（可加 superclaude-review）
 - 可配置开关：
   - GD_SECURE_MODE=1、ALLOWED_EXTERNAL_HOSTS=<csv>、GD_OFFLINE_MODE=0/1
@@ -516,7 +517,7 @@ This template comes pre-configured with the following technology stack:
 
 ---
 
-## 10 Definition of Done (DoD)
+## 8 Definition of Done (DoD)
 
 - [ ] Unit/E2E tests written and passing
 - [ ] Code follows conventions; no lint/format warnings
