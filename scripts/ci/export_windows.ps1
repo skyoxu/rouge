@@ -17,10 +17,19 @@ if (Test-Path "$PSScriptRoot/../../addons/godot-sqlite") {
 } else {
   Write-Host "No addons/godot-sqlite found: export relies on Microsoft.Data.Sqlite managed fallback. If runtime missing native e_sqlite3, add SQLitePCLRaw.bundle_e_sqlite3."
 }
-& "$GodotBin" --headless --path . --export-release "$Preset" "$Output"
+if (Get-Command dotnet -ErrorAction SilentlyContinue) {
+  $env:GODOT_DOTNET_CLI = (Get-Command dotnet).Path
+  Write-Host "GODOT_DOTNET_CLI=$env:GODOT_DOTNET_CLI"
+}
+& "$GodotBin" --headless --verbose --path . --export-release "$Preset" "$Output"
 $exitCode = $LASTEXITCODE
 if ($exitCode -ne 0) {
-  Write-Error "Export failed with exit code $exitCode. Ensure export templates are installed in Godot."
+  Write-Warning "Export-release failed with exit code $exitCode. Trying export-debug as fallback."
+  & "$GodotBin" --headless --verbose --path . --export-debug "$Preset" "$Output"
+  $exitCode = $LASTEXITCODE
+  if ($exitCode -ne 0) {
+    Write-Error "Export failed (release & debug) with exit code $exitCode. Ensure export templates are installed in Godot."
+  }
 }
 
 # Collect artifacts
