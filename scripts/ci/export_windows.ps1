@@ -58,6 +58,22 @@ function Invoke-BuildSolutions() {
     } else {
       Add-Content -Encoding UTF8 -Path $glog -Value 'Warning: .godot/mono/temp/bin not found after build-solutions.'
     }
+    # Try to capture MSBuild detailed log Godot writes under Roaming\Godot\mono\build_logs
+    $blRoot = Join-Path $env:APPDATA 'Godot/mono/build_logs'
+    if (Test-Path $blRoot) {
+      $latest = Get-ChildItem -Directory $blRoot | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+      if ($latest) {
+        $logPath = Join-Path $latest.FullName 'msbuild_log.txt'
+        if (Test-Path $logPath) {
+          Copy-Item -Force $logPath (Join-Path $dest 'msbuild_log.txt') -ErrorAction SilentlyContinue
+          # Also extract C# error lines for quick visibility
+          try {
+            (Select-String -Path $logPath -Pattern 'error CS[0-9]+' -SimpleMatch -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Line) |
+              Set-Content -Path (Join-Path $dest 'msbuild_errors.txt') -Encoding UTF8
+          } catch {}
+        }
+      }
+    }
   } catch {}
   return $p.ExitCode
 }
