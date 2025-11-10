@@ -1,4 +1,4 @@
-name: Windows Quality Gate
+﻿name: Windows Quality Gate
 
 on:
   workflow_dispatch: {}
@@ -14,6 +14,19 @@ jobs:
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Cache Godot zip
+        uses: actions/cache@v4
+        with:
+          path: godot/godot.zip
+          key: godot-${{ env.GODOT_VERSION }}-mono-zip
+
+      - name: Cache Export Templates
+        uses: actions/cache@v4
+        with:
+          path: godot/export_templates.tpz
+          key: templates-${{ env.GODOT_VERSION }}-tpz
         with:
           dotnet-version: '8.0.x'
 
@@ -113,3 +126,4 @@ jobs:
           path: |
             build/Game.exe
             logs/ci/**
+
