@@ -15,6 +15,11 @@ config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 run/main_scene="res://Game.Godot/Scenes/Main.tscn"
 
+[dotnet]
+
+project/assembly_name="GodotGame"
+project/project_path="res://GodotGame.csproj"
+
 [autoload]
 
 EventBus="res://Game.Godot/Adapters/EventBusAdapter.cs"
