@@ -21,21 +21,32 @@ if (Get-Command dotnet -ErrorAction SilentlyContinue) {
   $env:GODOT_DOTNET_CLI = (Get-Command dotnet).Path
   Write-Host "GODOT_DOTNET_CLI=$env:GODOT_DOTNET_CLI"
 }
-& "$GodotBin" --headless --verbose --path . --export-release "$Preset" "$Output"
-$exitCode = $LASTEXITCODE
+
+# Prepare log dir and capture Godot output
+$ts = Get-Date -Format 'yyyyMMdd-HHmmss'
+$dest = Join-Path $PSScriptRoot ("../../logs/ci/$ts/export")
+New-Item -ItemType Directory -Force -Path $dest | Out-Null
+$glog = Join-Path $dest 'godot_export.log'
+
+function Invoke-Export([string]$mode) {
+  Write-Host "Invoking export: $mode"
+  $args = @('--headless','--verbose','--path','.', "--export-$mode", $Preset, $Output)
+  $p = Start-Process -FilePath $GodotBin -ArgumentList $args -PassThru -RedirectStandardOutput $glog -RedirectStandardError $glog -WindowStyle Hidden
+  $ok = $p.WaitForExit(600000)
+  if (-not $ok) { Write-Warning 'Godot export timed out; killing process'; Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+  return $p.ExitCode
+}
+
+$exitCode = Invoke-Export 'release'
 if ($exitCode -ne 0) {
   Write-Warning "Export-release failed with exit code $exitCode. Trying export-debug as fallback."
-  & "$GodotBin" --headless --verbose --path . --export-debug "$Preset" "$Output"
-  $exitCode = $LASTEXITCODE
+  $exitCode = Invoke-Export 'debug'
   if ($exitCode -ne 0) {
-    Write-Error "Export failed (release & debug) with exit code $exitCode. Ensure export templates are installed in Godot."
+    Write-Error "Export failed (release & debug) with exit code $exitCode. Ensure export templates are installed in Godot. See log: $glog"
   }
 }
 
 # Collect artifacts
-$ts = Get-Date -Format 'yyyyMMdd-HHmmss'
-$dest = Join-Path $PSScriptRoot ("../../logs/ci/$ts/export")
-New-Item -ItemType Directory -Force -Path $dest | Out-Null
 Copy-Item -Force $Output $dest 2>$null
-Write-Host "Export artifact copied to $dest"
+Write-Host "Export artifact copied to $dest (log: $glog)"
 exit $exitCode

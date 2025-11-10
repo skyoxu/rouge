@@ -51,3 +51,18 @@ One‑liner（已在 Editor 安装 Export Templates 后）：
 - 文件配置：`user://config/features.json`（示例：`{"demo_screens": true}`）
 - 代码示例：`if (FeatureFlags.IsEnabled("demo_screens")) { /* ... */ }`
 
+## 如何发版（打 tag）
+- 确认主分支已包含所需变更：`git status && git push`
+- 创建版本标签：`git tag v0.1.1 -m "v0.1.1 release"`
+- 推送标签触发发布：`git push origin v0.1.1`
+- 工作流：`Windows Release (Tag)` 自动导出并将 `build/Game.exe` 附加到 GitHub Release。
+- 如需手动导出：运行 `Windows Release (Manual)` 或 `Windows Export Slim`。
+
+## 自定义应用元数据（图标/公司/描述）
+- 文件：`export_presets.cfg` → `[preset.0.options]` 段。
+- 关键字段：
+  - `application/product_name`（产品名），`application/company_name`（公司名）
+  - `application/file_description`（文件描述），`application/*_version`（版本）
+  - 图标：`application/icon`（推荐 ICO：`res://icon.ico`；当前为 `res://icon.svg`）
+- 修改后，运行 `Windows Export Slim` 或 `Windows Release (Manual)` 验证导出产物。
+
