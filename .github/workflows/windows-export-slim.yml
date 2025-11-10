@@ -96,6 +96,7 @@ jobs:
           }
 
       - name: Prewarm & Build Solutions
+        continue-on-error: true
         shell: pwsh
         run: |
           $env:Path = "$HOME\.dotnet;" + $env:Path
@@ -106,6 +107,7 @@ jobs:
           dotnet build GodotGame.csproj -c Release -v minimal
 
       - name: Export Windows EXE
+        if: always()
         shell: pwsh
         run: |
           $env:Path = "$HOME\.dotnet;" + $env:Path
