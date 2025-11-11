@@ -27,6 +27,10 @@ $glog = Join-Path $dest 'godot_export.log'
 New-Item -ItemType File -Force -Path $glog | Out-Null
 Write-Host ("Log file: " + $glog)
 
+# Resolve project root (repo root) and use absolute --path to avoid CWD issues
+$ProjectDir = (Resolve-Path (Join-Path $PSScriptRoot '../../')).Path
+Add-Content -Encoding UTF8 -Path $glog -Value ("ProjectDir: " + $ProjectDir)
+
 if (-not $GodotBin -or -not (Test-Path $GodotBin)) {
   $msg = "GODOT_BIN is not set or file not found: '$GodotBin'"
   Add-Content -Encoding UTF8 -Path $glog -Value $msg
@@ -72,7 +76,7 @@ function Invoke-BuildSolutions() {
   Write-Host "Pre-building C# solutions via Godot (--build-solutions)"
   $out = Join-Path $dest ("godot_build_solutions.out.log")
   $err = Join-Path $dest ("godot_build_solutions.err.log")
-  $args = @('--headless','--verbose','--path','.', '--build-solutions', '--quit')
+  $args = @('--headless','--verbose','--path', $ProjectDir, '--build-solutions', '--quit')
   $argStr = ($args | ForEach-Object { Quote-Arg $_ }) -join ' '
   try {
     $p = Start-Process -FilePath $GodotBin -ArgumentList $argStr -PassThru -RedirectStandardOutput $out -RedirectStandardError $err -WindowStyle Hidden
@@ -131,7 +135,7 @@ function Invoke-Export([string]$mode) {
   $resolved = Resolve-Preset $Preset
   Add-Content -Encoding UTF8 -Path $glog -Value ("Using preset: '" + $resolved + "' output: '" + $Output + "'")
   if ($resolved -ne $Preset) { Add-Content -Encoding UTF8 -Path $glog -Value ("Requested preset '" + $Preset + "' resolved to '" + $resolved + "'") }
-  $args = @('--headless','--verbose','--path','.', "--export-$mode", $resolved, $Output)
+  $args = @('--headless','--verbose','--path', $ProjectDir, "--export-$mode", $resolved, $Output)
   $argStr = ($args | ForEach-Object { Quote-Arg $_ }) -join ' '
   try {
     $p = Start-Process -FilePath $GodotBin -ArgumentList $argStr -PassThru -RedirectStandardOutput $out -RedirectStandardError $err -WindowStyle Hidden
@@ -163,7 +167,7 @@ if ($exitCode -ne 0) {
     $err = Join-Path $dest ("godot_export.pack.err.log")
     $resolved = Resolve-Preset $Preset
     Add-Content -Encoding UTF8 -Path $glog -Value ("Using preset (pack): '" + $resolved + "' output: '" + $pck + "'")
-    $args = @('--headless','--verbose','--path','.', '--export-pack', $resolved, $pck)
+    $args = @('--headless','--verbose','--path', $ProjectDir, '--export-pack', $resolved, $pck)
     $argStr = ($args | ForEach-Object { Quote-Arg $_ }) -join ' '
     $p = Start-Process -FilePath $GodotBin -ArgumentList $argStr -PassThru -RedirectStandardOutput $out -RedirectStandardError $err -WindowStyle Hidden
     $ok = $p.WaitForExit(600000)
