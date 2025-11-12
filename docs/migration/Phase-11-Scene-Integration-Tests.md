@@ -1078,3 +1078,8 @@ if __name__ == '__main__':
 - 在 C# 测试中注入异常路径（场景加载失败/节点缺失/信号未触发）
 - 对“失败一次自动重试；仍失败则降级/返回主菜单”的流程进行断言
 - 将异常注入的结果写入报告，作为“场景测试通过率=100%”的前置门禁依据（与 Phase-13 聚合一致）
+# Phase 11 — 场景集成测试（Deprecated）
+
+> 状态：Deprecated（本页已废弃，仅作历史参考）。请阅读并以 REVISED 版本为唯一口径：`docs/migration/Phase-11-Scene-Integration-Tests-REVISED.md`。
+
+本页保留是为了追溯迁移思路的演进。实际执行与验收以 REVISED 文档为准。
