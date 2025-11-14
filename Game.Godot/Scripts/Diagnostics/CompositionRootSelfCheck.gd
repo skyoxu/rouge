@@ -83,7 +83,7 @@ func _run() -> void:
         if main != null:
             result["ui"]["main"] = true
             sandbox.add_child(main)
-            await get_tree().process_frame
+            await process_frame
             if typeof(main) == TYPE_OBJECT:
                 var has_menu := main.get_node_or_null("MainMenu") != null
                 var has_hud := main.get_node_or_null("HUD") != null
@@ -100,7 +100,7 @@ func _run() -> void:
                     var btn = main.get_node_or_null("MainMenu/VBox/BtnPlay")
                     if btn != null:
                         btn.emit_signal("pressed")
-                        await get_tree().process_frame
+                        await process_frame
                 result["ui"]["menuStartPublishes"] = bool(_sc_published)
         else:
             result["ui"]["error"] = "Main instantiation returned null"
