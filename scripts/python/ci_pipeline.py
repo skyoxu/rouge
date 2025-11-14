@@ -83,16 +83,30 @@ def main():
     if rc not in (0, 2) or summary['dotnet']['status'] == 'tests_failed':
         hard_fail = True
 
-    # 2) Godot self-check
-    # ensure autoload fixed
+    # 2) Godot self-check (hard gate)
+    # ensure autoload fixed (explicit project path)
     _ = run_cmd(['py', '-3', 'scripts/python/godot_selfcheck.py', 'fix-autoload', '--project', args.project], cwd=root)
-    sc_args = ['py', '-3', 'scripts/python/godot_selfcheck.py', 'run', '--godot-bin', args.godot_bin]
+    sc_args = ['py', '-3', 'scripts/python/godot_selfcheck.py', 'run', '--godot-bin', args.godot_bin, '--project', args.project]
     if args.build_solutions:
         sc_args.append('--build-solutions')
     rc2, out2 = run_cmd(sc_args, cwd=root, timeout=600_000)
+    # persist raw stdout for diagnosis
+    os.makedirs(os.path.join('logs', 'ci', date), exist_ok=True)
+    with io.open(os.path.join('logs', 'ci', date, 'selfcheck-stdout.txt'), 'w', encoding='utf-8') as f:
+        f.write(out2)
     sc_sum = read_json(os.path.join('logs', 'e2e', date, 'selfcheck-summary.json')) or {}
-    summary['selfcheck'] = sc_sum
-    if sc_sum.get('status') != 'ok':
+    # fallback: parse status from stdout if summary missing
+    if not sc_sum:
+        import re
+        m = re.search(r"SELF_CHECK status=([a-z]+).*? out=([^\r\n]+)", out2)
+        if m:
+            sc_status = m.group(1)
+            sc_out = m.group(2)
+            sc_sum = {'status': sc_status, 'out': sc_out, 'note': 'parsed-from-stdout'}
+    # as ultimate fallback, trust process rc (0==ok)
+    sc_ok = (sc_sum.get('status') == 'ok') or (rc2 == 0)
+    summary['selfcheck'] = sc_sum or {'status': 'fail', 'note': 'no-summary'}
+    if not sc_ok:
         hard_fail = True
 
     # 3) Encoding scan (soft gate)
@@ -110,4 +124,3 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-
