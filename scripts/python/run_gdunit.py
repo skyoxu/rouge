@@ -14,6 +14,7 @@ import datetime as dt
 import os
 import shutil
 import subprocess
+import json
 
 
 def run_cmd(args, cwd=None, timeout=600_000):
@@ -26,6 +27,12 @@ def run_cmd(args, cwd=None, timeout=600_000):
         out, _ = p.communicate()
         return 124, out
     return p.returncode, out
+
+
+def write_text(path: str, content: str) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(content)
 
 
 def main():
@@ -44,9 +51,33 @@ def main():
     out_dir = os.path.join(root, 'logs', 'e2e', date)
     os.makedirs(out_dir, exist_ok=True)
 
-    # Optional prewarm
+    # Optional prewarm with fallback
+    prewarm_rc = None
+    prewarm_note = None
     if args.prewarm:
-        _rcp, _outp = run_cmd([args.godot_bin, '--headless', '--path', proj, '--build-solutions', '--quit'], cwd=proj, timeout=300_000)
+        pre_cmd = [args.godot_bin, '--headless', '--path', proj, '--build-solutions', '--quit']
+        _rcp, _outp = run_cmd(pre_cmd, cwd=proj, timeout=300_000)
+        prewarm_rc = _rcp
+        write_text(os.path.join(out_dir, 'prewarm-godot.txt'), _outp)
+        if _rcp != 0:
+            # Fallback to dotnet build to avoid editor plugin failures
+            dotnet_projects = []
+            tests_csproj = os.path.join(proj, 'Tests.Godot.csproj')
+            if os.path.isfile(tests_csproj):
+                dotnet_projects.append(tests_csproj)
+            # Also try solution at repo root if present
+            sln = os.path.join(root, 'GodotGame.sln')
+            # Prefer project build; if solution exists, add as secondary
+            build_logs = []
+            for item in (dotnet_projects or [sln] if os.path.isfile(sln) else []):
+                rc_b, out_b = run_cmd(['dotnet', 'build', item, '-c', 'Debug', '-v', 'minimal'], cwd=root, timeout=600_000)
+                build_logs.append((item, rc_b, out_b))
+            # Persist build logs
+            agg = []
+            for item, rc_b, out_b in build_logs:
+                agg.append(f'=== {item} rc={rc_b} ===\n{out_b}\n')
+            write_text(os.path.join(out_dir, 'prewarm-dotnet.txt'), '\n'.join(agg) if agg else 'NO_DOTNET_BUILD_TARGETS')
+            prewarm_note = 'fallback-dotnet'
 
     # Run tests
     # Build command with optional -a filters
@@ -87,10 +118,14 @@ def main():
             else:
                 shutil.copy2(src, dst)
     # Write a small summary json for CI
+    summary = {'rc': rc, 'project': proj, 'added': args.add, 'timeout_sec': args.timeout_sec}
+    if prewarm_rc is not None:
+        summary['prewarm_rc'] = prewarm_rc
+        if prewarm_note:
+            summary['prewarm_note'] = prewarm_note
     try:
-        import json
         with open(os.path.join(dest, 'run-summary.json'), 'w', encoding='utf-8') as f:
-            json.dump({'rc': rc, 'project': proj, 'added': args.add, 'timeout_sec': args.timeout_sec}, f, ensure_ascii=False)
+            json.dump(summary, f, ensure_ascii=False)
     except Exception:
         pass
     print(f'GDUNIT_DONE rc={rc} out={out_dir}')
