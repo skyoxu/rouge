@@ -42,6 +42,10 @@ static func _copy_file(src: String, dst: String) -> bool:
 func test_backup_restore_inventory() -> void:
     var path = "user://utdb_%s/inv_bak.db" % Time.get_unix_time_from_system()
     var db = await _new_db("SqlDb")
+    # Force managed provider to avoid flaky godot-sqlite plugin path in local env
+    var helper = preload("res://Game.Godot/Adapters/Db/DbTestHelper.cs").new()
+    add_child(auto_free(helper))
+    helper.ForceManaged()
     var tries := 20
     while not db.has_method("TryOpen") and tries > 0:
         await get_tree().process_frame
@@ -49,8 +53,7 @@ func test_backup_restore_inventory() -> void:
     assert_bool(db.has_method("TryOpen")).is_true()
     var ok = db.TryOpen(path)
     assert_bool(ok).is_true()
-    var helper = preload("res://Game.Godot/Adapters/Db/DbTestHelper.cs").new()
-    add_child(auto_free(helper))
+    # Ensure schema exists and clean
     helper.CreateSchema()
     helper.ClearAll()
 
