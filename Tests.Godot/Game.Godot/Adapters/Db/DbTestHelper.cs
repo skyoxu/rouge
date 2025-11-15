@@ -79,4 +79,17 @@ public partial class DbTestHelper : Node
         }
         catch { }
     }
+
+    // GDScript-friendly helpers to avoid calling C# params methods directly
+    public void ExecSql(string sql)
+    {
+        var db = GetDb();
+        db.Execute(sql);
+    }
+
+    public void ExecSql2(string sql, object p0, object p1)
+    {
+        var db = GetDb();
+        db.Execute(sql, p0, p1);
+    }
 }
