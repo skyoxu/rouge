@@ -6,13 +6,24 @@ func _new_db(name: String) -> Node:
     get_tree().get_root().add_child(auto_free(db))
     return db
 
+static func _mkdirs_user(abs_path: String) -> bool:
+    var base := abs_path.get_base_dir()
+    if not base.begins_with("user://"):
+        return false
+    var rel := base.substr("user://".length())
+    var d := DirAccess.open("user://")
+    if d == null:
+        return false
+    return d.make_dir_recursive(rel) == OK
+
 static func _copy_file(src: String, dst: String) -> bool:
-    DirAccess.make_dir_recursive(dst.get_base_dir())
-    var r = FileAccess.open(src, FileAccess.READ)
+    if not _mkdirs_user(dst):
+        return false
+    var r := FileAccess.open(src, FileAccess.READ)
     if r == null:
         return false
-    var data = r.get_buffer(r.get_length())
-    var w = FileAccess.open(dst, FileAccess.WRITE)
+    var data := r.get_buffer(r.get_length())
+    var w := FileAccess.open(dst, FileAccess.WRITE)
     if w == null:
         return false
     w.store_buffer(data)
@@ -54,4 +65,3 @@ func test_backup_restore_inventory() -> void:
         if str(s).find("elixir:2") != -1:
             ok_e = true
     assert_bool(ok_p and ok_e).is_true()
-
