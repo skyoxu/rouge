@@ -59,6 +59,30 @@
 - 首屏时间基于冷启动（首次运行），每运行周期只计一次
 - 菜单/游戏场景的帧时间采集 300+ 帧，排除前 30 帧（预热期）
 
+### 2.2 Godot+C# 变体（当前模板实现）
+
+> 本节描述的是 **当前 godotgame 模板已经落地的性能采集与门禁实现**。上面的 KPI 与后文 Game.Core/PerformanceTracker 蓝图视为长期目标，尚未全部在本仓库中实现，对应增强统一收敛到 Phase-15 Backlog。
+
+- Autoload 性能采集器：
+  - `PerformanceTracker="res://Game.Godot/Scripts/Perf/PerformanceTracker.cs"` 已在 `project.godot` 配置为 Autoload；
+  - 节点在 `_Process(delta)` 中采集最近 `WindowFrames` 帧的帧时间（毫秒），并通过定时器按 `FlushIntervalSec` 周期性刷新；
+  - 每次刷新时：
+    - 计算当前窗口的 `frames/avg_ms/p50_ms/p95_ms/p99_ms`；
+    - 向控制台打印带标记的行：`[PERF] frames=... avg_ms=.. p50_ms=.. p95_ms=.. p99_ms=..`；
+    - 将同一批统计写入 `user://logs/perf/perf.json`（JSON 格式）。
+
+- Perf 预算门禁脚本（CI 可选）：
+  - PowerShell：`scripts/ci/check_perf_budget.ps1`；
+    - 如未显式指定 `-LogPath`，自动在 `logs/ci/**/headless.log` 下寻找最近一份 headless 日志；
+    - 使用正则 `\[PERF\][^\n]*p95_ms=...` 提取最近一次刷新的 `p95_ms` 值；
+    - 将 `p95_ms` 与预算 `MaxP95Ms`（默认 20ms，可在 CI 中传入）比较，生成 `PERF BUDGET PASS/FAIL` 并以退出码 0/1 表示。
+  - 该脚本由 `scripts/ci/quality_gate.ps1` 的 Perf 步骤调用，仅在显式传入 `-PerfP95Ms` 时启用。
+
+- 当前模板的性能门禁范围：
+  - 仅对“最近一段时间的全局帧时间 P95”施加软/硬门禁（取决于在 CI 中是否启用 Perf 步骤）；
+  - 尚未实现 Game.Core 层的 PerformanceTracker 库、跨场景 baseline JSON、Python 聚合脚本等蓝图功能；
+  - 这些增强统一记录在 `docs/migration/Phase-15-Performance-Budgets-Backlog.md` 中，供后续项目按需启用。
+
 ---
 
 ## 3. 架构设计

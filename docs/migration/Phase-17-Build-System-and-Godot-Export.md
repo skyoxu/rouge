@@ -94,11 +94,43 @@
 
 ## 2. 构建系统架构
 
+### 2.0 Godot+C# 变体（当前模板实现）
 
+> 本节描述的是 **当前 godotgame 模板已经落地的构建/导出能力**。下文所述的 `scripts/build_windows.py`、独立 Release 工作流等仍处于蓝图阶段，对应增强统一收敛到 Phase-17 Backlog。
+
+- 依赖与前置：
+  - 环境变量：`GODOT_BIN` 指向 Godot .NET（mono）可执行文件路径（例如 `C:\Godot\Godot_v4.5.1-stable_mono_win64.exe`）。
+  - Godot Editor 中已安装 Windows Desktop Export Templates，并在 `export_presets.cfg` 中配置 “Windows Desktop” 预设。
+
+- 导出脚本（当前 SSoT）：
+  - `scripts/ci/export_windows.ps1`：
+    - 参数：`-GodotBin`（必需）、`-Preset`（默认 `Windows Desktop`）、`-Output`（默认 `build/Game.exe`）。
+    - 行为：
+      - 预先调用 `--build-solutions`（如未检测到现有 `.sln`）以构建 C#；
+      - 根据 `export_presets.cfg` 解析实际导出预设名称（解决 “Invalid export preset name”）；
+      - 尝试 `--export-release`，失败时回退 `--export-debug`，必要时再回退 `--export-pack` 生成 `.pck`；
+      - 在导出前临时移动 `addons/gdUnit4`、`tests`、`Game.Core.Tests` 等目录到 `.export_exclude/`，导出后再恢复；
+      - 将导出日志和摘要复制到 `logs/ci/<YYYYMMDD-HHmmss>/export/`，写入 `summary.json` 并可选执行大小门禁（`EXPORT_SIZE_MAX_MB`）。
+
+- EXE 冒烟与 Headless 冒烟：
+  - `scripts/ci/smoke_exe.ps1`：
+    - 参数：`-ExePath`、`-TimeoutSec`；
+    - 行为：启动导出的 EXE，等待指定时间，基于进程退出/挂起与控制台输出判断基本可运行性。
+  - `scripts/ci/smoke_headless.ps1`：
+    - 参数：`-GodotBin`、`-Scene`（默认 Main）、`-TimeoutSec`；
+    - 行为：在 headless 模式运行主场景，截获 stdout/stderr，生成 `headless.log`，并根据 `[TEMPLATE_SMOKE_READY]` / `[DB] opened` / 任意输出作为不同级别的 Smoke 信号（详细规则见 Phase‑12 Backlog）。
+
+- CI 集成（Windows）：
+  - `.github/workflows/windows-ci.yml` / `windows-quality-gate.yml`：
+    - 通过 `scripts/ci/quality_gate.ps1` 作为统一入口；
+    - 在需要导出时传入 `-WithExport`，内部调用 `export_windows.ps1` 导出 `build/Game.exe` 并可选运行 `smoke_exe.ps1`；
+    - 导出日志与产物统一收集到 `logs/ci/<date>/export/` 与 `build/` 目录。
+
+> 说明：
+> - 当前模板不包含 `scripts/build_windows.py` 或独立 Release 工作流；
+> - 正式的 Release 管道（版本元数据生成、签名、GitHub Release 上传等）保留为蓝图/Backlog，不影响模板级“可导出 + 可冒烟”的最小能力。
 
 ### 2.1 构建流程图
-
-
 
 ```
 

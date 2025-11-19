@@ -70,12 +70,13 @@ supersedes: []
 - CH 章节：CH01、CH03、CH07
 - 相关 ADR：ADR‑0005（质量门禁）、ADR‑0002（安全）
 - 外部：Sentry Electron, Release Health 文档
+- Godot 变体实现与规划：`docs/migration/Phase-16-Observability-Sentry-Integration.md`、`docs/migration/Phase-16-Observability-Backlog.md`
 ---
 
 ## Addendum (2025-11-08): Godot Alignment
 
-- SDK: Replace Electron integration with Sentry Godot SDK. Initialize in an Autoload singleton during project startup; scrub PII at source.
-- Sessions/Release Health: Map Godot sessions to releases; keep Crash-Free Users/Sessions as primary gates. Keep logs under `logs/YYYYMMDD/observability/`.
+- SDK: Replace Electron integration with Sentry Godot SDK. Initialize in an Autoload singleton during project startup; scrub PII at source（当前模板尚未集成，具体任务参见 Phase-16 Backlog B1/B2）。
+- Sessions/Release Health: Map Godot sessions to releases; keep Crash-Free Users/Sessions as primary gates. Keep logs under `logs/YYYYMMDD/observability/`（当前模板仍以本地 JSONL 日志与测试报告为主，不提供 Release Health 硬门禁）。
 - Test/CI: Collect GdUnit4 JUnit/XML and HTML reports under `reports/`; aggregate into CI summary. Windows-only runners (`pwsh`) remain.
-- Config: Provide `sentry.dsn` and environment via `project.godot` or environment variables; disallow hard-coded secrets.
-- Verification: Add a headless scene smoke that initializes Sentry and emits a controlled test error; assert it is captured in dry-run mode.
+- Config: Provide `sentry.dsn` and environment via `project.godot` or environment variables; disallow hard-coded secrets。
+- Verification: Add a headless scene smoke that initializes Sentry and emits a controlled test error; assert it is captured in dry-run mode（Godot 侧验证路径由 Phase‑16 文档与 Backlog 进一步细化）。

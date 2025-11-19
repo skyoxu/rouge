@@ -142,5 +142,5 @@ supersedes: []
   - ADR-0005（质量门禁）
   - ADR-0006 Godot Data Storage Addendum（偏好设置使用 ConfigFile）
   - ADR-0023（Settings SSoT = ConfigFile）
+  - Phase-14 Godot 安全基线（SqliteDataStore 与 SecurityAudit/SecurityHttpClient 的 DB/HTTP 审计约束）
 - 外部文档：SQLite 官方文档（WAL / VACUUM / PRAGMA），Godot ConfigFile / FileAccess / DirAccess API 文档
-

@@ -122,6 +122,31 @@
 
 ---
 
+### 2.3 Godot+C# 变体（当前模板实现）
+
+> 本节描述的是 **当前 godotgame 模板已落地的可观测性与审计能力**。上文和后文中涉及的 Observability.cs、Sentry SDK、Release Health Gate 仍处于蓝图阶段，对应工作全部登记在 Phase-16 Backlog 中。
+
+- 日志与审计现状：
+  - C# 领域日志接口：`Game.Core/Ports/ILogger.cs`；
+  - Godot 适配器：`Game.Godot/Adapters/LoggerAdapter.cs` 将 Info/Warn/Error 映射到 `GD.Print/GD.PushWarning/GD.PushError`，在 `CompositionRoot` 中作为 `/root/Logger` 注入；
+  - 安全审计：
+    - 启动基线：`SecurityAudit` Autoload 在 `_Ready()` 时写入 `user://logs/security/security-audit.jsonl`（包含 Godot 版本/DB 后端/示例开关等）；
+    - DB 审计：`SqliteDataStore` 在 Open/Execute/Query 失败路径写入 `logs/ci/<YYYY-MM-DD>/security-audit.jsonl`；
+    - HTTP 审计：`SecurityHttpClient` 在允许/拒绝 HTTP 调用时写入 `user://logs/security/audit-http.jsonl`，并通过 `RequestBlocked(reason, url)` Signal 暴露给 GDScript。
+
+- Sentry/Release Health 现状：
+  - 当前模板尚未集成 Sentry Godot SDK，也未实现 Observability.cs Autoload 或 Release Health Gate 脚本；
+  - ADR‑0003 已通过 Addendum 规定了“Godot 需采用 Sentry 作为 Release Health SSoT”的架构口径，但具体实现（DSN 配置、环境变量、发布健康脚本等）仍在 Backlog 中；
+  - CI 中的 release-health 步骤尚未落地，Crash‑Free Sessions/Users 仅在文档和 ADR 层定义。
+
+- Godot 变体的临时约定：
+  - 在未接入 Sentry SDK 之前，可观察性基线由本地日志与安全审计承担：
+    - UI/Glue/Db/Security 测试通过 GdUnit4 报告（logs/e2e/** 与 reports/**）体现“结构化验证”；
+    - SecurityAudit/SqliteDataStore/SecurityHttpClient 的 JSONL 日志提供最小审计能力；
+  - 一旦后续项目需要正式的 Release Health 门禁，应按照 Phase‑16 Backlog 中的条目引入 Observability Autoload + Sentry SDK + release_health_gate 脚本，并在 ADR‑0003 中更新“Verification”段落。
+
+---
+
 ## 3. 架构设计
 
 ### 3.1 分层集成架构

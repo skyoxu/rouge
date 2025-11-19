@@ -480,3 +480,5 @@ const blocksMerge =
 - **安全工具**: Electronegativity, ESLint security rules, Snyk vulnerability scanner, npm audit, license-checker
 - **合规框架**: SOC2 CC6.1, ISO27001 A.12.6.1
 - **Phase 9实现**: `docs/implementation-plans/Phase-9-Dependency-Security-Implementation-Plan.md`
+- **Godot+C# 变体**:
+  - 安全基线在 Godot 模板中通过 `SecurityAudit`（Autoload 启动审计）、`SqliteDataStore`（DB 路径守卫 + CI 审计）与 `SecurityHttpClient`（HTTP 验证与审计）落地，详细规则见 `docs/migration/Phase-14-Godot-Security-Baseline.md` 与 ADR-0006。

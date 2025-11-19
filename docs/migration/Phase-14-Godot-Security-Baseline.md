@@ -57,6 +57,55 @@ window.webContents.session.webRequest.onBeforeSendHeaders(
 
 ## 2. 安全基线定义
 
+### 2.0 Godot+C# 变体（当前模板实现）
+
+> 本节描述的是 **godotgame 模板已经落地的安全基线实现**，用于对齐 ADR‑0002/0006 与运行时代码。下文给出的大号 `Security : Node` 示例仍然是蓝图级参考，不代表当前仓库的唯一实现形式。
+
+- 自检与审计（启动基线）：
+  - Autoload：`SecurityAudit="res://Game.Godot/Scripts/Security/SecurityAudit.cs"` 已在 `project.godot` 中配置；
+  - 启动时写入 `user://logs/security/security-audit.jsonl`，记录：
+    - `ts`：UTC 时间戳（ISO8601）；
+    - `event_type="SECURITY_BASELINE"`；
+    - `app`：应用名称（从 `application/config/name` 获取，失败时退化为 `GodotGame`）；
+    - `godot`：Godot 版本字符串；
+    - `db_backend`：`GODOT_DB_BACKEND` 环境变量或 `default`；
+    - `demo`：`TEMPLATE_DEMO` 环境变量是否为 `1`；
+    - `plugin_sqlite`：是否探测到 SQLite 插件类存在。
+
+- DB 安全与审计（数据存储变体，归口 ADR‑0006）：
+  - 组件：`Game.Godot/Adapters/SqliteDataStore.cs` 实现 `ISqlDatabase`，并在 `Open(string dbPath)` 中强制：
+    - 仅允许 `user://` 前缀路径；
+    - 禁止包含 `..` 的路径穿越；
+    - 使用 `GlobalizePath` 后保证目录存在。
+  - 审计：
+    - 在 `TryOpen/Execute/Query` 等失败路径调用内部 `Audit(action, reason, target)`；
+    - 写入 `logs/ci/<YYYY-MM-DD>/security-audit.jsonl`；
+    - 字段格式：`{ ts, action, reason, target, caller }`，与 ADR‑0006 / AGENTS.md 中对 DB 审计日志的口径一致。
+
+- HTTP 安全与审计（网络白名单变体）：
+  - 组件：`Game.Godot/Scripts/Security/SecurityHttpClient.cs`，作为 `Node` 级 http 验证器：
+    - `AllowedDomains` / `AllowedMethods` / `EnforceHttps` / `MaxBodyBytes` 通过 [Export] 提供配置；
+    - `Validate(method, url, contentType, bodyBytes)`：
+      - 拒绝空 URL、`file://`、非 https（在 `EnforceHttps==true` 时）；
+      - 拒绝不在 `AllowedDomains` 内的域名；
+      - 拒绝缺少 `Content-Type` 的 POST；
+      - 拒绝超过 `MaxBodyBytes` 的请求体；
+      - 允许请求时记 `HTTP_ALLOWED` 审计事件。
+  - 审计输出：
+    - 阻断时：通过 `RequestBlocked(reason, url)` Signal 暴露给 GDScript；
+    - 所有允许/拒绝路径调用 `Audit(eventType, url, reason)`，写入 `user://logs/security/audit-http.jsonl`；
+    - 字段格式：`{ ts, event_type, url, reason, source }`。
+
+- 已有安全测试（GdUnit4）：
+  - HTTP 拦截与审计：
+    - `Tests.Godot/tests/Integration/Security/test_security_http_client.gd`：验证 http 协议、未知域名、POST 无 Content-Type/超大 body 被拒绝；
+    - `Tests.Godot/tests/Integration/Security/test_security_http_audit.gd`：验证拒绝路径会写入 `audit-http.jsonl`，且 `event_type` 包含 `protocol_denied`；
+    - `Tests.Godot/tests/Integration/Security/test_security_http_allowed_audit.gd`：验证允许路径写入 `HTTP_ALLOWED` 事件。
+  - DB 审计与失败路径：
+    - `Tests.Godot/tests/Security/test_db_audit_exec_query_fail.gd`：验证 DB 执行失败时会在 `logs/ci/<date>/security-audit.jsonl` 中追加审计行。
+
+> 后续如需扩展 URL/file/signal 等额外安全规则，应优先在上述组件基础上增量实现，并在 Phase-14 Backlog 中登记扩展项。
+
 ### 2.1 5 大防守领域
 
 #### A. 网络白名单（URL / Domain）
