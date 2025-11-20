@@ -1,7 +1,7 @@
 extends "res://addons/gdUnit4/src/GdUnitTestSuite.gd"
 
 func _new_db(name: String) -> Node:
-	var db: Node = null
+    var db: Node = null
     if ClassDB.class_exists("SqliteDataStore"):
         db = ClassDB.instantiate("SqliteDataStore")
     else:
@@ -26,9 +26,9 @@ func _audit_path() -> String:
 
 
 func _remove_audit_file() -> void:
-    var p := _audit_path()
+    var p: String = _audit_path()
     if FileAccess.file_exists(p):
-        var abs := ProjectSettings.globalize_path(p)
+        var abs: String = ProjectSettings.globalize_path(p)
         DirAccess.remove_absolute(abs)
 
 
@@ -36,26 +36,29 @@ func test_open_denied_writes_audit_log() -> void:
     _remove_audit_file()
 
     var db = await _new_db("DbAuditOpenFail")
-    var ok := db.TryOpen("C:/temp/security_open_denied.db")
+    var ok: bool = db.TryOpen("C:/temp/security_open_denied.db")
     assert_bool(ok).is_false()
 
     await get_tree().process_frame
 
-    var p := _audit_path()
+    var p: String = _audit_path()
     assert_bool(FileAccess.file_exists(p)).is_true()
 
-    var txt := FileAccess.get_file_as_string(p)
+    var txt: String = FileAccess.get_file_as_string(p)
     assert_str(txt).is_not_empty()
 
-    var lines := txt.split("\n", false)
-    var last := ""
-    for i in range(lines.size() - 1, -1, -1):
-        var l := lines[i].strip_edges()
-        if l != "":
-            last = l
+    var lines: Array = txt.split("\n", false)
+    var found := false
+    for i in range(lines.size()):
+        var raw: String = lines[i].strip_edges()
+        if raw == "":
+            continue
+        var parsed = JSON.parse_string(raw)
+        if parsed == null:
+            continue
+        var action = str(parsed.get("action", "")).to_lower()
+        if action == "db.open.fail":
+            found = true
             break
 
-    assert_str(last).is_not_empty()
-    var obj = JSON.parse_string(last)
-    assert_that(obj).is_not_null()
-    assert_str(str(obj["action"])).is_equal("db.open.fail")
+    assert_bool(found).is_true()

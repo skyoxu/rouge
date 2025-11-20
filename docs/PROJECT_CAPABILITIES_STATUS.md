@@ -266,3 +266,4 @@
 1. 优先从各 Phase 的 Backlog 文档中选择与“游戏模板可复制性”强相关的项（如 Sentry / Release Health、Perf 基线、更多 GdUnit 场景用例）逐步落地。
 2. 对 Electron/vitegame 专用能力，若未来不计划迁移到 Godot，可在相应 Phase 文档中显式标注为“历史参考，不适用于 Godot 模板”，进一步减少歧义。
 
+

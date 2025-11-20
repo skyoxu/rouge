@@ -1,7 +1,7 @@
 extends "res://addons/gdUnit4/src/GdUnitTestSuite.gd"
 
 func _new_db() -> Node:
-	var db: Node = null
+    var db: Node = null
     if ClassDB.class_exists("SqliteDataStore"):
         db = ClassDB.instantiate("SqliteDataStore")
     else:
@@ -19,11 +19,11 @@ func _new_db() -> Node:
 func test_sqlite_path_security_rejects_absolute_and_traversal() -> void:
     var db = await _new_db()
 
-    var ok_user := db.TryOpen("user://security_path_ok.db")
+    var ok_user: bool = db.TryOpen("user://security_path_ok.db")
     assert_bool(ok_user).is_true()
 
-    var abs := db.TryOpen("C:/temp/security_path_bad.db")
+    var abs: bool = db.TryOpen("C:/temp/security_path_bad.db")
     assert_bool(abs).is_false()
 
-    var trav := db.TryOpen("user://../security_path_bad.db")
+    var trav: bool = db.TryOpen("user://../security_path_bad.db")
     assert_bool(trav).is_false()
