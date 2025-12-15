@@ -16,8 +16,8 @@
 
 ## 导出 EXE 冒烟（Windows‑only）
 
-1) 导出 EXE：`./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Game.exe`
-2) 运行冒烟：`./scripts/ci/smoke_exe.ps1 -ExePath build\Game.exe -TimeoutSec 5`
+1) 导出 EXE：`./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Rouge.exe`
+2) 运行冒烟：`./scripts/ci/smoke_exe.ps1 -ExePath build\Rouge.exe -TimeoutSec 5`
 
 说明：
 - 若使用插件后端（addons/godot-sqlite），请确保编辑器已安装导出模板；托管后备路径会随包带 `e_sqlite3`（模板已配置）。

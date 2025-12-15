@@ -1,4 +1,4 @@
-[![Windows Export Slim](https://github.com/skyoxu/godotgame/actions/workflows/windows-export-slim.yml/badge.svg)](https://github.com/skyoxu/godotgame/actions/workflows/windows-export-slim.yml) [![Windows Release](https://github.com/skyoxu/godotgame/actions/workflows/windows-release.yml/badge.svg)](https://github.com/skyoxu/godotgame/actions/workflows/windows-release.yml) [![Windows Quality Gate](https://github.com/skyoxu/godotgame/actions/workflows/windows-quality-gate.yml/badge.svg)](https://github.com/skyoxu/godotgame/actions/workflows/windows-quality-gate.yml)
+[![Windows Export Slim](https://github.com/skyoxu/rouge/actions/workflows/windows-export-slim.yml/badge.svg)](https://github.com/skyoxu/rouge/actions/workflows/windows-export-slim.yml) [![Windows Release](https://github.com/skyoxu/rouge/actions/workflows/windows-release.yml/badge.svg)](https://github.com/skyoxu/rouge/actions/workflows/windows-release.yml) [![Windows Quality Gate](https://github.com/skyoxu/rouge/actions/workflows/windows-quality-gate.yml/badge.svg)](https://github.com/skyoxu/rouge/actions/workflows/windows-quality-gate.yml)
 
 # Godot Windows-only Template (C#)
 
@@ -32,11 +32,11 @@ Production-ready Godot 4.5 + C# game template with enterprise-grade tooling.
    - `./scripts/ci/smoke_headless.ps1 -GodotBin "$env:GODOT_BIN"`
 3) 在 Godot Editor 安装 Export Templates（Windows Desktop）。
 4) 导出与运行 EXE：
-   - `./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Game.exe`
-   - `./scripts/ci/smoke_exe.ps1 -ExePath build\Game.exe`
+   - `./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Rouge.exe`
+   - `./scripts/ci/smoke_exe.ps1 -ExePath build\Rouge.exe`
 
 One‑liner（已在 Editor 安装 Export Templates 后）：
-- PowerShell：`$env:GODOT_BIN='C:\\Godot\\Godot_v4.5.1-stable_mono_win64.exe'; ./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Game.exe; ./scripts/ci/smoke_exe.ps1 -ExePath build\Game.exe`
+- PowerShell：`$env:GODOT_BIN='C:\\Godot\\Godot_v4.5.1-stable_mono_win64.exe'; ./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Rouge.exe; ./scripts/ci/smoke_exe.ps1 -ExePath build\Rouge.exe`
 
 ## What You Get（模板内容）
 - 适配层 Autoload：EventBus/DataStore/Logger/Audio/Time/Input/SqlDb
@@ -48,7 +48,7 @@ One‑liner（已在 Editor 安装 Export Templates 后）：
 
 ## Quick Links
 - 文档索引：`docs/PROJECT_DOCUMENTATION_INDEX.md`
-- Godot+C# 快速开始（godotgame 项目）：`docs/TEMPLATE_GODOT_GETTING_STARTED.md`
+- Godot+C# 快速开始（rouge 项目）：`docs/TEMPLATE_GODOT_GETTING_STARTED.md`
 - Windows-only 快速指引：`docs/migration/Phase-17-Windows-Only-Quickstart.md`
 - FeatureFlags 快速指引：`docs/migration/Phase-18-Staged-Release-and-Canary-Strategy.md`
 - 导出清单：`docs/migration/Phase-17-Export-Checklist.md`
@@ -82,7 +82,7 @@ One‑liner（已在 Editor 安装 Export Templates 后）：
 - 确认主分支已包含所需变更：`git status && git push`
 - 创建版本标签：`git tag v0.1.1 -m "v0.1.1 release"`
 - 推送标签触发发布：`git push origin v0.1.1`
-- 工作流：`Windows Release (Tag)` 自动导出并将 `build/Game.exe` 附加到 GitHub Release。
+- 工作流：`Windows Release (Tag)` 自动导出并将 `build/Rouge.exe` 附加到 GitHub Release。
 - 如需手动导出：运行 `Windows Release (Manual)` 或 `Windows Export Slim`。
 
 ## 自定义应用元数据（图标/公司/描述）

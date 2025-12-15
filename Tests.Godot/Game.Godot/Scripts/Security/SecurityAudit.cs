@@ -1,4 +1,4 @@
-﻿using Godot;
+using Godot;
 using System;
 using System.IO;
 using System.Text.Json;
@@ -51,9 +51,9 @@ public partial class SecurityAudit : Node
         try
         {
             var v = ProjectSettings.GetSetting("application/config/name");
-            return v.VariantType == Variant.Type.Nil ? "GodotGame" : v.AsString();
+            return v.VariantType == Variant.Type.Nil ? "Rouge" : v.AsString();
         }
-        catch { return "GodotGame"; }
+        catch { return "Rouge"; }
     }
 }
 

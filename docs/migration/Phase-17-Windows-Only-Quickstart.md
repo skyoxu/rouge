@@ -11,14 +11,14 @@
   - `"$env:GODOT_BIN" --path . --scene "res://Game.Godot/Scenes/Main.tscn"`
 
 ## 2) 导出 Windows 可执行
-- 预设：`export_presets.cfg` 已包含 “Windows Desktop”，输出 `build/Game.exe`
+- 预设：`export_presets.cfg` 已包含 “Windows Desktop”，输出 `build/Rouge.exe`
 - 命令：
-  - `./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Game.exe`
+  - `./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Rouge.exe`
 - 模板：需在 Godot Editor 安装 Windows Export Templates（Editor → Export → Manage Export Templates）
 
 ## 3) CI（GitHub Actions / Windows）
 - 工作流：`.github/workflows/windows-ci.yml`
-- 步骤概览：安装 .NET → 下载 Godot .NET → 运行 GdUnit4 → 导出 .exe → 上传 `build/Game.exe` 与 `logs/ci/**`
+- 步骤概览：安装 .NET → 下载 Godot .NET → 运行 GdUnit4 → 导出 .exe → 上传 `build/Rouge.exe` 与 `logs/ci/**`
 - 轻量导出流（可选）：`.github/workflows/windows-export-slim.yml`
 
 ## 4) 路径与注意事项
@@ -28,9 +28,9 @@
 
 ## 5) 常用命令（Windows-only）
 - 测试：`.\scripts\ci\run_gdunit_tests.ps1 -GodotBin "$env:GODOT_BIN"`
-- 导出：`.\scripts\ci\export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Game.exe`
+- 导出：`.\scripts\ci\export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Rouge.exe`
 - 烟测（headless）：`.\scripts\ci\smoke_headless.ps1 -GodotBin "$env:GODOT_BIN"`
-- 烟测（exe）：`.\scripts\ci\smoke_exe.ps1 -ExePath build\Game.exe`
+- 烟测（exe）：`.\scripts\ci\smoke_exe.ps1 -ExePath build\Rouge.exe`
 
 ## 6) 与相关 Phase 的衔接
 - Phase‑16（可观测性与发布健康）：建议在构建产物中启用 Sentry Releases + Sessions，CI 校验 Crash‑Free 指标

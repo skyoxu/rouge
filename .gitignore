@@ -63,6 +63,9 @@ Thumbs.db
 *.user
 *.suo
 
+# Local backups (created during setup)
+_backup_pre_godotgame_*/
+
 # Debug symbols/build outputs not meant for VCS
 *.pdb
 

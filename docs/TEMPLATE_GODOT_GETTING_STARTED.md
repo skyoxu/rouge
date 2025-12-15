@@ -1,5 +1,5 @@
 # Godot+C# 模板：快速开始（Windows-only）
-  > 本文件是 `godotgame` 仓库的通用「上手模板」，用于指导从本项目派生的新游戏在 Windows 上完成首次运行、测试与导出。
+  > 本文件是 `rouge` 仓库的通用「上手模板」，用于指导从本项目派生的新游戏在 Windows 上完成首次运行、测试与导出。
   > 所有中文内容均使用 UTF-8 编码；若在终端中出现乱码，请以 VS Code 等编辑器并显式选择 UTF-8 查看。
 
   ---
@@ -8,7 +8,7 @@
 
   本模板面向 **Godot 4.5.1 + C#（.NET 8）+ Windows-only** 项目，默认目录结构与本仓一致：
 
-  - `GodotGame.csproj` —— Godot .NET 主工程（场景 + Adapters 层）
+  - `Rouge.csproj` —— Godot .NET 主工程（场景 + Adapters 层）
   - `Game.Core/` —— 纯 C# 领域层（零 Godot 依赖）
   - `Game.Core.Tests/` —— xUnit 单元测试（覆盖率门禁）
   - `Tests.Godot/` —— GdUnit4 场景/Glue 测试
@@ -52,14 +52,14 @@
 
   1. 在仓库根目录打开 PowerShell：
 
-     cd C:\buildgame\godotgame  # 或你的派生项目路径
+     cd C:\buildgame\rouge  # 或你的派生项目路径
      $env:GODOT_BIN = "C:\Godot\Godot_v4.5.1-stable_mono_win64.exe"
   2. 使用内置导出脚本生成 EXE：
 
-     ./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Preset "Windows Desktop" -Output build\Game.exe
+     ./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Preset "Windows Desktop" -Output build\Rouge.exe
   3. 对导出的 EXE 做一次本地冒烟测试：
 
-     ./scripts/ci/smoke_exe.ps1 -ExePath build\Game.exe
+     ./scripts/ci/smoke_exe.ps1 -ExePath build\Rouge.exe
   4. 若希望在 CI 工作流中 dry-run 导出/冒烟，可参考：
       - .github/workflows/windows-export-slim.yml
       - .github/workflows/windows-release.yml
@@ -68,7 +68,7 @@
   这些工作流均假设：
 
   - Godot 可执行由 CI 任务下载到 GODOT_BIN
-  - 导出产物落盘到 build/Game.exe
+  - 导出产物落盘到 build/Rouge.exe
   - 日志与工件写入 logs/ci/**（见 AGENTS.md 6.3 日志规范）
 
   ———
@@ -77,7 +77,7 @@
 
   领域层逻辑放在 Game.Core/，通过 Game.Core.Tests/ 做 xUnit 单元测试（ADR-0005/0006）：
 
-  cd C:\buildgame\godotgame
+  cd C:\buildgame\rouge
 
   # 运行所有单元测试
   dotnet test --collect:"XPlat Code Coverage"
@@ -100,7 +100,7 @@
 
   本模板提供统一的 Python 封装脚本：
 
-  cd C:\buildgame\godotgame
+  cd C:\buildgame\rouge
 
   # 准备 GdUnit4 测试工程（一次性或按需执行）
   py -3 scripts/python/prepare_gd_tests.py --project Tests.Godot --runtime Game.Godot
@@ -142,4 +142,4 @@
   - 安全基线：docs/migration/Phase-14-Godot-Security-Baseline.md
   - Release / Sentry / 工作流说明：docs/workflows/GM-NG-T2-playable-guide.md
 
-  > 派生新项目时，可以直接复制本文件并按实际仓库名、主工程名（例如 GodotGame）做极少量替换，即可获得一份完整的「Godot+C# Windows-only 快速开始」文档。
+  > 派生新项目时，可以直接复制本文件并按实际仓库名、主工程名（例如 Rouge）做极少量替换，即可获得一份完整的「Godot+C# Windows-only 快速开始」文档。

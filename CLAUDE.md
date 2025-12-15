@@ -521,8 +521,8 @@ This template comes pre-configured with the following technology stack:
   - 产出：见 6.3（release-health.json）
 - package（Windows 导出）
   - 准备 export templates 缓存（Godot 4.5）
-  - 导出发布：godot.exe --headless --export-release "Windows Desktop" build/Game.exe
-  - 产出：build/Game.exe、build/Game.pck；导出日志见 6.3（export.log）
+  - 导出发布：godot.exe --headless --export-release "Windows Desktop" build/Rouge.exe
+  - 产出：build/Rouge.exe、build/Game.pck；导出日志见 6.3（export.log）
   - 仅在前置门禁全绿时运行
 - dotnet：actions/setup-dotnet（.NET 8）
 - 缓存建议：
@@ -534,7 +534,7 @@ This template comes pre-configured with the following technology stack:
 - E2E（headless）：py -3 scripts/python/godot_tests.py --headless --suite smoke,security,perf
 - 任务/回链：py -3 scripts/python/task_links_validate.py
 - 发布健康：py -3 scripts/python/release_health_gate.py --project <sentry_project> --env <env>
-- 导出：godot.exe --headless --export-release "Windows Desktop" build/Game.exe
+- 导出：godot.exe --headless --export-release "Windows Desktop" build/Rouge.exe
 
 **分支保护与开关**
 - 受保护分支启用 Required checks：godot-e2e、dotnet-unit、task-links-validate、release-health（可加 superclaude-review）

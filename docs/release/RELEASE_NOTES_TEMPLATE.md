@@ -17,6 +17,6 @@
 - ...
 
 ## Artifacts
-- EXE: build/Game.exe
+- EXE: build/Rouge.exe
 - Logs: logs/ci/YYYYMMDD-HHMMSS/**
 

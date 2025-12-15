@@ -10,16 +10,16 @@
 - 运行测试（可选示例）：
   - `.\scripts\test.ps1 -GodotBin "$env:GODOT_BIN"`（默认不含示例；加 `-IncludeDemo` 开启）
 - 导出 EXE：
-  - `.\scripts\ci\export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Game.exe`
+  - `.\scripts\ci\export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Rouge.exe`
 - EXE 冒烟：
-  - `.\scripts\ci\smoke_exe.ps1 -ExePath build\Game.exe -TimeoutSec 5`
+  - `.\scripts\ci\smoke_exe.ps1 -ExePath build\Rouge.exe -TimeoutSec 5`
 - Headless 冒烟（不依赖导出）：
   - `.\scripts\ci\smoke_headless.ps1 -GodotBin "$env:GODOT_BIN" -TimeoutSec 5`
 
 ### One‑liner（已安装 Export Templates 前提）
 - PowerShell：
   - ```powershell
-    $env:GODOT_BIN='C:\\Godot\\Godot_v4.5.1-stable_mono_win64.exe'; ./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Game.exe; ./scripts/ci/smoke_exe.ps1 -ExePath build\Game.exe
+    $env:GODOT_BIN='C:\\Godot\\Godot_v4.5.1-stable_mono_win64.exe'; ./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Rouge.exe; ./scripts/ci/smoke_exe.ps1 -ExePath build\Rouge.exe
     ```
 
 ## 验证项 / Verification

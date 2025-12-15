@@ -1,4 +1,4 @@
-﻿# Phase 6 Quickstart 鈥?Windows-only DB Setup
+# Phase 6 Quickstart 鈥?Windows-only DB Setup
 
 鐩爣/Goal
 - 鍦?Windows 鐜涓?Godot + C# 椤圭洰鍑嗗 SQLite 瀛樺偍锛岄伒寰?Phase鈥? 杩佺Щ鏂规銆?
@@ -7,7 +7,7 @@
 浠ｇ爜鎺ュ叆/Code Integration锛堝悗缁級
 - 閫傞厤鍣細`Game.Godot/Adapters/SqliteDataStore.cs`锛堝綋鍓嶄负鍗犱綅锛屽惎鐢ㄦ彃浠跺悗瀵规帴 API锛夈€?- 绔彛锛歚Game.Core/Ports/ISqlDatabase.cs`锛圤pen/Close/Execute/Query/Tx锛夈€?- Autoload锛氫笉寮哄埗锛涘缓璁敱鍦烘櫙鍏ュ彛鎴栨湇鍔″畾浣嶅櫒鎸夐渶鍒涘缓骞舵寔鏈夈€?
 娉ㄦ剰/Notes
-- 鏈ā鏉?Windows鈥憃nly锛涗繚鎸佷笌 Editor 鐨?.NET 鐗堟湰涓€鑷达紙`GodotGame.csproj` Sdk=4.5.x锛夈€?- 鑻ユ湭瀹夎鎻掍欢锛岄€傞厤鍣ㄤ細鎶涘嚭 NotSupportedException锛岃繖鏄鏈熺殑鍗犱綅琛屼负銆?
+- 鏈ā鏉?Windows鈥憃nly锛涗繚鎸佷笌 Editor 鐨?.NET 鐗堟湰涓€鑷达紙`Rouge.csproj` Sdk=4.5.x锛夈€?- 鑻ユ湭瀹夎鎻掍欢锛岄€傞厤鍣ㄤ細鎶涘嚭 NotSupportedException锛岃繖鏄鏈熺殑鍗犱綅琛屼负銆?
 
 ## 导出注意事项 / Export Notes
 

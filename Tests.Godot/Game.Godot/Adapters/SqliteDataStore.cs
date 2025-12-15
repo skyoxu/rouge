@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using Game.Core.Ports;
@@ -225,9 +225,9 @@ public partial class SqliteDataStore : Node, ISqlDatabase
         try
         {
             var v = ProjectSettings.GetSetting("application/config/name");
-            return v.VariantType == Variant.Type.Nil ? "GodotGame" : v.AsString();
+            return v.VariantType == Variant.Type.Nil ? "Rouge" : v.AsString();
         }
-        catch { return "GodotGame"; }
+        catch { return "Rouge"; }
     }
 
     private static void EnsureParentDir(string absPath)

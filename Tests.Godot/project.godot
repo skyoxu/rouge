@@ -4,7 +4,7 @@ config_version=5
 
 [application]
 
-config/name="Godot Tests"
+config/name="Rouge"
 config/features=PackedStringArray("4.5")
 config/icon="res://icon.svg"
 
@@ -14,5 +14,5 @@ enabled=PackedStringArray("gdUnit4")
 
 [dotnet]
 
-project/assembly_name="Tests.Godot"
-project/project_path="res://Tests.Godot.csproj"
+project/assembly_name="Rouge"
+project/project_path="res://Rouge.csproj"
