@@ -41,6 +41,9 @@ tmp/
 **/obj/
 .vs/
 TestResults/
+
+# Vendored demo content (not meant for VCS)
+demo/
 # Keep GdUnit4 CLI runner scripts inside plugin bin
 !Tests.Godot/addons/gdUnit4/bin/
 !Tests.Godot/addons/gdUnit4/bin/**
@@ -54,6 +57,11 @@ tmp_patch.txt
 # IDE/editor caches (keep project configs if any are explicitly added elsewhere)
 .idea/
 .vscode/
+.cursor/
+.serena/
+.superclaude/
+__pycache__/
+*.docx
 
 # Windows/macOS system files
 Thumbs.db
@@ -75,3 +83,27 @@ Godot_*.zip
 
 # Local: ignore cifix artifacts
 cifix*.*
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+.env
+# Editor directories and files
+.idea
+.vscode
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+# tasks.json
+# tasks/ 
