@@ -1,0 +1,16 @@
+{
+	"mcpServers": {
+		"task-master-ai": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"task-master-ai"
+			],
+			"env": {
+				"TASK_MASTER_TOOLS": "core",
+				"ANTHROPIC_BASE_URL": "https://api.aicodemirror.com/api/claudecode"
+			}
+		}
+	}
+}

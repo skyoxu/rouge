@@ -1,0 +1,1849 @@
+[
+  {
+    "id": "GM-0101",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "设计并实现卡牌领域模型 (CardDefinition/CardInstance)",
+    "description": "在 Game.Core/Domain 中创建卡牌核心数据结构,支持静态定义与运行时实例分离\n\n创建 Game.Core/Domain/Card.cs:\n- CardDefinition: 卡牌静态配置(ID、名称、消耗、目标规则、效果指令列表、文本key、稀有度、职业标签)\n- CardInstance: 运行时卡牌实例(引用 CardDefinition、临时费用变化、回合内标记、升级状态)\n- TargetRule 枚举(SingleEnemy/AllEnemies/SingleAlly/AllAllies/Random)\n- CardType 枚举(Attack/Defense/Skill)\n效果指令使用 List<EffectCommand> 预留接口。使用 record 类型保证不可变性。",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "core",
+    "depends_on": [],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "cards",
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Domain/CardDefinitionTests.cs",
+      "Game.Core.Tests/Domain/CardInstanceTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- CardDefinitionTests: 验证卡牌创建、字段验证、升级ID映射",
+      "- CardInstanceTests: 验证临时状态修改、费用计算、标记管理",
+      "覆盖率目标: lines ≥90%, branches ≥85%"
+    ],
+    "taskmaster_id": 1,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0102",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现牌堆系统 (Deck/Hand/Discard/Exhaust)",
+    "description": "实现卡牌堆操作逻辑,支持抽牌、弃牌、洗牌、移除、升级替换\n\n创建 Game.Core/Domain/CardPile.cs:\n- DrawPile/Hand/DiscardPile/ExhaustPile 类(或统一 CardPile 类用 PileType 区分)\n- 操作方法:\n  - Draw(n): 抽 n 张牌,抽牌堆空时自动洗回弃牌堆\n  - Discard(cardId): 手牌 → 弃牌堆\n  - Exhaust(cardId): 移至消耗堆(战斗结束移除)\n  - Shuffle(): 洗牌(调用 RngService)\n  - AddCard(cardDef): 构筑时添加卡\n  - RemoveCard(cardId): 构筑时移除卡\n  - UpgradeCard(cardId): 替换为升级版ID\n使用现有 Services/EventBus 发布 CardDrawn/CardDiscarded 事件。\n\n参考实现（demo/）：\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/SimpleCardPile.cs\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/SimpleCardPileManager.cs\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/CardManager.cs\n\n实现建议：\n- Core 只建模“牌堆状态 + 变更操作”，UI/输入驱动放到 Adapter/Scenes；不要让 Core 依赖 Godot Node。\n- 洗牌/抽牌要可测：RngService 注入、用 seed 固定测试用例。\n- 所有跨堆迁移（hand→discard 等）建议统一走一个内部 Move(cardId, from, to) 以减少分支与漏更新。",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "core",
+    "depends_on": [
+      "GM-0101"
+    ],
+    "adr_refs": [
+      "ADR-0004",
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0020",
+      "ADR-0021",
+      "ADR-0022",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH04",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "deck",
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Domain/CardPileTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- CardPileTests: 验证抽牌逻辑、洗牌可复现性(固定 Seed)、弃牌堆循环、手牌上限",
+      "- 边界测试: 空牌堆抽牌、重复移除、升级不存在卡牌",
+      "使用 Fake RngService Mock 保证可预测随机"
+    ],
+    "taskmaster_id": 2,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0103",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "创建统一效果系统 (EffectResolver)",
+    "description": "实现数据驱动的效果指令解析与执行引擎,复用于卡牌/事件/意图/奖励\n\n创建 Game.Core/Services/EffectResolver.cs:\n- 定义效果指令基类 EffectCommand (抽象类或接口):\n  - DamageCommand(targetId, amount, damageType)\n  - GainBlockCommand(targetId, amount)\n  - HealCommand(targetId, amount)\n  - ApplyStatusCommand(targetId, statusId, stacks, duration)\n  - DrawCommand(heroId, count)\n  - ChangeEnergyCommand(heroId, delta)\n  - GainGoldCommand(amount)\n  - AddCardToDeckCommand(heroId, cardId)\n  - RemoveCardFromDeckCommand(heroId, cardId)\n  - UpgradeCardCommand(heroId, cardId)\n  - TriggerBattleCommand(encounterId)\n  - SetFlagCommand(flagId, value)\n- ExecuteEffect(cmd, context): 单条指令执行入口\n- ExecuteEffects(List<cmd>, context): 批量执行并触发事件\n使用 BattleContext 传递战斗状态引用。",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "core",
+    "depends_on": [
+      "GM-0101"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "effects",
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Domain/EffectResolverTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- EffectResolverTests: 每种指令单独验证(Damage扣血、Block加盾、Heal回血等)",
+      "- 组合测试: 多指令序列、目标校验、状态交互",
+      "- Mock BattleContext 与 StatusManager 保证隔离"
+    ],
+    "taskmaster_id": 3,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0104",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "设计状态系统 (StatusManager)",
+    "description": "实现战斗状态(Buff/Debuff)的叠加、衰减、结算机制\n\n创建 Game.Core/Domain/Status.cs 和 Game.Core/Services/StatusManager.cs:\n- StatusDefinition: 状态静态配置(ID、名称、结算时机、叠加规则、UI图标key)\n- StatusInstance: 运行时状态(statusId、stacks、duration、ownerUnitId)\n- 最小状态集合:\n  - Strength(力量): 造成伤害 +X\n  - Weak(虚弱): 造成伤害 -Y\n  - Vulnerable(易伤): 受到伤害 +Z%\n  - Poison(中毒): 回合开始结算伤害并衰减\n  - Block(护盾): 抵挡伤害(回合结束清零)\n- 结算时机:\n  - OnTurnStart: 中毒结算、回合开始衰减\n  - OnTurnEnd: 护盾清零、持续回合数衰减\n  - OnDealDamage: 力量/虚弱修正\n  - OnTakeDamage: 易伤修正\n叠加规则: stacks 相加,duration 取最大值。",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "core",
+    "depends_on": [
+      "GM-0103"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "status",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Services/StatusManagerTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- StatusManagerTests: 验证状态叠加、衰减、结算时机触发",
+      "- 伤害修正测试: 力量/虚弱/易伤数值计算",
+      "- 中毒测试: 回合开始伤害与 stacks 衰减",
+      "- 护盾测试: 回合结束清零逻辑"
+    ],
+    "taskmaster_id": 4,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0105",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现英雄领域模型 (Hero)",
+    "description": "创建英雄实体,支持属性、牌组、战斗临时状态管理\n\n创建 Game.Core/Domain/Hero.cs:\n- 基础属性:\n  - HeroId、Name、ClassId(职业)\n  - MaxHealth、CurrentHealth\n  - BaseEnergyMax(每回合刷新)\n  - CurrentEnergy(战斗临时)\n  - BaseAttack/BaseDefense(可选,T2弱化)\n- 牌组引用: Deck/Hand/Discard/Exhaust(组合 CardPile)\n- 战斗临时状态:\n  - Shield(护盾)\n  - Statuses: List<StatusInstance>\n- 方法:\n  - TakeDamage(amount): 优先扣护盾再扣生命\n  - Heal(amount): 回血(不超过上限)\n  - GainShield(amount): 加护盾\n  - RefreshEnergy(): 回合开始重置能量\n  - ClearCombatState(): 战斗结束清除临时状态(保留 HP)\n继承或使用现有 Player 类,扩展卡牌相关字段。",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "core",
+    "depends_on": [
+      "GM-0102",
+      "GM-0104"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "heroes",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Domain/HeroTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- HeroTests: 验证 TakeDamage 护盾优先级、Heal 上限限制、能量刷新",
+      "- 状态集成测试: ApplyStatus → TakeDamage 验证易伤/护盾交互",
+      "- ClearCombatState: 验证战斗结束状态清空但 HP 保留"
+    ],
+    "taskmaster_id": 5,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0106",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现敌人领域模型 (Enemy/EnemyAI)",
+    "description": "创建敌人实体与意图生成逻辑\n\n创建 Game.Core/Domain/Enemy.cs:\n- 基础属性:\n  - EnemyId、Name、EncounterId\n  - MaxHealth、CurrentHealth、Shield\n  - Statuses: List<StatusInstance>\n- 意图系统:\n  - Intent: 下一回合动作预告(IntentType、TargetId、EffectCommands)\n  - IntentType 枚举(Attack/Defend/Buff/Debuff/Special)\n  - GenerateIntent(): 根据简单 AI 表生成下一回合动作\n- 方法: TakeDamage/Heal/GainShield(与 Hero 复用或抽象基类 CombatUnit)\n创建 Game.Core/Services/EnemyAI.cs:\n- IntentTable: 敌人技能序列定义(循环/条件触发)\n- GenerateIntent(enemy, battleContext): 最小实现为顺序循环技能表。",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "core",
+    "depends_on": [
+      "GM-0104"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "enemies",
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Domain/EnemyTests.cs",
+      "Game.Core.Tests/Domain/EnemyAITests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- EnemyTests: 验证 TakeDamage、状态管理",
+      "- EnemyAITests: 验证意图生成可预测性(固定技能表 → 固定意图序列)",
+      "- Intent 结构测试: 验证 EffectCommands 可序列化与执行"
+    ],
+    "taskmaster_id": 6,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0107",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "创建战斗状态机 (BattleManager)",
+    "description": "实现回合制战斗核心状态机,管理阶段推进与胜负判定\n\n创建 Game.Core/Services/BattleManager.cs:\n- 战斗阶段枚举:\n  - BattleStart → PlayerTurnStart → PlayerMain → PlayerTurnEnd → EnemyTurn → (循环或胜负)\n- 核心方法:\n  - StartBattle(heroes, enemies): 初始化战斗,清空临时状态,生成敌人初始意图\n  - StartPlayerTurn(): 刷新能量、抽牌、结算 OnTurnStart 状态\n  - PlayCard(heroId, cardId, targetId): 校验能量/目标,执行卡牌 EffectCommands,扣能量,移牌\n  - EndPlayerTurn(): 弃手牌,结算 OnTurnEnd 状态(护盾清零),刷新敌人意图\n  - ExecuteEnemyTurn(): 遍历敌人执行意图(复用 EffectResolver)\n  - CheckVictory(): 敌方全灭 → BattleWon\n  - CheckDefeat(): 我方全灭 → BattleLost\n- 任意单位 HP ≤ 0 时立即触发死亡处理与胜负检查。\n发布事件: BattleStarted/PlayerTurnStarted/CardPlayed/UnitDamaged/UnitDied/BattleWon/BattleLost。\n\n参考实现（demo/）：\n- demo/godot-demo-projects/2d/finite_state_machine/state_machine/state_machine.gd\n- demo/godot-demo-projects/2d/finite_state_machine/player/player_state_machine.gd\n\n实现建议：\n- 建议用显式 State 对象（Enter/Exit/Handle）或严格 transition 表，避免 BattleManager 退化为巨型 switch。\n- 把“输入阶段”（选牌/选目标/结算）也当作状态，能减少 UI 与逻辑竞态与边界 Bug。",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "core",
+    "depends_on": [
+      "GM-0105",
+      "GM-0106",
+      "GM-0103"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "battle",
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Services/BattleManagerTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- BattleManagerTests: 验证状态机推进顺序、回合能量刷新、抽牌数量",
+      "- PlayCard 测试: 能量不足拒绝、目标非法拒绝、成功出牌后能量扣除",
+      "- 胜负判定: 敌方全灭触发 BattleWon、我方全灭触发 BattleLost",
+      "- 状态结算: OnTurnStart 中毒结算、OnTurnEnd 护盾清零",
+      "使用 Mock StatusManager 和 EffectResolver 隔离依赖"
+    ],
+    "taskmaster_id": 7,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0108",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "设计地图节点系统 (AdventureMap/MapNode)",
+    "description": "实现分层节点图结构,支持节点类型与连线关系\n\n创建 Game.Core/Domain/AdventureMap.cs:\n- MapNode:\n  - NodeId、NodeType(Combat/Event/Rest/Shop/Elite/Boss)、Layer\n  - Connections: List<NodeId>(可达下一层节点)\n  - Completed: bool(是否已完成)\n  - Parameters: Dictionary<string,object>(节点参数,如 EncounterId/EventId/ShopTableId)\n- AdventureMap:\n  - Nodes: List<MapNode>\n  - CurrentNodeId\n  - CompletedNodes: HashSet<NodeId>\n  - StartNodeId、BossNodeId\n- 方法:\n  - GetAvailableNodes(): 返回当前可达节点(下一层连线节点)\n  - MoveToNode(nodeId): 更新 CurrentNodeId\n  - CompleteNode(nodeId): 标记完成\n  - IsPathComplete(): Boss 节点完成则章节完成\n地图生成逻辑可先硬编码模板(8–12 普通节点 + Boss),预留随机生成接口。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "core",
+    "depends_on": [],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "map",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Domain/AdventureMapTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- AdventureMapTests: 验证节点连线关系、可达性计算",
+      "- MoveToNode 测试: 非法移动(不连线节点)拒绝",
+      "- CompleteNode 测试: 标记完成后 GetAvailableNodes 返回下一层",
+      "- IsPathComplete 测试: Boss 完成返回 true"
+    ],
+    "taskmaster_id": 8,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0109",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现队伍管理 (Party)",
+    "description": "创建队伍容器,维护英雄列表与共享资源(金币/标记)\n\n创建 Game.Core/Domain/Party.cs:\n- Heroes: List<Hero>(T2 建议 2 名英雄)\n- Gold: int(共享金币)\n- Flags: Dictionary<string, object>(事件标记,用于事件链)\n- 方法:\n  - AddHero(hero): 添加英雄\n  - GetHero(heroId): 获取英雄\n  - GainGold(amount)/SpendGold(amount): 金币操作\n  - SetFlag(key, value)/GetFlag(key): 事件标记操作\n  - IsPartyAlive(): 检查是否全灭(所有英雄 HP ≤ 0)\n- 预留装备栏、天赋树字段(T2 不实现但保留 EquipmentSlots/TalentTree 占位)。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "core",
+    "depends_on": [
+      "GM-0105"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Domain/PartyTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- PartyTests: 验证英雄添加/获取、金币操作、标记读写",
+      "- IsPartyAlive 测试: 全灭判定、部分存活判定",
+      "- 边界测试: 金币不足 SpendGold 抛异常或返回失败"
+    ],
+    "taskmaster_id": 9,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0110",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "创建随机数服务 (RngService)",
+    "description": "统一管理随机源,支持 Seed 固定以保证可复现\n\n创建 Game.Core/Services/RngService.cs:\n- 字段: System.Random _rng\n- 方法:\n  - SetSeed(seed): 固定种子(用于调试/回放/测试)\n  - NextInt(min, max): 返回 [min, max) 随机整数\n  - NextFloat(): 返回 [0, 1) 随机浮点数\n  - Shuffle<T>(List<T>): Fisher-Yates 洗牌算法\n  - PickRandom<T>(List<T>): 随机选择一个元素\n- 设计为接口 IRngService,便于测试时 Mock。\n- 在 GameState 中记录 RunSeed,启动时调用 SetSeed(RunSeed)。",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "core",
+    "depends_on": [],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Domain/RngServiceTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- RngServiceTests: 固定 Seed 验证可复现性(多次调用返回相同序列)",
+      "- Shuffle 测试: 固定 Seed 洗牌结果一致",
+      "- 边界测试: min >= max 抛异常、空列表 PickRandom 抛异常"
+    ],
+    "taskmaster_id": 10,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0111",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现游戏状态管理 (GameState)",
+    "description": "创建一局冒险的存档快照结构,支持序列化与版本迁移\n\n创建 Game.Core/State/RunGameState.cs:\n- 最小字段集合:\n  - Version: int(存档版本号,用于迁移)\n  - RunSeed: int(本局随机种子)\n  - CurrentAct: int(当前章节,T2 可固定为 1)\n  - Map: AdventureMap(地图进度)\n  - Party: Party(队伍状态)\n  - CompletedNodes: HashSet<NodeId>\n  - Statistics: RunStatistics(可选:击杀数、获得卡牌数等)\n- 方法:\n  - ToJson(): 序列化为 JSON\n  - FromJson(json): 反序列化并版本校验\n  - Validate(): 校验数据完整性(如英雄 HP > 0)\n利用现有 State/SaveData.cs 结构扩展或新建 RunGameState。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "core",
+    "depends_on": [
+      "GM-0108",
+      "GM-0109"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/State/RunGameStateTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- RunGameStateTests: 验证序列化/反序列化一致性",
+      "- 版本迁移测试: 老版本数据加载后补充默认值",
+      "- Validate 测试: 非法数据(如负 HP)抛异常"
+    ],
+    "taskmaster_id": 11,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0112",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现奖励生成服务 (RewardManager)",
+    "description": "战斗胜利后生成卡牌/金币奖励,支持职业过滤与稀有度权重\n\n创建 Game.Core/Services/RewardManager.cs:\n- 方法:\n  - GenerateCardRewards(heroClassId, count=3): 从卡池中根据职业标签与稀有度权重随机抽取 count 张候选卡\n  - GenerateGoldReward(nodeType): 根据节点类型(普通/精英)返回金币数量(可配置范围)\n- 卡池过滤:\n  - 按职业标签过滤(若卡牌有 ClassTags)\n  - 按稀有度权重随机(Common 70%、Uncommon 25%、Rare 5%)\n- 使用 RngService.PickRandom 与 Shuffle 保证随机可复现。\n- 奖励配置可先硬编码,后续抽取到配置文件(JSON/Resource)。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "core",
+    "depends_on": [
+      "GM-0101",
+      "GM-0110"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "reward",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Services/RewardManagerTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- RewardManagerTests: 固定 Seed 验证奖励候选一致性",
+      "- 职业过滤测试: 战士职业不出现法师卡",
+      "- 稀有度权重测试: 大量样本验证权重分布(可选统计测试)",
+      "- Mock RngService 保证测试可预测"
+    ],
+    "taskmaster_id": 12,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0113",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现事件系统 (EventManager)",
+    "description": "事件节点展示与选项处理,复用 EffectResolver\n\n创建 Game.Core/Domain/Event.cs 和 Game.Core/Services/EventManager.cs:\n- EventDefinition:\n  - EventId、TextKey(本地化文本)\n  - Options: List<EventOption>\n- EventOption:\n  - OptionTextKey、Requirements(可选:金币/标记条件)\n  - Effects: List<EffectCommand>(复用 EffectResolver)\n- EventManager 方法:\n  - GetEvent(eventId): 根据 ID 获取事件定义\n  - SelectOption(eventId, optionIndex, context): 执行选项 Effects,应用到 Party/BattleManager\n  - CheckRequirement(option, context): 校验选项可选性(金币不足置灰)\n- 事件抽取逻辑: 从事件池随机选择(RngService),T2 可先硬编码少量事件。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "core",
+    "depends_on": [
+      "GM-0103",
+      "GM-0110"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "events",
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Services/EventManagerTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- EventManagerTests: 验证 SelectOption 执行效果(GainGold/Heal/AddCard)",
+      "- 条件选项测试: 金币不足时 CheckRequirement 返回 false",
+      "- TriggerBattle 测试: 事件触发战斗后进入 BattleManager",
+      "使用 Mock EffectResolver 隔离依赖"
+    ],
+    "taskmaster_id": 13,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0114",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现休息节点逻辑 (RestNode)",
+    "description": "休息节点提供回血/升级卡二选一功能\n\n创建 Game.Core/Services/RestService.cs:\n- 方法:\n  - HealParty(party, amount): 为所有英雄回复生命(固定值或百分比)\n  - UpgradeCard(hero, cardId): 将卡牌 ID 替换为升级版 ID(CardDefinition 中预定义 UpgradedId)\n- 二选一逻辑在 UI 层处理,Core 层只提供两个独立用例。\n- 回血量配置: 可先硬编码(如 30% MaxHP),后续抽取配置。",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "core",
+    "depends_on": [
+      "GM-0109"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rest",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Domain/RestServiceTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- RestServiceTests: 验证 HealParty 正确回复多英雄 HP,不超过上限",
+      "- UpgradeCard 测试: 牌组中卡牌 ID 正确替换,升级后卡牌可用",
+      "- 边界测试: 升级不存在卡牌抛异常"
+    ],
+    "taskmaster_id": 14,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0115",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现商店节点逻辑 (ShopService)",
+    "description": "商店支持购买卡牌与移除卡牌功能\n\n创建 Game.Core/Services/ShopService.cs:\n- 方法:\n  - GenerateShopInventory(heroClassId, count=5): 随机生成商店售卖卡牌列表(职业过滤 + 稀有度)\n  - PurchaseCard(party, hero, cardId, price): 扣金币并将卡牌加入牌组\n  - RemoveCard(party, hero, cardId, price): 扣金币并移除卡牌(强力构筑工具)\n- 价格策略: 可先硬编码(如 Common 50金、Uncommon 75金、移除 75金),后续配置化。\n- 金币不足时返回失败或抛异常。",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "core",
+    "depends_on": [
+      "GM-0109",
+      "GM-0110"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "shop",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Domain/ShopServiceTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- ShopServiceTests: 验证 GenerateShopInventory 随机性(固定 Seed)",
+      "- PurchaseCard 测试: 金币足够时成功购买,金币不足时失败",
+      "- RemoveCard 测试: 移除成功后牌组中不含该卡",
+      "使用 Mock RngService 保证测试可预测"
+    ],
+    "taskmaster_id": 15,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0116",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "创建一局流程控制器 (RunManager)",
+    "description": "管理一局冒险的生命周期:开局→选路→节点内容→结算→重开\n\n创建 Game.Core/Services/RunManager.cs:\n- 方法:\n  - StartNewRun(seed): 生成 RunSeed、初始化 Party(2 英雄 + 初始牌组)、生成地图、定位起点\n  - EnterNode(nodeId): 根据节点类型进入对应内容(Combat/Event/Rest/Shop/Boss)\n  - CompleteNode(nodeId): 标记节点完成,返回地图\n  - EndRun(result): 章节完成或全灭时触发结算\n- 节点内容调度:\n  - Combat → 调用 BattleManager.StartBattle → 胜利触发奖励 → 回地图\n  - Event → 调用 EventManager.SelectOption → 回地图\n  - Rest/Shop → 调用对应 Service → 回地图\n  - Boss → 战斗 → 胜利触发章节结算 → 可重开\n- 发布事件: RunStarted/NodeEntered/NodeCompleted/RunEnded。",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "core",
+    "depends_on": [
+      "GM-0107",
+      "GM-0108",
+      "GM-0111",
+      "GM-0112",
+      "GM-0113",
+      "GM-0114",
+      "GM-0115"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "run",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Game.Core.Tests/Services/RunManagerTests.cs"
+    ],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- RunManagerTests: 验证 StartNewRun 初始化正确(Party/Map/Seed)",
+      "- EnterNode 测试: 不同节点类型调用正确 Service",
+      "- CompleteNode 测试: 节点完成后 GetAvailableNodes 返回下一层",
+      "- EndRun 测试: Boss 胜利触发 RunEnded(Victory),全灭触发 RunEnded(Defeat)",
+      "使用 Mock BattleManager/EventManager 等依赖"
+    ],
+    "taskmaster_id": 16,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0117",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "配置卡牌静态数据 (JSON/Resource)",
+    "description": "创建至少 20 张卡牌的静态配置,覆盖攻击/防御/技能类型\n\n在 Game.Core/Data 或 Godot Resources 中创建卡牌配置:\n- 格式: JSON 数组或 Godot Resource(.tres)\n- 最小卡牌集合(每职业 5 张,2 职业共 10 张 + 通用 10 张):\n  - 战士: 打击(Damage 6)/防御(Block 5)/重击(Damage 12,消耗 2)/战吼(力量 +2)/狂怒(Damage 15,Exhaust)\n  - 法师: 火球(Damage 8)/冰甲(Block 4,抽 1)/闪电链(Damage 4 All)/法力涌流(能量 +2)/陨石(Damage 20,消耗 3)\n  - 通用: 闪避(Block 3)/药水(Heal 5)/虚弱术(易伤 2 层)/中毒术(中毒 3 层)/抽牌(Draw 2)\n- 每张卡包含:\n  - id、name、cost、cardType、targetRule、effects(List<EffectCommand 序列化)、textKey、rarity、classTags\n  - upgradedId(升级版 ID,如 \"card_001\" → \"card_001_plus\")\n- 升级版: 消耗 -1 或伤害 +3 或效果增强。\n\n参考实现（demo/）：\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/CardData.cs（数据载体形态参考）\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/JsonUtils.cs（JSON 读写工具参考）\n\n实现建议：\n- 静态数据只存“定义”(CardDefinition)，运行时状态放 CardInstance；避免把战斗态字段写进配置。\n- 升级关系用 upgradedId 单向即可，加载时建立索引表加速查找。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "core",
+    "depends_on": [
+      "GM-0101",
+      "GM-0103"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "集成测试:",
+      "- 加载配置文件验证反序列化成功",
+      "- 每张卡 EffectCommands 可被 EffectResolver 执行",
+      "- 升级 ID 映射正确",
+      "手动验证: UI 中展示卡牌文本与效果一致"
+    ],
+    "taskmaster_id": 17,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0118",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "配置敌人与遭遇静态数据",
+    "description": "创建至少 10 个敌人定义与 5 个遭遇配置\n\n在 Game.Core/Data 或 Godot Resources 中创建敌人/遭遇配置:\n- 敌人定义(EnemyDefinition):\n  - id、name、maxHealth、intentTable(技能序列)\n  - 最小敌人集合:\n    - 史莱姆(HP 30,攻击 6)\n    - 哥布林(HP 40,攻击 8/防御 5 交替)\n    - 强盗(HP 50,攻击 10,施加虚弱)\n    - 巫师(HP 35,远程攻击 12,施加中毒)\n    - 骑士(HP 60,攻击 7,格挡 10)\n    - 精英: 狂战士(HP 100,攻击 15,暴怒 +力量)\n    - 精英: 黑暗法师(HP 80,群体攻击 8,上易伤)\n    - Boss: 龙王(HP 200,多阶段技能,召唤小怪)\n- 遭遇配置(EncounterDefinition):\n  - id、enemyIds(敌群组合)、difficulty\n  - 普通遭遇: 2–3 只小怪(史莱姆 x2、哥布林 + 强盗)\n  - 精英遭遇: 1 只精英 + 1 只小怪\n  - Boss 遭遇: Boss 单体或 Boss + 护卫。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "core",
+    "depends_on": [
+      "GM-0106"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "集成测试:",
+      "- 加载配置验证反序列化",
+      "- IntentTable 可被 EnemyAI 正确解析与执行",
+      "手动验证: 战斗中敌人意图展示正确"
+    ],
+    "taskmaster_id": 18,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0119",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "配置事件静态数据",
+    "description": "创建至少 5 个事件定义,覆盖奖励/代价/战斗触发\n\n在 Game.Core/Data 或 Godot Resources 中创建事件配置:\n- 最小事件集合:\n  - 神秘宝箱: 选项 A(获得 100 金)/选项 B(获得稀有卡,扣 20 HP)/选项 C(离开)\n  - 流浪商人: 选项 A(购买药水 50 金,回血 20)/选项 B(拒绝)\n  - 强盗伏击: 选项 A(战斗,胜利奖励金币)/选项 B(交 50 金离开)/选项 C(拒绝,强制战斗)\n  - 神殿祝福: 选项 A(升级一张卡)/选项 B(全体回血 30%)\n  - 诅咒祭坛: 选项 A(获得强力卡,扣最大 HP 10%)/选项 B(离开)\n- 每个事件包含:\n  - id、textKey、options(List<EventOption>)\n  - EventOption: optionTextKey、requirements(可选)、effects(List<EffectCommand>)\n- 条件选项: 如强盗伏击选项 B 需要金币 ≥ 50。",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "core",
+    "depends_on": [
+      "GM-0113"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [],
+    "acceptance": [
+      "Implement the domain model/service in Game.Core without Godot dependencies.",
+      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
+      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+    ],
+    "test_strategy": [
+      "集成测试:",
+      "- 加载配置验证反序列化",
+      "- 每个选项 Effects 可被 EffectResolver 执行",
+      "- 条件选项正确过滤(金币不足时不可选)",
+      "手动验证: UI 展示事件文本与选项一致"
+    ],
+    "taskmaster_id": 19,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0120",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现战斗 UI (BattleScreen)",
+    "description": "Godot 场景实现战斗界面:手牌/能量/状态/敌人意图/目标选择\n\n创建 Game.Godot/Scenes/Battle/BattleScreen.tscn:\n- 布局:\n  - 左侧: 英雄列表(HP/护盾/状态图标)\n  - 右侧: 敌人列表(HP/护盾/意图预告)\n  - 底部: 手牌区(CardView 组件)、能量显示、结束回合按钮\n- CardView 组件:\n  - 显示卡牌名称/消耗/描述/类型图标\n  - 可拖拽或点击选择,选中后进入目标选择模式\n- 目标选择:\n  - 根据卡牌 TargetRule 高亮可选目标\n  - 点击目标触发 PlayCard 用例\n- 订阅 Core 事件刷新 UI:\n  - CardPlayed → 更新手牌\n  - UnitDamaged → 播放受击动画与血条更新\n  - StatusApplied → 刷新状态图标\n  - BattleWon/BattleLost → 切换到奖励/结算界面\n脚本: Game.Godot/Scripts/Battle/BattleScreenController.cs(调用 BattleManager 用例)。\n\n参考实现（demo/）：\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/Card.cs（hover/drag 的输入与视觉响应）\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/SimpleCardHand.cs（手牌布局/层级/hover 提升）\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/CardDropzone.cs（可投放区域判定）\n- demo/godot-card-game-framework/src/core/MousePointer.gd（输入路由/拖拽思路，Godot3）\n- demo/godot-card-game-framework/src/core/Card/TargetingArrow.gd（目标指向箭头，Godot3）\n- demo/godot-card-game-framework/src/core/CardViewer/CVPreviewPopup.gd（卡牌预览弹窗定位/缩放，Godot3）\n- demo/godot-demo-projects/2d/tween/main.gd（Tween 动效基线）\n\n实现建议：\n- BattleScreenController 只做输入与 UI->UseCase 编排；所有规则校验与状态变更一律在 Core。\n- 优先复用 GM-0131/GM-0132 的组件，避免 Battle/Reward/Shop 各自造轮子。\n- godot-card-game-framework 为 Godot3，注意 Input/Control API 差异；只借鉴交互流程，不直接复制。",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "adapter",
+    "depends_on": [
+      "GM-0107"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "battle",
+      "gameplay",
+      "rouge",
+      "t2",
+      "ui"
+    ],
+    "owner": "gameplay",
+    "test_refs": [],
+    "acceptance": [
+      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
+      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
+      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+    ],
+    "test_strategy": [
+      "GdUnit4 场景测试:",
+      "- 验证场景可正常加载",
+      "- 模拟 CardPlayed 事件触发 UI 刷新",
+      "- 验证结束回合按钮可点击并调用 BattleManager.EndPlayerTurn",
+      "手动冒烟: 出牌 → 目标选择 → 伤害数字 → 敌人死亡 → 胜利"
+    ],
+    "taskmaster_id": 20,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0121",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现地图 UI (MapScreen)",
+    "description": "Godot 场景实现地图界面:节点渲染/连线/选择/进入\n\n创建 Game.Godot/Scenes/Map/MapScreen.tscn:\n- 布局:\n  - 中央: 节点图(分层节点 + 连线)\n  - 顶部: 队伍信息(金币/英雄 HP)\n- 节点渲染:\n  - 每个 MapNode 绘制为图标(战斗/事件/休息/商店/精英/Boss)\n  - 当前节点高亮\n  - 可达节点可点击,不可达节点置灰\n  - 已完成节点显示勾选标记\n- 连线绘制:\n  - 使用 Line2D 或自定义绘制连线\n- 节点点击:\n  - 点击可达节点 → 调用 RunManager.EnterNode → 切换到对应场景(BattleScreen/EventDialog/RestPanel/ShopPanel)\n脚本: Game.Godot/Scripts/Map/MapScreenController.cs(调用 RunManager 用例)。\n\n参考实现（demo/）：\n- demo/godot-demo-projects/2d/custom_drawing/lines.gd（自绘连线/节点连通的实现方式）\n- demo/godot-demo-projects/gui/accessibility/custom_control.gd（自定义控件与键盘导航思路）\n- demo/godot-demo-projects/2d/tween/main.gd（节点选中/过渡动画）\n\n实现建议：\n- 连线优先走单个 Node2D _Draw() 批量绘制，减少大量 Line2D/节点实例带来的开销。\n- 节点点击/高亮建议统一用一个 MapInputController 管理可达/不可达状态，避免 UI 状态分散。",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "adapter",
+    "depends_on": [
+      "GM-0108"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "map",
+      "rouge",
+      "t2",
+      "ui"
+    ],
+    "owner": "gameplay",
+    "test_refs": [],
+    "acceptance": [
+      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
+      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
+      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+    ],
+    "test_strategy": [
+      "GdUnit4 场景测试:",
+      "- 验证场景加载",
+      "- 模拟点击节点触发 EnterNode 事件",
+      "手动冒烟: 地图显示 → 点击节点 → 进入战斗/事件 → 完成后回地图 → 下一层节点解锁"
+    ],
+    "taskmaster_id": 21,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0122",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现奖励选择 UI (RewardPanel)",
+    "description": "战后奖励界面:选卡加入牌组/金币展示\n\n创建 Game.Godot/Scenes/Reward/RewardPanel.tscn:\n- 布局:\n  - 顶部: \"战斗胜利!\" 标题\n  - 中央: 3 张候选卡牌(CardView 组件)\n  - 底部: 金币奖励文本、\"跳过\" 按钮\n- 交互:\n  - 点击卡牌 → 调用 Party.GetHero(heroId).Deck.AddCard(cardDef)\n  - 点击跳过或选择卡牌后 → 关闭面板,回到地图\n- 订阅 BattleWon 事件打开面板:\n  - 从 RewardManager 获取候选卡与金币\n脚本: Game.Godot/Scripts/Reward/RewardPanelController.cs。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "adapter",
+    "depends_on": [
+      "GM-0112"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "reward",
+      "rouge",
+      "t2",
+      "ui"
+    ],
+    "owner": "gameplay",
+    "test_refs": [],
+    "acceptance": [
+      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
+      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
+      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+    ],
+    "test_strategy": [
+      "GdUnit4 场景测试:",
+      "- 验证面板显示候选卡",
+      "- 模拟点击卡牌触发 AddCard 事件",
+      "手动冒烟: 战斗胜利 → 奖励面板弹出 → 选卡 → 牌组中新增卡牌"
+    ],
+    "taskmaster_id": 22,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0123",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现事件对话框 UI (EventDialog)",
+    "description": "事件节点展示文本与选项按钮\n\n创建 Game.Godot/Scenes/Event/EventDialog.tscn:\n- 布局:\n  - 中央: 事件文本框(RichTextLabel)\n  - 底部: 2–3 个选项按钮(动态生成)\n- 交互:\n  - 加载事件时从 EventManager 获取 EventDefinition\n  - 根据 Options 动态创建按钮\n  - 按钮文本从本地化 key 获取(或暂时硬编码)\n  - 点击选项 → 调用 EventManager.SelectOption → 执行 Effects → 关闭对话框回地图\n- 条件选项:\n  - 金币不足时按钮置灰并显示提示\n脚本: Game.Godot/Scripts/Event/EventDialogController.cs。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "adapter",
+    "depends_on": [
+      "GM-0113"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "events",
+      "gameplay",
+      "rouge",
+      "t2",
+      "ui"
+    ],
+    "owner": "gameplay",
+    "test_refs": [],
+    "acceptance": [
+      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
+      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
+      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+    ],
+    "test_strategy": [
+      "GdUnit4 场景测试:",
+      "- 验证事件文本与选项按钮正确显示",
+      "- 模拟点击选项触发 SelectOption 事件",
+      "手动冒烟: 进入事件节点 → 对话框弹出 → 点击选项 → Effects 生效 → 回地图"
+    ],
+    "taskmaster_id": 23,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0124",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现休息界面 UI (RestPanel)",
+    "description": "休息节点二选一:回血/升级卡\n\n创建 Game.Godot/Scenes/Rest/RestPanel.tscn:\n- 布局:\n  - 顶部: \"休息营地\" 标题\n  - 中央: 两个大按钮(\"回复生命\" / \"升级卡牌\")\n- 交互:\n  - 点击 \"回复生命\" → 调用 RestService.HealParty → 关闭面板回地图\n  - 点击 \"升级卡牌\" → 打开牌组选择器(选择一张卡升级)→ 调用 RestService.UpgradeCard → 关闭面板回地图\n- 牌组选择器(可复用后续构筑界面组件):\n  - 展示英雄牌组所有卡牌\n  - 点击一张卡 → 确认升级\n脚本: Game.Godot/Scripts/Rest/RestPanelController.cs。",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "adapter",
+    "depends_on": [
+      "GM-0114"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rest",
+      "rouge",
+      "t2",
+      "ui"
+    ],
+    "owner": "gameplay",
+    "test_refs": [],
+    "acceptance": [
+      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
+      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
+      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+    ],
+    "test_strategy": [
+      "GdUnit4 场景测试:",
+      "- 验证两个按钮可点击",
+      "- 模拟点击回血触发 HealParty 事件",
+      "手动冒烟: 进入休息节点 → 选择回血/升级 → 效果生效 → 回地图"
+    ],
+    "taskmaster_id": 24,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0125",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现商店界面 UI (ShopPanel)",
+    "description": "商店节点:购买卡牌/移除卡牌\n\n创建 Game.Godot/Scenes/Shop/ShopPanel.tscn:\n- 布局:\n  - 顶部: 金币显示\n  - 左侧: 售卖卡牌列表(CardView + 价格)\n  - 右侧: \"移除卡牌\" 按钮\n  - 底部: \"离开商店\" 按钮\n- 交互:\n  - 进入商店时调用 ShopService.GenerateShopInventory 生成商品\n  - 点击卡牌 → 调用 ShopService.PurchaseCard → 扣金币加牌 → 刷新金币显示\n  - 点击 \"移除卡牌\" → 打开牌组选择器 → 选择一张卡 → 调用 ShopService.RemoveCard → 扣金币移牌\n  - 金币不足时购买/移除按钮置灰\n  - 点击 \"离开商店\" → 关闭面板回地图\n脚本: Game.Godot/Scripts/Shop/ShopPanelController.cs。",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "adapter",
+    "depends_on": [
+      "GM-0115"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "shop",
+      "t2",
+      "ui"
+    ],
+    "owner": "gameplay",
+    "test_refs": [],
+    "acceptance": [
+      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
+      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
+      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+    ],
+    "test_strategy": [
+      "GdUnit4 场景测试:",
+      "- 验证商品列表生成",
+      "- 模拟购买触发 PurchaseCard 事件",
+      "- 金币不足时按钮置灰",
+      "手动冒烟: 进入商店 → 购买卡/移除卡 → 金币变化 → 牌组变化 → 离开回地图"
+    ],
+    "taskmaster_id": 25,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0126",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现主菜单与开局流程 UI (MainMenu)",
+    "description": "主菜单提供开始新局/继续/设置功能\n\n创建 Game.Godot/Scenes/MainMenu.tscn:\n- 布局:\n  - 中央: 游戏标题\n  - 按钮:\n    - \"开始新局\": 调用 RunManager.StartNewRun(随机 Seed) → 切换到 MapScreen\n    - \"继续\" (可选): 加载存档 → 切换到 MapScreen(T2 可先占位不实现)\n    - \"设置\": 打开设置面板(音量等,可复用现有 SettingsPanel)\n    - \"退出\": 退出游戏\n- 开局流程:\n  - 点击 \"开始新局\" → (可选)选择初始英雄与职业 → 生成初始牌组 → StartNewRun → 进入地图\n  - T2 可简化为固定 2 名英雄(战士 + 法师)直接开局\n脚本: Game.Godot/Scripts/MainMenuController.cs。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "adapter",
+    "depends_on": [
+      "GM-0116"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "t2",
+      "ui"
+    ],
+    "owner": "gameplay",
+    "test_refs": [],
+    "acceptance": [
+      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
+      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
+      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+    ],
+    "test_strategy": [
+      "GdUnit4 场景测试:",
+      "- 验证按钮可点击",
+      "- 模拟点击开始新局触发 StartNewRun 事件",
+      "手动冒烟: 主菜单 → 开始新局 → 地图界面加载成功"
+    ],
+    "taskmaster_id": 26,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0127",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现结算界面 UI (RunEndScreen)",
+    "description": "胜利/失败结算展示统计数据与重开按钮\n\n创建 Game.Godot/Scenes/RunEnd/RunEndScreen.tscn:\n- 布局:\n  - 顶部: 结果标题(\"胜利!\" / \"失败\")\n  - 中央: 统计数据(可选):\n    - 用时、击杀数、获得卡牌数、最终金币\n  - 底部: \"重新开始\" 按钮、\"返回主菜单\" 按钮\n- 交互:\n  - 订阅 RunEnded 事件打开界面\n  - 点击 \"重新开始\" → 调用 RunManager.StartNewRun(新 Seed) → 回到地图\n  - 点击 \"返回主菜单\" → 切换到 MainMenu\n脚本: Game.Godot/Scripts/RunEnd/RunEndScreenController.cs。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "adapter",
+    "depends_on": [
+      "GM-0116"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "run",
+      "t2",
+      "ui"
+    ],
+    "owner": "gameplay",
+    "test_refs": [],
+    "acceptance": [
+      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
+      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
+      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+    ],
+    "test_strategy": [
+      "GdUnit4 场景测试:",
+      "- 验证胜利/失败文本正确显示",
+      "- 模拟点击重新开始触发 StartNewRun 事件",
+      "手动冒烟: Boss 胜利/全灭 → 结算界面弹出 → 重开下一局 → 地图重新生成"
+    ],
+    "taskmaster_id": 27,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0128",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现存档与读档功能 (DataStore 集成)",
+    "description": "利用 DataStore Autoload 保存/加载 RunGameState（单机离线）\n\n实现方式（遵循 Ports/Adapters）：\n- 复用现有适配器: Game.Godot/Adapters/DataStoreAdapter.cs（实现 IDataStore）\n- 在 Core 层新增 Save/Load 用例（例如 RunManager 或 SaveGameService），调用 IDataStore.SaveAsync/LoadAsync：\n  - key: \"current_run\"（最终落盘为 user://saves/current_run.json）\n\n调用时机（T2 最小集）：\n- 每次节点完成后自动保存（RunManager.CompleteNode 后）\n- 主菜单 \"继续\"：若存在存档则加载并进入 MapScreen\n\n版本迁移（T2 最小集）：\n- 存档包含 Version 字段；版本不匹配时给出明确提示并拒绝加载（迁移留到后续迭代）。",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "adapter",
+    "depends_on": [
+      "GM-0111"
+    ],
+    "adr_refs": [
+      "ADR-0006",
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH05",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Tests.Godot/tests/Adapters/test_data_store_adapter.gd",
+      "Tests.Godot/tests/Integration/test_run_save_load_flow.gd",
+      "Game.Core.Tests/State/RunGameStateManagerTests.cs"
+    ],
+    "acceptance": [
+      "Integrate save/load via IDataStore (adapter) and keep save/load orchestration in Game.Core (no Godot dependency in Core).",
+      "Persist only to user:// and never accept absolute paths or traversal; failures are surfaced with context.",
+      "Add at least one headless GdUnit4 integration test for save+restart+load flow (see test_refs)."
+    ],
+    "test_strategy": [
+      "xUnit 单元测试:",
+      "- RunGameStateManagerTests: 验证存档结构、版本校验、反序列化失败路径",
+      "GdUnit4 集成测试（headless）:",
+      "- 写入存档后重启进程/重载场景，\"继续\" 能恢复地图进度与队伍/牌组状态",
+      "- 存档缺失/版本不匹配时 UI 有明确提示且不会崩溃"
+    ],
+    "taskmaster_id": 28,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0129",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "编写 E2E 可玩闭环冒烟测试",
+    "description": "自动化或手动验证完整流程:开局→选路→战斗→奖励→Boss→结算→重开\n\n创建 GdUnit4 E2E 测试套件 Tests.Godot/tests/Integration/test_mvp_run.gd:\n- 测试流程:\n  1. 模拟点击主菜单 \"开始新局\" → 验证进入 MapScreen\n  2. 模拟点击战斗节点 → 验证进入 BattleScreen\n  3. 模拟出牌 → 验证敌人 HP 下降、手牌移动\n  4. 模拟结束回合 → 验证敌方回合执行意图\n  5. 模拟敌人全灭 → 验证 BattleWon 事件触发、RewardPanel 打开\n  6. 模拟选择卡牌奖励 → 验证牌组新增卡牌\n  7. 回到地图 → 验证当前节点标记完成、下一层节点可点击\n  8. 重复步骤 2–7 直到 Boss 节点\n  9. 模拟 Boss 战胜利 → 验证 RunEndScreen 显示胜利\n  10. 模拟点击 \"重新开始\" → 验证回到地图且地图重新生成\n- 或编写手动冒烟测试清单(docs/testing/mvp-smoke-test.md)供 QA 执行。",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "ci",
+    "depends_on": [
+      "GM-0120",
+      "GM-0121",
+      "GM-0122",
+      "GM-0123",
+      "GM-0126",
+      "GM-0127"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "e2e",
+      "gameplay",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [],
+    "acceptance": [
+      "Provide a one-command entry for Windows/CI headless runs and write artifacts under logs/ci/** or logs/e2e/**.",
+      "Use non-zero exit code on failure with an actionable summary; emit machine-readable summary JSON on success.",
+      "Align with ADR-0005 (quality gates) and ADR-0015 (performance budgets) where applicable."
+    ],
+    "test_strategy": [
+      "GdUnit4 场景集成测试:",
+      "- test_mvp_run.gd: 完整流程自动化测试",
+      "手动冒烟:",
+      "- 执行完整流程并记录通过/失败",
+      "通过标准: 无崩溃、无卡死、所有节点类型可正常完成、Boss 胜利后可重开"
+    ],
+    "taskmaster_id": 29,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0130",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "性能与质量门禁验证",
+    "description": "验证 T2 阶段质量门禁（覆盖率/集成/安全/性能预算）达标\n\n一键入口（Windows）：\n- PowerShell: scripts/ci/quality_gate.ps1\n- Python: scripts/python/quality_gates.py all --gdunit-hard --smoke\n\n覆盖率（软/硬由环境变量决定）：\n- dotnet test --collect:\"XPlat Code Coverage\"\n- 阈值环境变量: COVERAGE_LINES_MIN / COVERAGE_BRANCHES_MIN\n- 产出: logs/unit/<date>/summary.json\n\n集成/安全（硬门禁建议最小集）：\n- GdUnit4: tests/Adapters/Config + tests/Security/Hard\n- 产出: logs/e2e/**\n\n性能预算（可选，按预算开关启用）：\n- scripts/ci/check_perf_budget.ps1 从 logs/ci/**/headless.log 中解析 [PERF] p95_ms\n\n通过标准：hard gates 全绿；soft gates 允许 warning 但必须在 logs/ci/** 中留痕。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "ci",
+    "depends_on": [
+      "GM-0129"
+    ],
+    "adr_refs": [
+      "ADR-0005",
+      "ADR-0006",
+      "ADR-0011",
+      "ADR-0015",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH05",
+      "CH06",
+      "CH07",
+      "CH09",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "gameplay",
+      "quality-gates",
+      "ci",
+      "perf",
+      "security",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "scripts/ci/quality_gate.ps1",
+      "scripts/python/quality_gates.py",
+      "scripts/ci/check_perf_budget.ps1",
+      ".github/workflows/windows-quality-gate.yml"
+    ],
+    "acceptance": [
+      "Quality gate can run headless on Windows (CI and local) and produces artifacts under logs/**.",
+      "Hard gate failures return non-zero; soft gate failures are recorded as warnings with actionable context.",
+      "Gate composition aligns with ADR-0005 (quality gates) and ADR-0015 (performance budgets) and does not introduce new tooling dependencies."
+    ],
+    "test_strategy": [
+      "CI 工作流:",
+      "- dotnet-unit 作业: 运行单元测试并收集覆盖率",
+      "- windows-quality-gate 作业: headless 运行 selfcheck + gdunit-hard + smoke，并上传 logs/**",
+      "- perf 预算: (可选) 运行 scripts/ci/check_perf_budget.ps1 并在失败时阻断",
+      "本地验证: 运行 ./scripts/ci/quality_gate.ps1 -GodotBin <path> 或 py -3 scripts/python/quality_gates.py all --godot-bin <path> --gdunit-hard --smoke"
+    ],
+    "taskmaster_id": 30,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0131",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现卡牌交互基础组件 (CardView/HandLayout/HoverPreview)",
+    "description": "实现可复用的卡牌 UI 基础组件，为 Battle/Reward/Shop/Rest 共用（参考 demo 目录的交互模式）\n\n最小组件集合（Godot 4.x + C#）：\n- CardView.tscn + CardViewController.cs\n  - 正面信息（名称/费用/描述/稀有度）\n  - hover 预览（放大、展示完整文本）\n- HandLayout（手牌容器）\n  - 自动布局/间距/最大手牌数显示\n  - 选中态与可出牌态高亮\n\n约束：\n- 组件只做展示与输入路由；出牌规则与结算仍在 Game.Core。\n- 不引入第三方插件/库（仅参考 demo 目录代码）。\n\n参考实现（demo/）：\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/Card.cs（hover/drag 基础）\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/SimpleCardHand.cs（手牌布局/层级/hover 提升）\n- demo/godot-card-game-framework/src/core/CardViewer/CVPreviewPopup.gd（预览弹窗定位/缩放思路，Godot3）\n\n实现建议：\n- hover 放大时提高 ZIndex/CanvasItem layer，避免被邻牌遮挡；hover 退出要恢复原始顺序。\n- HandLayout 用曲线/扇形分布（手牌少时更集中），并提供 deterministic 排序（按 index）。\n- godot-card-game-framework 为 Godot3，仅参考交互思路；落地时按 Godot4+C# 重写。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "adapter",
+    "depends_on": [
+      "GM-0101",
+      "GM-0102"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "cards",
+      "ui",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Tests.Godot/tests/UI/test_card_view_scene.gd"
+    ],
+    "acceptance": [
+      "Provide reusable CardView + HandLayout components and keep gameplay rules in Game.Core.",
+      "Hover preview works in both mouse and keyboard focus navigation scenarios.",
+      "Add at least one headless GdUnit4 UI test (see test_refs) and produce artifacts under logs/e2e/**."
+    ],
+    "test_strategy": [
+      "GdUnit4 UI 测试（headless）:",
+      "- CardView 可实例化、文本可更新、hover/聚焦时能触发预览状态",
+      "手动冒烟:",
+      "- 进入 BattleScreen/RewardPanel 能正确渲染手牌/候选卡并可预览"
+    ],
+    "taskmaster_id": 54,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0132",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现出牌交互与目标选择 UX (Click/Targeting)",
+    "description": "实现战斗中“选择卡牌 → 选择目标 → 确认出牌”的输入闭环，并与 BattleManager.PlayCard(heroId, cardId, targetId) 对齐（参考 demo 目录的 targeting 交互）\n\n最小 UX（T2）：\n- 点击手牌选中卡牌，进入 Targeting 模式\n- 根据 CardDefinition.TargetRule 高亮合法目标（敌人/队友/全体/随机）\n- 点击目标执行出牌；右键或 Esc 取消\n- 能量不足/目标非法时给出明确提示且不会改变牌堆状态\n\n约束：\n- 规则校验必须在 Core（BattleManager）完成，UI 只负责引导与展示错误原因。\n\n参考实现（demo/）：\n- demo/godot-card-game-framework/src/core/Card/TargetingArrow.gd（目标指向箭头，Godot3）\n- demo/godot-card-game-framework/src/core/MousePointer.gd（输入路由/拖拽思路，Godot3）\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/CardDropzone.cs（可投放/命中区域判定）\n\n实现建议：\n- Targeting 模式下必须有明确的“取消路径”(Esc/右键/点击空白)并恢复 UI 高亮与卡牌选中态。\n- 对不可选目标显示原因（例如：已死亡/不可选/免疫等），避免玩家误以为卡牌无效。\n- godot-card-game-framework 为 Godot3，仅参考交互思路；落地时按 Godot4+C# 重写。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "adapter",
+    "depends_on": [
+      "GM-0107",
+      "GM-0120",
+      "GM-0131"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "battle",
+      "cards",
+      "targeting",
+      "ui",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Tests.Godot/tests/Integration/test_battle_card_input_flow.gd"
+    ],
+    "acceptance": [
+      "BattleScreen supports click-to-select and target selection based on TargetRule; cancel path is supported.",
+      "Invalid plays (no energy / invalid target) do not mutate battle state and show a clear reason.",
+      "Add at least one headless GdUnit4 integration test (see test_refs) that covers a full play+cancel+invalid attempt flow."
+    ],
+    "test_strategy": [
+      "GdUnit4 集成测试（headless）:",
+      "- 进入 BattleScreen → 选择攻击卡 → 点击敌人 → 敌人 HP 下降且手牌进入弃牌堆",
+      "- 选择卡后按 Esc 取消 → 状态回到可操作且不出牌",
+      "- 能量不足时尝试出牌 → 失败且状态不变"
+    ],
+    "taskmaster_id": 55,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "GM-0133",
+    "story_id": "PRD-ROUGE-T2-VS-0001",
+    "title": "实现敌人意图展示 UI (IntentView)",
+    "description": "实现 PRD 要求的敌人意图（Intent）可视化：在敌方回合前展示下一次行动类型/数值/目标，并在回合推进时刷新（参考 demo/godot-demo-projects 的 UI 组织方式）\n\n最小集（T2）：\n- IntentType 图标 + 数值（伤害/护盾/状态）\n- 目标指向（单体目标高亮；全体显示 All）\n- 回合切换时刷新（PlayerTurnStart 生成敌人意图，PlayerTurnEnd 或 EnemyTurn 后更新）\n\n参考实现（demo/）：\n- demo/godot-demo-projects/gui/accessibility/custom_control.gd（自定义 UI 控件/可达性处理）\n- demo/godot-demo-projects/2d/tween/main.gd（意图更新的过渡动效）\n\n实现建议：\n- IntentView 建议只消费 Core 输出的 IntentSnapshot/事件（不要直接读 Enemy 内部状态），降低 UI 与战斗逻辑耦合。\n- 意图刷新要覆盖“回合开始生成/出牌后可能改变/回合结束再生成”等路径，避免显示过期信息。\n- 需要更多 UI/图标资源时先检索 demo/awesome-godot/README.upstream.md（默认不引入新插件）。",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "adapter",
+    "depends_on": [
+      "GM-0106",
+      "GM-0120"
+    ],
+    "adr_refs": [
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0021",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "battle",
+      "intent",
+      "ui",
+      "rouge",
+      "t2"
+    ],
+    "owner": "gameplay",
+    "test_refs": [
+      "Tests.Godot/tests/Integration/test_enemy_intent_ui_updates.gd"
+    ],
+    "acceptance": [
+      "BattleScreen displays enemy intents before the enemy acts and refreshes them at the defined phase boundaries.",
+      "Intent view is data-driven from Enemy.Intent and does not duplicate game logic in UI.",
+      "Add at least one headless GdUnit4 integration test (see test_refs) to validate intent refresh behavior."
+    ],
+    "test_strategy": [
+      "GdUnit4 集成测试（headless）:",
+      "- 战斗开始后敌人 intent 可见",
+      "- 结束回合触发敌人行动后 intent 刷新为下一回合预告"
+    ],
+    "taskmaster_id": 56,
+    "taskmaster_exported": true
+  }
+]

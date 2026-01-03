@@ -38,11 +38,44 @@ def collect_adr_ids(root: Path) -> set[str]:
 
 
 def collect_overlay_paths(root: Path) -> set[str]:
-    overlay_root = root / "docs" / "architecture" / "overlays" / "PRD-Guild-Manager" / "08"
+    # Prefer inferring the overlay folder from existing task overlay_refs.
+    overlays_root = root / "docs" / "architecture" / "overlays"
+
+    overlay_prd_dir = None
+    try:
+        tasks_all = load_tasks_back(root)
+    except Exception:
+        tasks_all = []
+
+    pat = re.compile(r"^docs/architecture/overlays/([^/]+)/08/", re.IGNORECASE)
+    for t in tasks_all:
+        refs = t.get("overlay_refs") or []
+        if not isinstance(refs, list):
+            refs = [refs]
+        for ref in refs:
+            m = pat.match(str(ref).replace("\\", "/"))
+            if m:
+                overlay_prd_dir = m.group(1)
+                break
+        if overlay_prd_dir:
+            break
+
+    if not overlay_prd_dir and overlays_root.exists():
+        prd_dirs = [p.name for p in overlays_root.iterdir() if p.is_dir()]
+        if len(prd_dirs) == 1:
+            overlay_prd_dir = prd_dirs[0]
+
+    if not overlay_prd_dir:
+        return set()
+
+    overlay_root = overlays_root / overlay_prd_dir / "08"
     if not overlay_root.exists():
         return set()
+
     paths: set[str] = set()
     for p in overlay_root.glob("*"):
+        if p.is_dir():
+            continue
         rel = p.relative_to(root)
         paths.add(str(rel).replace("\\", "/"))
     return paths
@@ -99,15 +132,16 @@ def run_check(root: Path) -> bool:
 
         # overlay refs
         refs = [p.replace("\\", "/") for p in t.get("overlay_refs", [])]
-        if refs:
+        if not refs:
+            print("  overlay_refs: (missing)")
+            has_error = True
+        else:
             missing_overlays = [p for p in refs if p not in overlay_paths]
             if missing_overlays:
                 print(f"  missing overlays: {missing_overlays}")
                 has_error = True
             else:
                 print("  overlay_refs OK")
-        else:
-            print("  overlay_refs: (none)")
 
     return not has_error
 

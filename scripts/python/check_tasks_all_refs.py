@@ -50,12 +50,33 @@ def collect_adr_ids(root: Path) -> set[str]:
     return ids
 
 
-def collect_overlay_paths(root: Path) -> set[str]:
-    overlay_root = root / "docs" / "architecture" / "overlays" / "PRD-Guild-Manager" / "08"
+def detect_overlay_prd_dir(root: Path, tasks: list[dict]) -> str | None:
+    """Try to infer the overlay PRD directory name from overlay_refs."""
+    pat = re.compile(r"^docs/architecture/overlays/([^/]+)/08/", re.IGNORECASE)
+    for t in tasks:
+        refs = t.get("overlay_refs") or []
+        if not isinstance(refs, list):
+            refs = [refs]
+        for ref in refs:
+            m = pat.match(str(ref).replace("\\", "/"))
+            if m:
+                return m.group(1)
+    return None
+
+
+def collect_overlay_paths(root: Path, overlay_prd_dir: str | None) -> set[str]:
+    """Collect all overlay file paths under docs/architecture/overlays/<PRD>/08."""
+    if not overlay_prd_dir:
+        return set()
+
+    overlay_root = root / "docs" / "architecture" / "overlays" / overlay_prd_dir / "08"
     if not overlay_root.exists():
         return set()
+
     paths: set[str] = set()
     for p in overlay_root.glob("*"):
+        if p.is_dir():
+            continue
         rel = p.relative_to(root)
         paths.add(str(rel).replace("\\", "/"))
     return paths
@@ -91,14 +112,19 @@ def check_tasks(tasks: list[dict], adr_ids: set[str], overlay_paths: set[str], l
             print(f"- {tid}: extra chapter_refs (not implied by ADR map): {sorted(extra_ch)}")
             has_error = True
 
-        # overlay_refs only for tasks_back (label heuristic)
-        if label.startswith("tasks_back"):
-            refs = [p.replace("\\", "/") for p in t.get("overlay_refs", [])]
-            if refs:
-                missing_overlays = [p for p in refs if p not in overlay_paths]
-                if missing_overlays:
-                    print(f"- {tid}: missing overlays {missing_overlays}")
-                    has_error = True
+        # overlay_refs required for traceability (tasks -> overlay docs).
+        refs = t.get("overlay_refs") or []
+        if not isinstance(refs, list):
+            refs = [refs]
+        refs = [str(p).replace("\\", "/") for p in refs if str(p).strip()]
+        if not refs:
+            print(f"- {tid}: missing overlay_refs")
+            has_error = True
+        else:
+            missing_overlays = [p for p in refs if p not in overlay_paths]
+            if missing_overlays:
+                print(f"- {tid}: missing overlays {missing_overlays}")
+                has_error = True
 
         if not has_error:
             ok_count += 1
@@ -110,12 +136,23 @@ def check_tasks(tasks: list[dict], adr_ids: set[str], overlay_paths: set[str], l
 def run_check_all(root: Path) -> bool:
     """Run full ADR/CH/overlay checks for all task files."""
     adr_ids = collect_adr_ids(root)
-    overlay_paths = collect_overlay_paths(root)
 
     back = load_json_list(root / ".taskmaster" / "tasks" / "tasks_back.json")
     gameplay = load_json_list(root / ".taskmaster" / "tasks" / "tasks_gameplay.json")
 
+    overlay_prd_dir = detect_overlay_prd_dir(root, gameplay) or detect_overlay_prd_dir(root, back)
+    if not overlay_prd_dir:
+        # Fallback: if there's exactly one overlay folder, use it.
+        overlays_root = root / "docs" / "architecture" / "overlays"
+        if overlays_root.exists():
+            prd_dirs = [p.name for p in overlays_root.iterdir() if p.is_dir()]
+            if len(prd_dirs) == 1:
+                overlay_prd_dir = prd_dirs[0]
+
+    overlay_paths = collect_overlay_paths(root, overlay_prd_dir)
+
     print(f"known ADR ids (sample): {sorted(adr_ids)[:10]} ...")
+    print(f"overlay prd dir: {overlay_prd_dir}")
     print(f"overlay files (08/*): {sorted(overlay_paths)}")
 
     ok_back = check_tasks(back, adr_ids, overlay_paths, label="tasks_back.json")

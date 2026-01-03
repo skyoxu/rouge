@@ -1,0 +1,34 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "title": "设计并实现卡牌领域模型 (CardDefinition/CardInstance)",
+      "description": "在 Game.Core/Domain 中创建卡牌核心数据结构,支持静态定义与运行时实例分离",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "details": "创建 Game.Core/Domain/Card.cs:...",
+      "testStrategy": "xUnit 单元测试:...",
+      "subtasks": [
+        {
+          "id": "1.1",
+          "title": "定义卡牌属性与Immutable Record类型",
+          "description": "创建CardDefinition和CardInstance的record类型...",
+          "status": "pending",
+          "dependencies": [],
+          "details": "在Game.Core/Domain/Card.cs中实现:...",
+          "testStrategy": "xUnit单元测试CardDefinitionTests:..."
+        },
+        {
+          "id": "1.2",
+          "title": "实现卡牌验证逻辑与工厂方法",
+          "description": "为CardDefinition和CardInstance实现字段验证...",
+          "status": "pending",
+          "dependencies": ["1.1"],
+          "details": "在Game.Core/Domain/Card.cs中添加:...",
+          "testStrategy": "xUnit单元测试CardDefinitionTests和CardInstanceTests:..."
+        }
+      ]
+    }
+  ]
+}

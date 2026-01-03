@@ -1,0 +1,1046 @@
+[
+  {
+    "id": "NG-0001",
+    "story_id": "PH12-BACKLOG-B1-B2",
+    "title": "Headless smoke runner (Python) + strict mode",
+    "description": "Implement a Python-first headless smoke runner for Godot on Windows, matching the existing PowerShell behavior. Add an optional strict mode that requires a success marker in logs.\n\nSource: docs/migration/Phase-12-Headless-Smoke-Backlog.md (B1/B2).",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "ci",
+    "depends_on": [],
+    "adr_refs": [
+      "ADR-0005",
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "ci",
+      "smoke",
+      "godot",
+      "python",
+      "headless"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/ci/<date>/smoke/headless.out.log",
+      "logs/ci/<date>/smoke/headless.err.log",
+      "logs/ci/<date>/smoke/summary.json"
+    ],
+    "acceptance": [
+      "Provide scripts/python/smoke_headless.py with --godot-bin, --scene, --timeout-sec, --project-path, and --strict.",
+      "Write outputs under logs/ci/<date>/smoke/** and return non-zero on strict failures.",
+      "Strict mode passes only if logs contain [TEMPLATE_SMOKE_READY] or [DB] opened.",
+      "Non-strict mode remains permissive to preserve template ergonomics."
+    ],
+    "test_strategy": [
+      "Run locally on Windows against a known-good scene and verify exit code + artifacts.",
+      "Run in CI headless and confirm logs are archived under logs/ci/**."
+    ],
+    "taskmaster_id": 31,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0002",
+    "story_id": "PH13-BACKLOG-B2",
+    "title": "Integrate GdUnit4 suites into quality_gates.py",
+    "description": "Extend scripts/python/quality_gates.py to optionally run selected GdUnit4 suites (adapters/security as hard gate, integration/UI as soft gate) and aggregate results into a single summary JSON.\n\nSource: docs/migration/Phase-13-Quality-Gates-Backlog.md (B2).",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0001"
+    ],
+    "adr_refs": [
+      "ADR-0005",
+      "ADR-0011",
+      "ADR-0024"
+    ],
+    "chapter_refs": [
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "ci",
+      "quality-gates",
+      "gdunit4",
+      "headless"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/ci/<date>/quality-gates/summary.json",
+      "logs/e2e/<date>/gdunit/junit.xml"
+    ],
+    "acceptance": [
+      "quality_gates.py exposes flags to run GdUnit4 suites and includes them in the unified decision.",
+      "Adapters+Security suite is treated as hard gate; Integration/UI remains soft gate initially.",
+      "All outputs land under logs/ci/** and logs/e2e/** with a machine-readable summary."
+    ],
+    "test_strategy": [
+      "Run quality_gates.py locally with and without GdUnit4 flags to verify behavior.",
+      "Validate CI job consumes the summary JSON for pass/fail decisions."
+    ],
+    "taskmaster_id": 32,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0003",
+    "story_id": "PH13-BACKLOG-B1",
+    "title": "Coverage thresholds as configurable soft/hard gate",
+    "description": "Align xUnit coverage thresholds to the blueprint target (lines >= 90%, branches >= 85%) and allow overriding via environment variables. Provide soft/hard gate modes in scripts/python/run_dotnet.py and scripts/python/quality_gates.py.\n\nSource: docs/migration/Phase-13-Quality-Gates-Backlog.md (B1).",
+    "status": "pending",
+    "priority": "P1",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0002"
+    ],
+    "adr_refs": [
+      "ADR-0005"
+    ],
+    "chapter_refs": [
+      "CH07"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "ci",
+      "coverage",
+      "xunit"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/unit/<date>/summary.json",
+      "logs/ci/<date>/quality-gates/summary.json"
+    ],
+    "acceptance": [
+      "Default thresholds match the project standard (lines>=90, branches>=85) while remaining overrideable by env vars.",
+      "Soft gate records warnings; hard gate fails the pipeline with a non-zero exit code.",
+      "Coverage results are surfaced in a single summary JSON for CI consumption."
+    ],
+    "test_strategy": [
+      "Run dotnet tests on Windows and verify threshold behavior by temporarily setting env vars."
+    ],
+    "taskmaster_id": 33,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0004",
+    "story_id": "PH14-BACKLOG-B4",
+    "title": "Audit JSONL validation + gate integration",
+    "description": "Add a Python validator for security audit JSONL outputs and integrate it into the quality gates flow.\n\nSource: docs/migration/Phase-14-Godot-Security-Backlog.md (B4) and Phase-13 backlog (B4).",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0002"
+    ],
+    "adr_refs": [
+      "ADR-0019",
+      "ADR-0003",
+      "ADR-0005"
+    ],
+    "chapter_refs": [
+      "CH02",
+      "CH03",
+      "CH07"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "ci",
+      "security",
+      "audit",
+      "jsonl"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/ci/<date>/security-audit.jsonl",
+      "logs/ci/<date>/audit-validate/report.json"
+    ],
+    "acceptance": [
+      "Provide scripts/python/validate_audit_logs.py to validate JSONL structure and required fields.",
+      "quality_gates.py optionally calls the validator and records results in its summary JSON.",
+      "Validation failures are actionable and include offending line numbers and reasons."
+    ],
+    "test_strategy": [
+      "Use a small fixture JSONL (valid and invalid) to verify pass/fail behavior."
+    ],
+    "taskmaster_id": 34,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0005",
+    "story_id": "PH14-BACKLOG-B1",
+    "title": "External URL allowlist + safe ShellOpen adapter",
+    "description": "Provide a single safe entry point for opening external URLs and enforce HTTPS + allowlisted hosts. Support GD_OFFLINE_MODE=1 to deny all network-like actions and write audit records.\n\nSource: docs/migration/Phase-14-Godot-Security-Backlog.md (B1).",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "adapter",
+    "depends_on": [],
+    "adr_refs": [
+      "ADR-0019",
+      "ADR-0011",
+      "ADR-0018"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH02",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Allowed-External-Hosts.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "security",
+      "url",
+      "allowlist",
+      "offline-mode"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "Game.Core.Tests/Security/ExternalUrlPolicyTests.cs",
+      "logs/ci/<date>/security-audit.jsonl"
+    ],
+    "acceptance": [
+      "All OS.ShellOpen usage goes through a single adapter that enforces HTTPS + allowlist.",
+      "Allowed hosts are configured via ALLOWED_EXTERNAL_HOSTS (env/config) and audited on deny.",
+      "GD_OFFLINE_MODE=1 denies all external URL opens and records an audit entry."
+    ],
+    "test_strategy": [
+      "xUnit tests cover allow/deny/invalid URL cases and offline mode behavior."
+    ],
+    "taskmaster_id": 35,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0006",
+    "story_id": "PH14-BACKLOG-B2",
+    "title": "Secure file access adapter (res:// read-only, user:// read-write)",
+    "description": "Introduce a file access adapter that enforces the allowed roots (res://, user://), rejects absolute paths and path traversal, and emits audit records on violations.\n\nSource: docs/migration/Phase-14-Godot-Security-Backlog.md (B2).",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "adapter",
+    "depends_on": [],
+    "adr_refs": [
+      "ADR-0019",
+      "ADR-0006",
+      "ADR-0011"
+    ],
+    "chapter_refs": [
+      "CH02",
+      "CH05",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "security",
+      "filesystem",
+      "adapter"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "Game.Core.Tests/Security/FilePolicyTests.cs",
+      "logs/ci/<date>/security-audit.jsonl"
+    ],
+    "acceptance": [
+      "Provide a single adapter for FileAccess/DirAccess that enforces res:// and user:// rules.",
+      "Reject absolute paths and ../ traversal across all entry points.",
+      "Denied accesses write an audit JSONL record with reason + target."
+    ],
+    "test_strategy": [
+      "xUnit tests cover user:// allow, res:// allow-read-only, absolute path deny, and traversal deny."
+    ],
+    "taskmaster_id": 36,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0007",
+    "story_id": "PH15-BACKLOG-B1",
+    "title": "Performance budget gate integrated into quality gates",
+    "description": "Ensure performance P95 budget checks are consistently executed in CI and surfaced in the unified quality gates summary.\n\nSource: docs/migration/Phase-15-Performance-Budgets-Backlog.md (B1) and ADR-0015.",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0002"
+    ],
+    "adr_refs": [
+      "ADR-0015",
+      "ADR-0005"
+    ],
+    "chapter_refs": [
+      "CH07",
+      "CH09"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "perf",
+      "ci",
+      "budget",
+      "p95"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/perf/<date>/summary.json",
+      "logs/ci/<date>/quality-gates/summary.json"
+    ],
+    "acceptance": [
+      "Perf P95 budget check runs in CI (headless) and writes logs/perf/<date>/summary.json.",
+      "quality_gates.py consumes the perf summary and records pass/fail (soft/hard mode configurable)."
+    ],
+    "test_strategy": [
+      "Run perf suite locally with a low threshold to force a failure and verify gate behavior."
+    ],
+    "taskmaster_id": 37,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0008",
+    "story_id": "PH15-BACKLOG-B2",
+    "title": "Baseline-based performance regression comparison (optional)",
+    "description": "Add an optional baseline comparison workflow that compares current perf metrics against stored baseline JSON and fails if deviation exceeds tolerance.\n\nSource: docs/migration/Phase-15-Performance-Budgets-Backlog.md (B2).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0007"
+    ],
+    "adr_refs": [
+      "ADR-0015",
+      "ADR-0005"
+    ],
+    "chapter_refs": [
+      "CH07",
+      "CH09"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "perf",
+      "baseline",
+      "ci"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "benchmarks/*.json",
+      "logs/perf/<date>/comparison.json"
+    ],
+    "acceptance": [
+      "Provide scripts/python/performance_gates.py to compare baseline vs current and output a diff JSON.",
+      "Support tolerance percentage to avoid noise-driven failures."
+    ],
+    "test_strategy": [
+      "Use a small fixture baseline/current JSON pair to validate compare logic."
+    ],
+    "taskmaster_id": 38,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0009",
+    "story_id": "PH16-BACKLOG-B1",
+    "title": "Observability bootstrap (structured logs + optional Sentry init)",
+    "description": "Implement an observability bootstrap in Godot (autoload) to provide structured logs and (optionally) initialize Sentry SDK when configured.\n\nSource: docs/migration/Phase-16-Observability-Backlog.md (B1).",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "adapter",
+    "depends_on": [],
+    "adr_refs": [
+      "ADR-0003",
+      "ADR-0018",
+      "ADR-0011"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH03",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "observability",
+      "logging",
+      "sentry"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/ci/<date>/observability/selfcheck.json"
+    ],
+    "acceptance": [
+      "Provide an early-init entry point that is executed before the main scene is loaded.",
+      "Structured logs include consistent fields (ts, level, logger, message, tags/extra) and write to logs/**.",
+      "Sentry init is controlled by config/env vars and never hardcodes secrets."
+    ],
+    "test_strategy": [
+      "Run headless selfcheck and verify structured log output is produced."
+    ],
+    "taskmaster_id": 39,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0010",
+    "story_id": "PH16-BACKLOG-B3",
+    "title": "Release health gate script (Sentry Sessions) + CI integration",
+    "description": "Provide a Windows-friendly release health gate script that queries Sentry Sessions/Users and enforces the Crash-Free threshold defined in ADR-0003.\n\nSource: docs/migration/Phase-16-Observability-Backlog.md (B3) and Phase-19 backlog (B1).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0009"
+    ],
+    "adr_refs": [
+      "ADR-0003",
+      "ADR-0005",
+      "ADR-0011",
+      "ADR-0008"
+    ],
+    "chapter_refs": [
+      "CH03",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "release-health",
+      "sentry",
+      "ci"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/ci/<date>/release-health.json"
+    ],
+    "acceptance": [
+      "Provide scripts/python/release_health_gate.py that writes logs/ci/<date>/release-health.json.",
+      "CI can enable/disable this step via environment variables and does not require code changes.",
+      "No secrets are checked into git; scripts validate required env vars and fail fast with context."
+    ],
+    "test_strategy": [
+      "Run in dry-run mode with stub data (or missing env vars) and verify failure is explicit and logged."
+    ],
+    "taskmaster_id": 40,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0011",
+    "story_id": "PH17-BACKLOG-B1-B2",
+    "title": "Build/export pipeline hardening (Windows-only)",
+    "description": "Harden the Windows build/export pipeline: environment checks, consistent artifacts, and log outputs under logs/ci/**.\n\nSource: docs/migration/Phase-17-Build-Backlog.md (B1/B2).",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "ci",
+    "depends_on": [],
+    "adr_refs": [
+      "ADR-0018",
+      "ADR-0005",
+      "ADR-0011",
+      "ADR-0008"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "build",
+      "export",
+      "windows",
+      "ci"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/ci/<date>/export/export.log",
+      "logs/ci/<date>/export/summary.json"
+    ],
+    "acceptance": [
+      "Export step produces deterministic artifact names and a machine-readable summary JSON.",
+      "Failures surface as non-zero exit codes and logs include environment diagnostics."
+    ],
+    "test_strategy": [
+      "Run export in a local Windows environment and confirm build artifacts + logs are generated."
+    ],
+    "taskmaster_id": 41,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0012",
+    "story_id": "PH18-BACKLOG-B1-B2",
+    "title": "Release channel + release profile metadata (optional)",
+    "description": "Introduce a release channel concept (qa/internal/beta/stable) and generate a release profile JSON capturing channel + enabled FeatureFlags + build metadata for traceability.\n\nSource: docs/migration/Phase-18-Staged-Release-Backlog.md (B1/B2).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0011"
+    ],
+    "adr_refs": [
+      "ADR-0003",
+      "ADR-0008",
+      "ADR-0005"
+    ],
+    "chapter_refs": [
+      "CH03",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "release",
+      "canary",
+      "feature-flags"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "build/release-profile.json"
+    ],
+    "acceptance": [
+      "Release profile JSON includes version, commit, channel, enabled flags, built_at, and CI run id when available.",
+      "Release notes generation can reference the profile to display channel/flags."
+    ],
+    "test_strategy": [
+      "Run build/export with RELEASE_CHANNEL set and verify release-profile.json contents."
+    ],
+    "taskmaster_id": 42,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0013",
+    "story_id": "PH16-BACKLOG-B4-B5",
+    "title": "Privacy & logging guidelines docs (project-facing)",
+    "description": "Create project-facing privacy and logging guidelines documents to consolidate existing scattered rules and reduce future ambiguity.\n\nSource: docs/migration/Phase-16-Observability-Backlog.md (B4/B5).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "docs",
+    "depends_on": [],
+    "adr_refs": [
+      "ADR-0003",
+      "ADR-0019"
+    ],
+    "chapter_refs": [
+      "CH02",
+      "CH03"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "docs",
+      "privacy",
+      "logging"
+    ],
+    "owner": "architecture",
+    "test_refs": [],
+    "acceptance": [
+      "docs/privacy-compliance.md exists and defines allowed/forbidden data in logs and telemetry.",
+      "docs/logging-guidelines.md exists and aligns with the logs/** SSoT directory structure."
+    ],
+    "test_strategy": [
+      "Doc review: ensure ADR references are correct and no secrets/PII examples are included."
+    ],
+    "taskmaster_id": 43,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0014",
+    "story_id": "PH13-BACKLOG-B3",
+    "title": "Duplication and cyclomatic complexity gate (lightweight)",
+    "description": "Add lightweight duplication and cyclomatic complexity checks suitable for a Windows-only Godot+C# repo. Prefer Roslyn analyzers / dotnet tooling and small Python scanners over heavy external platforms.\n\nSource: docs/migration/Phase-13-Quality-Gates-Backlog.md (B3).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0002"
+    ],
+    "adr_refs": [
+      "ADR-0005",
+      "ADR-0011"
+    ],
+    "chapter_refs": [
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "ci",
+      "quality-gates",
+      "duplication",
+      "complexity"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/ci/<date>/quality-gates/duplication.json",
+      "logs/ci/<date>/quality-gates/complexity.json"
+    ],
+    "acceptance": [
+      "quality_gates.py can run duplication/complexity checks and records results in a summary JSON.",
+      "Checks have configurable thresholds and default to soft gate for T2 (upgradeable to hard gate later).",
+      "Artifacts are written under logs/ci/** for troubleshooting and archiving."
+    ],
+    "test_strategy": [
+      "Run quality_gates.py locally on Windows and confirm reports are generated and parsed."
+    ],
+    "taskmaster_id": 44,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0015",
+    "story_id": "PH13-BACKLOG-B5",
+    "title": "Architecture tests (Core must not depend on Godot)",
+    "description": "Add xUnit-based architecture tests to enforce the three-layer boundary: Game.Core must not reference Godot APIs, and adapters are the only layer allowed to touch Godot.\n\nSource: docs/migration/Phase-13-Quality-Gates-Backlog.md (B5).",
+    "status": "pending",
+    "priority": "P2",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0002"
+    ],
+    "adr_refs": [
+      "ADR-0007",
+      "ADR-0005",
+      "ADR-0024",
+      "ADR-0018"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH05",
+      "CH06",
+      "CH07"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "ci",
+      "architecture-tests",
+      "ports-adapters"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "Game.Core.Tests/Architecture/LayerDependencyTests.cs"
+    ],
+    "acceptance": [
+      "dotnet test fails if Game.Core references Godot types/namespaces.",
+      "Rules are explicit and documented in the test file for maintainability."
+    ],
+    "test_strategy": [
+      "Introduce a small intentional violation in a temp branch to verify the test catches it."
+    ],
+    "taskmaster_id": 45,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0016",
+    "story_id": "PH14-BACKLOG-B3",
+    "title": "OS.execute guard (deny-by-default) + audit",
+    "description": "Provide a single adapter for external process execution and keep OS.execute disabled by default. Allow only explicit dev-mode allowlisted commands and write audit records on any deny/allow.\n\nSource: docs/migration/Phase-14-Godot-Security-Backlog.md (B3).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "adapter",
+    "depends_on": [],
+    "adr_refs": [
+      "ADR-0019",
+      "ADR-0011",
+      "ADR-0005"
+    ],
+    "chapter_refs": [
+      "CH02",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "security",
+      "process",
+      "audit"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "Game.Core.Tests/Security/ProcessPolicyTests.cs",
+      "logs/ci/<date>/security-audit.jsonl"
+    ],
+    "acceptance": [
+      "No direct OS.execute calls remain in product code; use the guard adapter instead.",
+      "Default behavior is deny with an audit JSONL record.",
+      "A development-only allowlist path exists but is off by default (GD_SECURE_MODE=1)."
+    ],
+    "test_strategy": [
+      "xUnit tests cover deny-by-default and allowlist behavior with SECURITY_TEST_MODE=1."
+    ],
+    "taskmaster_id": 46,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0017",
+    "story_id": "PH14-BACKLOG-B5",
+    "title": "Signal contract validation and tests (security-sensitive)",
+    "description": "Add contract validation for security-sensitive signals (naming/arguments) and integrate into CI checks. This should catch accidental drift between signal definitions and expected contracts.\n\nSource: docs/migration/Phase-14-Godot-Security-Backlog.md (B5).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0005",
+      "NG-0006"
+    ],
+    "adr_refs": [
+      "ADR-0004",
+      "ADR-0019",
+      "ADR-0005"
+    ],
+    "chapter_refs": [
+      "CH02",
+      "CH04",
+      "CH07"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-CloudEvent.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-CloudEvents-Core.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "ci",
+      "signals",
+      "contracts",
+      "security"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "Tests.Godot/tests/Security/Hard/test_signal_contracts.gd",
+      "logs/e2e/<date>/security/signal-contracts.json"
+    ],
+    "acceptance": [
+      "Contract checks validate that required security-related signals exist and match expected parameter shapes.",
+      "Headless test suite produces a machine-readable report under logs/e2e/**."
+    ],
+    "test_strategy": [
+      "Run headless GdUnit4 suite and confirm contract checks report PASS/FAIL deterministically."
+    ],
+    "taskmaster_id": 47,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0018",
+    "story_id": "PH15-BACKLOG-B3",
+    "title": "Performance reports and history artifacts (project-level)",
+    "description": "Generate a human-readable performance report and keep a minimal history artifact (CSV/JSONL) for trend tracking. This is optional for T2 but should be ready before any wider distribution.\n\nSource: docs/migration/Phase-15-Performance-Budgets-Backlog.md (B3).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0007"
+    ],
+    "adr_refs": [
+      "ADR-0015",
+      "ADR-0005"
+    ],
+    "chapter_refs": [
+      "CH07",
+      "CH09"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "perf",
+      "report",
+      "ci"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/perf/<date>/summary.json",
+      "logs/perf/<date>/report.json"
+    ],
+    "acceptance": [
+      "Perf runs emit both summary.json and an extended report.json (or equivalent) under logs/perf/**.",
+      "A minimal history artifact is produced without committing logs/ to git."
+    ],
+    "test_strategy": [
+      "Run perf suite locally and inspect the generated report files for completeness."
+    ],
+    "taskmaster_id": 48,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0019",
+    "story_id": "PH15-BACKLOG-B5",
+    "title": "Dedicated performance gate workflow (optional)",
+    "description": "Add a dedicated CI workflow/job that runs only the performance gate (headless) and uploads perf artifacts.\n\nSource: docs/migration/Phase-15-Performance-Budgets-Backlog.md (B5).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0007"
+    ],
+    "adr_refs": [
+      "ADR-0015",
+      "ADR-0005",
+      "ADR-0011"
+    ],
+    "chapter_refs": [
+      "CH07",
+      "CH09",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "perf",
+      "ci",
+      "workflow"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/perf/<date>/summary.json"
+    ],
+    "acceptance": [
+      "CI can run a perf-only job that fails on budget violations (configurable soft/hard).",
+      "Perf artifacts are uploaded as CI artifacts for later analysis."
+    ],
+    "test_strategy": [
+      "Trigger the workflow manually and verify artifact upload and pass/fail behavior."
+    ],
+    "taskmaster_id": 49,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0020",
+    "story_id": "PH16-BACKLOG-B2",
+    "title": "Game.Core observability client (structured logs + PII scrubbing)",
+    "description": "Implement a pure C# observability client for Game.Core: structured logs, breadcrumbs, and optional sinks (e.g., Sentry via adapter). Include PII scrubbing rules aligned with ADR-0003/ADR-0019.\n\nSource: docs/migration/Phase-16-Observability-Backlog.md (B2).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "core",
+    "depends_on": [
+      "NG-0009"
+    ],
+    "adr_refs": [
+      "ADR-0003",
+      "ADR-0019",
+      "ADR-0005"
+    ],
+    "chapter_refs": [
+      "CH02",
+      "CH03",
+      "CH07"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "observability",
+      "logging",
+      "pii",
+      "core"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "Game.Core.Tests/Observability/StructuredLoggerTests.cs"
+    ],
+    "acceptance": [
+      "Game.Core can emit structured log events without referencing Godot APIs.",
+      "PII scrubbing is applied consistently and is covered by unit tests."
+    ],
+    "test_strategy": [
+      "Unit tests validate field scrubbing, tag propagation, and sink invocation ordering."
+    ],
+    "taskmaster_id": 50,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0021",
+    "story_id": "PH17-BACKLOG-B3",
+    "title": "Dedicated Windows release workflow (tag/dispatch) + artifacts",
+    "description": "Provide a dedicated GitHub Actions workflow for Windows releases (tag push or workflow_dispatch). It should export the game, run smoke, and upload artifacts with consistent naming.\n\nSource: docs/migration/Phase-17-Build-Backlog.md (B3).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0011"
+    ],
+    "adr_refs": [
+      "ADR-0008",
+      "ADR-0011",
+      "ADR-0018",
+      "ADR-0005"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "release",
+      "ci",
+      "export",
+      "windows"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/ci/<date>/export/summary.json"
+    ],
+    "acceptance": [
+      "Workflow triggers on tag or manual dispatch and uploads build artifacts.",
+      "Workflow includes smoke verification and attaches logs/ci artifacts for traceability."
+    ],
+    "test_strategy": [
+      "Dry-run on a non-protected branch using workflow_dispatch and inspect uploaded artifacts."
+    ],
+    "taskmaster_id": 51,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0022",
+    "story_id": "PH17-BACKLOG-B4",
+    "title": "Optional code signing step (SignTool) for release artifacts",
+    "description": "Add an optional code signing step using Windows SignTool, controlled by environment variables and secrets. No signing material is stored in git.\n\nSource: docs/migration/Phase-17-Build-Backlog.md (B4).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0021"
+    ],
+    "adr_refs": [
+      "ADR-0008",
+      "ADR-0011",
+      "ADR-0018"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "release",
+      "signing",
+      "windows"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "logs/ci/<date>/export/signing.log"
+    ],
+    "acceptance": [
+      "Signing runs only when required env vars are set; otherwise the step is skipped with a clear message.",
+      "Signing status is recorded in export summary/logs."
+    ],
+    "test_strategy": [
+      "Run in a local environment without secrets to confirm it safely skips."
+    ],
+    "taskmaster_id": 52,
+    "taskmaster_exported": true
+  },
+  {
+    "id": "NG-0023",
+    "story_id": "PH17-BACKLOG-B5",
+    "title": "Export presets for multiple configurations (debug/release/demo)",
+    "description": "Define multiple export presets (Debug/Release/Demo) and update scripts to select presets via parameters.\n\nSource: docs/migration/Phase-17-Build-Backlog.md (B5).",
+    "status": "pending",
+    "priority": "P3",
+    "layer": "ci",
+    "depends_on": [
+      "NG-0011"
+    ],
+    "adr_refs": [
+      "ADR-0018",
+      "ADR-0011",
+      "ADR-0008"
+    ],
+    "chapter_refs": [
+      "CH01",
+      "CH06",
+      "CH07",
+      "CH10"
+    ],
+    "overlay_refs": [
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+    ],
+    "labels": [
+      "export",
+      "presets",
+      "ci"
+    ],
+    "owner": "architecture",
+    "test_refs": [
+      "export_presets.cfg",
+      "logs/ci/<date>/export/summary.json"
+    ],
+    "acceptance": [
+      "At least two presets exist and can be selected from CI/local scripts.",
+      "Export summary includes which preset was used and the resulting artifact paths."
+    ],
+    "test_strategy": [
+      "Run export for each preset and verify artifacts are produced and runnable."
+    ],
+    "taskmaster_id": 53,
+    "taskmaster_exported": true
+  }
+]
