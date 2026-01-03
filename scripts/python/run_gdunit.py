@@ -15,6 +15,7 @@ import os
 import shutil
 import subprocess
 import json
+import re
 import time
 
 
@@ -153,6 +154,21 @@ def main():
     console_path = os.path.join(out_dir, 'gdunit-console.txt')
     with open(console_path, 'w', encoding='utf-8') as f:
         f.write(out)
+
+    # Extract contract reports emitted by tests (optional)
+    try:
+        m = re.search(r"^SIGNAL_CONTRACTS_OUT:\s*(.+)$", out, flags=re.M)
+        if m:
+            src = m.group(1).strip()
+            sec_dir = os.path.join(out_dir, 'security')
+            os.makedirs(sec_dir, exist_ok=True)
+            dst = os.path.join(sec_dir, 'signal-contracts.json')
+            if os.path.isfile(src):
+                shutil.copy2(src, dst)
+            else:
+                write_text(os.path.join(sec_dir, 'signal-contracts.missing.txt'), f'MISSING: {src}')
+    except Exception:
+        pass
 
     # Generate HTML log frame (optional)
     _rc2, _out2 = run_cmd([args.godot_bin, '--headless', '--path', proj, '--quiet', '-s', 'res://addons/gdUnit4/bin/GdUnitCopyLog.gd'], cwd=proj)
