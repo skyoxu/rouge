@@ -23,7 +23,7 @@ C4Context
     Person(user, "End User", "使用应用程序")
     Person(ops, "Operations Team", "监控系统健康状态")
     Person(dev, "Development Team", "调试与性能分析")
-    System(app, "Unknown Product", "Electron桌面应用")
+    System(app, "Unknown Product", "旧桌面壳桌面应用")
     System_Ext(sentry, "dev-team", "错误追踪与性能监控")
     System_Ext(logs, "Log Storage", "结构化日志存储")
     System_Ext(alerts, "Alert System", "告警通知系统")
@@ -46,17 +46,17 @@ C4Context
 C4Container
     title Observability Containers for Unknown Product
     System_Boundary(app_boundary, "Unknown Product Application") {
-        Container(main_process, "Main Process", "Node.js/Electron", "应用主进程")
-        Container(renderer, "Renderer Process", "React 19", "UI渲染进程")
+        Container(main_process, "宿主进程", "旧脚本运行时/旧桌面壳", "应用主进程")
+        Container(renderer, "渲染进程", "旧前端框架 19", "UI渲染进程")
         Container(self_check, "Self Check", "TypeScript", "启动时配置验证")
         Container(sampler, "Traces Sampler", "TypeScript", "动态采样策略")
         Container(privacy, "PII Scrubber", "TypeScript", "数据去敏处理")
         Container(rate_limiter, "Rate Limiter", "TypeScript", "事件限流控制")
     }
     System_Boundary(monitoring, "Monitoring Infrastructure") {
-        Container(sentry_sdk, "Sentry SDK", "@sentry/electron", "错误与性能追踪")
-        Container(health_gate, "Health Gate", "Node.js Script", "Release Health检查")
-        Container(env_verify, "Env Verifier", "Node.js Script", "环境一致性校验")
+        Container(sentry_sdk, "Sentry SDK", "@sentry/旧桌面壳", "错误与性能追踪")
+        Container(health_gate, "Health Gate", "旧脚本运行时 Script", "Release Health检查")
+        Container(env_verify, "Env Verifier", "旧脚本运行时 Script", "环境一致性校验")
     }
     System_Ext(sentry_cloud, "dev-team", "Sentry云服务")
     System_Ext(log_storage, "Log Storage", "日志存储系统")
@@ -79,7 +79,7 @@ C4Container
 
 ```ts
 // src/shared/observability/self-check.ts
-import * as Sentry from '@sentry/electron';
+import * as Sentry from '@sentry/旧桌面壳';
 export type SelfCheckReport = {
   initialized: boolean;
   env?: string;
@@ -327,7 +327,7 @@ export class ReleaseHealthGate {
 
   private async fetchLiveMetrics(config: any): Promise<any> {
     if (!this.options.sentryToken) {
-      console.warn('⚠️ SENTRY_TOKEN未配置，使用本地数据');
+      console.warn(' SENTRY_TOKEN未配置，使用本地数据');
       return config.metrics;
     }
 
@@ -345,7 +345,7 @@ export class ReleaseHealthGate {
       // 转换Sentry API响应到标准格式
       return this.transformSentryMetrics(sessionData);
     } catch (error) {
-      console.error('❌ Sentry API查询失败，回退到本地数据:', error.message);
+      console.error(' Sentry API查询失败，回退到本地数据:', error.message);
       return config.metrics;
     }
   }
@@ -423,15 +423,15 @@ export async function runHealthGateCLI(): Promise<void> {
   const result = await gate.checkHealth();
 
   // 输出结果
-  console.log(`🔍 Release Health检查完成: ${result.report.verdict}`);
+  console.log(` Release Health检查完成: ${result.report.verdict}`);
 
   if (result.recommendations.length > 0) {
-    console.log('\n📋 建议行动:');
+    console.log('\n 建议行动:');
     result.recommendations.forEach(rec => console.log(`  - ${rec}`));
   }
 
   if (options.verbose) {
-    console.log('\n📊 详细报告:', JSON.stringify(result.report, null, 2));
+    console.log('\n 详细报告:', JSON.stringify(result.report, null, 2));
   }
 
   // 写入报告文件
@@ -467,7 +467,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup 旧脚本运行时
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -503,9 +503,9 @@ jobs:
             const report = JSON.parse(fs.readFileSync('.release-health-report.json', 'utf8'));
 
             const statusIcon = {
-              'PASSED': '✅',
-              'WARNING': '⚠️',
-              'BLOCKED': '❌'
+              'PASSED': '',
+              'WARNING': '',
+              'BLOCKED': ''
             }[report.verdict];
 
             const comment = `${statusIcon} **Release Health Gate**: ${report.verdict}

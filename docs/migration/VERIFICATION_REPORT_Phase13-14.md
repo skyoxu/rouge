@@ -21,7 +21,7 @@ Phase 13-14 架构设计完整、可行、生产就绪
 - **Phase 14 (安全基线)**: 5 个防御域 + Security.cs Autoload + 20+ GdUnit4 测试
   - 代码完整性: 100% (Security.cs 200+ 行 + HTTPSecurityWrapper 80+ 行)
   - 测试覆盖: 4 个 GdUnit4 测试文件，20+ 测试用例
-  - 合规等价性: 通过 (与 Electron ADR-0002 功能等价)
+  - 合规等价性: 通过 (与 旧桌面壳 ADR-0002 功能等价)
 
 ### 关键指标
 
@@ -122,9 +122,9 @@ Security.cs (中央守卫, Autoload)
 **验证结论**: 完善
 - 等价性验证:
 
-| Electron (ADR-0002) | Godot (Phase 14) | 等价 |
+| 旧桌面壳 (ADR-0002) | Godot (Phase 14) | 等价 |
 |-------------------|-----------------|------|
-| CSP 头策略 | URL 白名单 + HTTPSecurityWrapper | 功能等价 |
+| Web 内容安全策略 头策略 | URL 白名单 + HTTPSecurityWrapper | 功能等价 |
 | preload 沙箱 | 文件系统保护 + user:// 约束 | 功能等价 |
 | 加载策略白名单 | open_file_secure() + res:// 只读 | 功能等价 |
 | 可观测性 | JSONL 审计日志 + structured | 超越 |
@@ -559,7 +559,7 @@ Phase 14 依赖:
   ├─ Phase 8 (Scene Design)         Node 结构
   ├─ Phase 9 (Signal System)        Signal 定义
   ├─ Phase 12 (Headless Tests)      测试框架
-  └─ ADR-0002 (Electron Security)   功能等价
+  └─ ADR-0002 (旧桌面壳 Security)   功能等价
 ```
 
 **验证**: 所有依赖已满足
@@ -734,7 +734,7 @@ public partial class ExampleTest
 ```
 Day 1: 环境准备与脚本集成
    安装 .NET 8 覆盖率工具 (OpenCover)
-   安装 Node.js 工具链 (jscpd, complexity-report)
+   安装 旧脚本运行时 工具链 (jscpd, complexity-report)
    配置 Python 环境 (lxml, pyyaml)
    复制 PowerShell 脚本到 scripts/ 目录
    配置 guard-ci.yml GitHub Actions 工作流
@@ -834,7 +834,7 @@ Day 5-7: CI 集成与生产验证
 1. **环境准备** (Day 1-2)
    - 验证 Godot 4.5 .NET 环境
    - 安装 .NET 8 + OpenCover
-   - 安装 Node.js 工具链
+   - 安装 旧脚本运行时 工具链
    - 配置 Python 环境
 
 2. **脚本集成** (Day 3)

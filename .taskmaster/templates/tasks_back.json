@@ -597,7 +597,7 @@
     "test_refs": [
       "docs/prd.txt",
       "docs/architecture/base/01-introduction-and-goals-v2.md",
-      "docs/adr/ADR-0018-godot-csharp-tech-stack.md",
+      "docs/adr/ADR-0018-godot-runtime-and-distribution.md",
       "docs/adr/ADR-0019-godot-security-baseline.md"
     ],
     "acceptance": [

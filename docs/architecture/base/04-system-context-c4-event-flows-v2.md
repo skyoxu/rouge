@@ -15,13 +15,13 @@ placeholders: unknown-app, Unknown Product, gamedev
 ## 1. System Context（最小）
 
 - Actors：Player、Updater、Telemetry（Sentry）、Content CDN、Crash Reporter。
-- 系统边界：Electron App（Main/Renderer）、Local Store、Extension Sandbox。
+- 系统边界：旧桌面壳 App（Main/Renderer）、Local Store、Extension Sandbox。
 
 ```mermaid
 C4Context
     title System Context (Base)
     Person(player, "Player")
-    System(app, "Unknown Product (Electron App)")
+    System(app, "Unknown Product (旧桌面壳 App)")
     System_Ext(cdn, "Content CDN")
     System_Ext(sentry, "Sentry/Obs")
     System_Ext(updater, "Update Server")
@@ -31,25 +31,25 @@ C4Context
     Rel(app, updater, "Check/Download")
 ```
 
-> 安全边界仅**引用** Ch02：`nodeIntegration=false`、`contextIsolation=true`、`sandbox=true`、预加载白名单导出。
+> 安全边界仅**引用** Ch02：`旧脚本集成开关=false`、`旧隔离开关=true`、`sandbox=true`、预加载白名单导出。
 
 ## 2. Container（最小）
 
 - Main（进程）/ Renderer（Web 框架）/ Preload（桥接）/ Worker（资产处理）/ Event Bus（进程内）。
-- 跨容器通信：IPC（主↔渲染/预加载）、HTTP(s)（远端）、文件系统（本地）。
+- 跨容器通信：进程间通信（主↔渲染/预加载）、HTTP(s)（远端）、文件系统（本地）。
 
 ```mermaid
 C4Container
     title Container View (Base)
     Container_Boundary(app, "Unknown Product") {
-      Container(main, "Main Process", "Node/Electron")
-      Container(preload, "Preload Bridge", "contextBridge API")
-      Container(renderer, "Renderer UI", "React + Phaser")
+      Container(main, "宿主进程", "Node/旧桌面壳")
+      Container(preload, "Preload Bridge", "旧桥接层 API")
+      Container(renderer, "Renderer UI", "旧前端框架 + 旧前端游戏引擎")
       Container(worker, "Worker", "Asset/Physics")
       Container(bus, "Event Bus", "RxJS | Node EventEmitter")
     }
-    Rel(main, preload, "exposeInMainWorld", "IPC")
-    Rel(preload, renderer, "safe API", "contextBridge")
+    Rel(main, preload, "exposeInMainWorld", "进程间通信")
+    Rel(preload, renderer, "safe API", "旧桥接层")
     Rel(renderer, bus, "publish/subscribe")
     Rel(main, bus, "publish/subscribe")
 ```
@@ -92,10 +92,10 @@ export type DomainEvent =
 
 // 跨平台事件源标识（便于云原生集成）
 export const EVENT_SOURCES = {
-  ELECTRON_MAIN: 'electron://main-process',
-  ELECTRON_RENDERER: 'electron://renderer-process',
-  PHASER_ENGINE: 'phaser://game-engine',
-  REACT_UI: 'react://ui-components',
+  LEGACY_SHELL_MAIN: '旧桌面壳://main-process',
+  LEGACY_SHELL_RENDERER: '旧桌面壳://renderer-process',
+  PHASER_ENGINE: '旧前端游戏引擎://game-engine',
+  REACT_UI: '旧前端框架://ui-components',
 } as const;
 
 // CloudEvents 1.0构建器和验证函数
@@ -184,7 +184,7 @@ sequenceDiagram
   Player->>UI: start app
   UI->>Bus: cloudevent {type: "${DOMAIN_PREFIX}.app.started"}
   Bus->>Main: dispatch -> init services
-  Main-->>UI: app-ready (ipc)
+  Main-->>UI: app-ready (进程间通信)
 ```
 
 ## 5. 背压/批处理（最小策略，Base）
@@ -232,14 +232,14 @@ import { mkEvent, assertCe } from '@/shared/contracts/cloudevents-core';
 test('CloudEvents 1.0 minimal fields compliance', () => {
   const event = mkEvent({
     type: 'app.test.demo',
-    source: 'app://vitegame/test',
+    source: 'app://旧项目/test',
   });
 
   expect(event.specversion).toBe('1.0');
   expect(event.id).toBeDefined();
   expect(event.time).toBeDefined();
   expect(event.type).toBe('app.test.demo');
-  expect(event.source).toBe('app://vitegame/test');
+  expect(event.source).toBe('app://旧项目/test');
 
   // 验证CloudEvents 1.0规范合规性
   assertCe(event);

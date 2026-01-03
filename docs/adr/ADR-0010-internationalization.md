@@ -38,7 +38,7 @@ supersedes: []
 
 ## Context and Problem Statement
 
-Build Game需要支持多语言和多地区，提供本地化的用户体验。需要建立可扩展的国际化架构，支持动态语言切换、复数形式处理、日期时间格式化、文本方向性（RTL/LTR）和文化敏感内容适配。同时需要考虑Electron应用的特殊性，确保主进程和渲染进程的语言设置同步。
+Build Game需要支持多语言和多地区，提供本地化的用户体验。需要建立可扩展的国际化架构，支持动态语言切换、复数形式处理、日期时间格式化、文本方向性（RTL/LTR）和文化敏感内容适配。同时需要考虑旧桌面壳应用的特殊性，确保主进程和渲染进程的语言设置同步。
 
 ## Decision Drivers
 
@@ -48,20 +48,20 @@ Build Game需要支持多语言和多地区，提供本地化的用户体验。�
 - 需要本地化日期、时间、数字、货币格式
 - 需要支持从右到左（RTL）语言如阿拉伯语
 - 需要延迟加载语言包，减少初始化时间
-- 需要与Electron主进程语言设置同步
+- 需要与旧桌面壳主进程语言设置同步
 - 需要支持插件和扩展的国际化
 
 ## Considered Options
 
-- **react-i18next + 命名空间 + 懒加载** (选择方案)
-- **Format.js (React Intl) + 分包加载**
+- **旧前端框架-i18next + 命名空间 + 懒加载** (选择方案)
+- **Format.js (旧前端框架 Intl) + 分包加载**
 - **自定义i18n引擎 + JSON语言包**
-- **Electron locales API + React context**
+- **旧桌面壳 locales API + 旧前端框架 context**
 - **第三方云端翻译服务集成**
 
 ## Decision Outcome
 
-选择的方案：**react-i18next + 命名空间 + 懒加载**
+选择的方案：**旧前端框架-i18next + 命名空间 + 懒加载**
 
 ### 核心配置与初始化
 
@@ -70,18 +70,18 @@ Build Game需要支持多语言和多地区，提供本地化的用户体验。�
 ```typescript
 // src/shared/i18n/config.ts
 import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import { initReactI18next } from '旧前端框架-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';
 
 export const SUPPORTED_LANGUAGES = {
-  'zh-CN': { name: '中文（简体）', flag: '🇨🇳', rtl: false },
-  'zh-TW': { name: '中文（繁體）', flag: '🇹🇼', rtl: false },
-  en: { name: 'English', flag: '🇺🇸', rtl: false },
-  ja: { name: '日本語', flag: '🇯🇵', rtl: false },
-  ko: { name: '한국어', flag: '🇰🇷', rtl: false },
-  de: { name: 'Deutsch', flag: '🇩🇪', rtl: false },
-  ar: { name: 'العربية', flag: '🇸🇦', rtl: true },
+  'zh-CN': { name: '中文（简体）', flag: '', rtl: false },
+  'zh-TW': { name: '中文（繁體）', flag: '', rtl: false },
+  en: { name: 'English', flag: '', rtl: false },
+  ja: { name: '日本語', flag: '', rtl: false },
+  ko: { name: '한국어', flag: '', rtl: false },
+  de: { name: 'Deutsch', flag: '', rtl: false },
+  ar: { name: 'العربية', flag: '', rtl: true },
 } as const;
 
 export const DEFAULT_NAMESPACE = 'common';
@@ -118,8 +118,8 @@ const i18nConfig = {
     allowMultiLoading: false,
   },
 
-  // React配置
-  react: {
+  // 旧前端框架配置
+  旧前端框架: {
     useSuspense: true,
     bindI18n: 'languageChanged loaded',
     bindI18nStore: 'added removed',
@@ -130,7 +130,7 @@ const i18nConfig = {
 
   // 插值配置
   interpolation: {
-    escapeValue: false, // React已经防XSS
+    escapeValue: false, // 旧前端框架已经防XSS
     formatSeparator: ',',
     format: function (value, format, lng) {
       if (format === 'uppercase') return value.toUpperCase();
@@ -228,14 +228,14 @@ export default i18n;
 }
 ```
 
-### React组件集成
+### 旧前端框架组件集成
 
 **Hook封装**：
 
 ```typescript
 // src/shared/i18n/hooks.ts
-import { useTranslation } from 'react-i18next';
-import { useCallback, useMemo } from 'react';
+import { useTranslation } from '旧前端框架-i18next';
+import { useCallback, useMemo } from '旧前端框架';
 import { SUPPORTED_LANGUAGES } from './config';
 
 export interface UseI18nReturn {
@@ -265,9 +265,9 @@ export function useI18n(namespace?: string | string[]): UseI18nReturn {
   const changeLanguage = useCallback(
     async (lng: string) => {
       await i18n.changeLanguage(lng);
-      // 同步到Electron主进程
-      if (window.electronAPI) {
-        await window.electronAPI.setLanguage(lng);
+      // 同步到旧桌面壳主进程
+      if (window.legacyShellApi) {
+        await window.legacyShellApi.setLanguage(lng);
       }
       // 更新HTML lang属性
       document.documentElement.lang = lng;
@@ -378,7 +378,7 @@ export const useErrorsI18n = () => useI18n('errors');
 
 ```typescript
 // src/components/common/LanguageSwitcher.tsx
-import React, { Suspense } from 'react';
+import 旧前端框架, { Suspense } from '旧前端框架';
 import { useI18n } from '../../shared/i18n/hooks';
 
 export interface LanguageSwitcherProps {
@@ -387,7 +387,7 @@ export interface LanguageSwitcherProps {
   className?: string;
 }
 
-export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
+export const LanguageSwitcher: 旧前端框架.FC<LanguageSwitcherProps> = ({
   variant = 'dropdown',
   showFlags = true,
   className = ''
@@ -474,7 +474,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
 };
 
 // Suspense包装器，处理懒加载
-export const LanguageSwitcherWithSuspense: React.FC<LanguageSwitcherProps> = (props) => {
+export const LanguageSwitcherWithSuspense: 旧前端框架.FC<LanguageSwitcherProps> = (props) => {
   return (
     <Suspense fallback={<div className="w-20 h-8 bg-gray-200 animate-pulse rounded"></div>}>
       <LanguageSwitcher {...props} />
@@ -483,17 +483,17 @@ export const LanguageSwitcherWithSuspense: React.FC<LanguageSwitcherProps> = (pr
 };
 ```
 
-### Electron集成
+### 旧桌面壳集成
 
 **主进程语言同步**：
 
 ```typescript
-// electron/i18n.ts
-import { app, ipcMain } from 'electron';
+// 旧桌面壳/i18n.ts
+import { app, ipcMain } from '旧桌面壳';
 import * as path from 'path';
 import * as fs from 'fs';
 
-export class ElectronI18nManager {
+export class LegacyShellI18nManager {
   private currentLanguage: string;
   private supportedLanguages = ['zh-CN', 'zh-TW', 'en', 'ja', 'ko', 'de', 'ar'];
 
@@ -572,7 +572,7 @@ export class ElectronI18nManager {
     // 应用新菜单...
   }
 
-  private buildLocalizedMenuTemplate(): Electron.MenuItemConstructorOptions[] {
+  private buildLocalizedMenuTemplate(): 旧桌面壳.MenuItemConstructorOptions[] {
     const translations = this.loadMainProcessTranslations();
 
     return [
@@ -635,13 +635,13 @@ export class ElectronI18nManager {
         __dirname,
         '../locales',
         this.currentLanguage,
-        'electron.json'
+        '旧桌面壳.json'
       );
       const translations = JSON.parse(fs.readFileSync(translationPath, 'utf8'));
       return translations.menu || {};
     } catch (error) {
       console.warn(
-        `Failed to load main process translations for ${this.currentLanguage}:`,
+        `Failed to load 宿主进程 translations for ${this.currentLanguage}:`,
         error
       );
       return {};
@@ -673,10 +673,10 @@ export class ElectronI18nManager {
 **预加载脚本API**：
 
 ```typescript
-// electron/preload.ts (添加i18n相关API)
-import { contextBridge, ipcRenderer } from 'electron';
+// 旧桌面壳/preload.ts (添加i18n相关API)
+import { 旧桥接层, ipcRenderer } from '旧桌面壳';
 
-contextBridge.exposeInMainWorld('electronAPI', {
+旧桥接层.exposeInMainWorld('legacyShellApi', {
   // ... 其他API ...
 
   // 国际化API
@@ -803,7 +803,7 @@ export const usePluralExamples = () => {
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import i18n from '../../../src/shared/i18n/config';
 import { useI18n } from '../../../src/shared/i18n/hooks';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/旧前端框架';
 
 describe('Internationalization', () => {
   beforeEach(() => {
@@ -950,16 +950,16 @@ describe('Internationalization', () => {
 **E2E国际化测试**：
 
 ```typescript
-// tests/e2e/i18n.electron.spec.ts
-import { test, expect, _electron as electron } from '@playwright/test';
+// tests/e2e/i18n.旧桌面壳.spec.ts
+import { test, expect, _legacy_shell as 旧桌面壳 } from '@旧 E2E 工具/test';
 
 test.describe('Internationalization E2E', () => {
   let app: any;
   let window: any;
 
   test.beforeAll(async () => {
-    app = await electron.launch({
-      args: ['./electron/main.js'],
+    app = await 旧桌面壳.launch({
+      args: ['./旧桌面壳/main.js'],
       timeout: 10000,
     });
 
@@ -1016,7 +1016,7 @@ test.describe('Internationalization E2E', () => {
     const htmlDir = await window.evaluate(() => document.documentElement.dir);
     expect(htmlDir).toBe('rtl');
 
-    // 🆕 验证CSS样式是否正确响应RTL布局
+    //  验证CSS样式是否正确响应RTL布局
     const bodyElement = window.locator('body');
     await expect(bodyElement).toHaveCSS('direction', 'rtl');
 
@@ -1034,7 +1034,7 @@ test.describe('Internationalization E2E', () => {
       .textContent();
     expect(title).toContain('العاب'); // Arabic text
 
-    // 🆕 验证Flexbox布局在RTL下的正确性
+    //  验证Flexbox布局在RTL下的正确性
     const flexContainer = window.locator('[data-testid="flex-container"]');
     if ((await flexContainer.count()) > 0) {
       await expect(flexContainer).toHaveCSS(
@@ -1068,8 +1068,8 @@ test.describe('Internationalization E2E', () => {
 
     // 重启应用
     await app.close();
-    app = await electron.launch({
-      args: ['./electron/main.js'],
+    app = await 旧桌面壳.launch({
+      args: ['./旧桌面壳/main.js'],
       timeout: 10000,
     });
     window = await app.firstWindow();
@@ -1113,7 +1113,7 @@ class I18nValidator {
   }
 
   async validate() {
-    console.log('🌐 Validating internationalization...');
+    console.log(' Validating internationalization...');
 
     await this.validateDirectoryStructure();
     await this.validateLanguageFiles();
@@ -1296,20 +1296,20 @@ class I18nValidator {
   }
 
   reportResults() {
-    console.log('\n📊 I18n Validation Results:');
+    console.log('\n I18n Validation Results:');
 
     if (this.errors.length === 0 && this.warnings.length === 0) {
-      console.log('✅ All internationalization files are valid!');
+      console.log(' All internationalization files are valid!');
       return;
     }
 
     if (this.errors.length > 0) {
-      console.log(`\n❌ ${this.errors.length} Error(s):`);
+      console.log(`\n ${this.errors.length} Error(s):`);
       this.errors.forEach(error => console.log(`   • ${error}`));
     }
 
     if (this.warnings.length > 0) {
-      console.log(`\n⚠️  ${this.warnings.length} Warning(s):`);
+      console.log(`\n  ${this.warnings.length} Warning(s):`);
       this.warnings.forEach(warning => console.log(`   • ${warning}`));
     }
   }
@@ -1328,7 +1328,7 @@ validator.validate().catch(console.error);
     "i18n:extract": "i18next-scanner --config i18next-scanner.config.js",
     "i18n:sync": "node scripts/sync_translations.mjs",
     "test:i18n": "vitest run tests/unit/i18n/",
-    "test:i18n:e2e": "playwright test tests/e2e/i18n.electron.spec.ts",
+    "test:i18n:e2e": "旧 E2E 工具 test tests/e2e/i18n.旧桌面壳.spec.ts",
     "guard:i18n": "npm run i18n:validate && npm run test:i18n && npm run test:i18n:e2e"
   }
 }
@@ -1338,7 +1338,7 @@ validator.validate().catch(console.error);
 
 - 支持多语言动态切换，提升全球用户体验
 - 命名空间和懒加载减少应用启动时间和内存占用
-- 与Electron深度集成，主进程和渲染进程语言同步
+- 与旧桌面壳深度集成，主进程和渲染进程语言同步
 - 支持复杂复数形式和文化敏感格式化
 - 完整的测试覆盖确保国际化功能稳定性
 - 自动化验证脚本确保翻译质量和一致性
@@ -1355,7 +1355,7 @@ validator.validate().catch(console.error);
 
 ## Verification
 
-- **核心验证**: tests/unit/i18n/i18n.spec.ts, tests/e2e/i18n.electron.spec.ts
+- **核心验证**: tests/unit/i18n/i18n.spec.ts, tests/e2e/i18n.旧桌面壳.spec.ts
 - **验证脚本**: scripts/verify_i18n.mjs
 - **监控指标**: i18n.language_switch_success_rate, i18n.translation_load_time, i18n.missing_keys_count
 - **质量门禁**: 100%翻译键覆盖率，语言切换E2E测试100%通过率
@@ -1375,11 +1375,11 @@ validator.validate().catch(console.error);
 
 ### 升级步骤
 
-1. **依赖安装**: 安装react-i18next、i18next相关包和类型定义
+1. **依赖安装**: 安装旧前端框架-i18next、i18next相关包和类型定义
 2. **配置部署**: 创建i18n配置文件和hook封装
 3. **语言包创建**: 建立语言包目录结构和初始翻译文件
-4. **组件集成**: 在React组件中集成useI18n hook
-5. **Electron集成**: 配置主进程语言同步和菜单本地化
+4. **组件集成**: 在旧前端框架组件中集成useI18n hook
+5. **旧桌面壳集成**: 配置主进程语言同步和菜单本地化
 6. **测试部署**: 建立单元测试和E2E测试套件
 
 ### 回滚步骤
@@ -1403,9 +1403,9 @@ validator.validate().catch(console.error);
 - **CH章节关联**: CH01, CH04, CH10
 - **相关ADR**: ADR-0001-tech-stack, ADR-0005-quality-gates
 - **外部文档**:
-  - [react-i18next Documentation](https://react.i18next.com/)
+  - [旧前端框架-i18next Documentation](https://旧前端框架.i18next.com/)
   - [i18next Configuration](https://www.i18next.com/overview/configuration-options)
   - [Unicode Locale Data Markup Language](https://unicode.org/reports/tr35/)
-  - [Electron Localization](https://www.electronjs.org/docs/latest/tutorial/localization)
+  - [旧桌面壳 Localization](https://www.legacy-shell.invalid/docs/latest/tutorial/localization)
 - **国际化标准**: BCP 47 Language Tags, Unicode CLDR, ISO 639 Language Codes
 - **相关PRD-ID**: 适用于所有需要多语言支持的PRD功能模块

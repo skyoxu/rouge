@@ -2,13 +2,13 @@
 
 ## 实施状态检查
 
-### ADR-0002 Electron安全基线
+### ADR-0002 旧桌面壳安全基线
 
-- [ ] contextIsolation = true
-- [ ] nodeIntegration = false
+- [ ] 旧隔离开关 = true
+- [ ] 旧脚本集成开关 = false
 - [ ] sandbox = true
-- [ ] 严格CSP策略已配置
-- [ ] preload脚本使用contextBridge白名单API
+- [ ] 严格Web 内容安全策略策略已配置
+- [ ] preload脚本使用旧桥接层白名单API
 
 ### ADR-0003 可观测性系统
 
@@ -21,7 +21,7 @@
 
 - [ ] CloudEvents格式事件定义
 - [ ] 类型安全的事件系统
-- [ ] IPC通信契约已定义
+- [ ] 进程间通信通信契约已定义
 - [ ] 事件版本化策略已实施
 
 ### ADR-0005 质量门禁
@@ -36,7 +36,7 @@
 ### Base文档 (docs/architecture/base/)
 
 - [ ] 01-约束与目标-增强版.md
-- [ ] 02-安全基线(Electron).md
+- [ ] 02-安全基线(Godot).md
 - [ ] 03-可观测性(Sentry+日志)增强版.md
 - [ ] 04-系统上下文与C4+事件流.md
 - [ ] 05-数据模型与存储端口.md

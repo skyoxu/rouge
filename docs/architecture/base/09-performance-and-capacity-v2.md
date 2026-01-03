@@ -17,7 +17,7 @@ C4Context
     Person(dev, "Developer", "性能测试与优化")
     Person(qa, "QA Engineer", "性能验证与基准测试")
     Person(ops, "Operations", "生产性能监控")
-    System(app, "Unknown Product", "Electron游戏应用")
+    System(app, "Unknown Product", "旧桌面壳游戏应用")
     System_Ext(perf_tools, "Performance Tools", "Lighthouse/Perfetto/Chrome DevTools")
     System_Ext(ci_system, "CI/CD System", "自动化性能门禁")
     System_Ext(monitoring, "APM System", "应用性能监控平台")
@@ -40,26 +40,26 @@ C4Context
 C4Container
     title Performance Monitoring Containers for Unknown Product
     System_Boundary(app_boundary, "Unknown Product Application") {
-        Container(game_engine, "Game Engine", "Phaser 3", "游戏渲染与逻辑")
-        Container(ui_layer, "UI Layer", "React 19", "用户界面渲染")
+        Container(game_engine, "Game Engine", "旧前端游戏引擎 3", "游戏渲染与逻辑")
+        Container(ui_layer, "UI Layer", "旧前端框架 19", "用户界面渲染")
         Container(perf_tracker, "Performance Tracker", "TypeScript", "性能指标追踪")
         Container(scenario_runner, "Scenario Runner", "TypeScript", "场景权重执行")
     }
     System_Boundary(perf_infra, "Performance Infrastructure") {
-        Container(perf_gate, "Performance Gate", "Node.js Script", "性能门禁脚本")
+        Container(perf_gate, "Performance Gate", "旧脚本运行时 Script", "性能门禁脚本")
         Container(baseline_mgr, "Baseline Manager", "JSON Files", "基线快照管理")
         Container(debt_tracker, "Debt Tracker", "TypeScript", "性能债务追踪")
         Container(budget_enforcer, "Budget Enforcer", "TypeScript", "预算阶梯执行")
     }
     System_Boundary(tools_boundary, "Performance Tools") {
-        Container(lighthouse, "Lighthouse CI", "Node.js", "Web性能测试")
+        Container(lighthouse, "Lighthouse CI", "旧脚本运行时", "Web性能测试")
         Container(perfetto, "Perfetto Tracer", "Chrome", "深度性能追踪")
         Container(vitest_perf, "Vitest Perf", "Testing", "性能单元测试")
     }
     System_Ext(sentry_perf, "Sentry Performance", "性能监控云服务")
 
     Rel(game_engine, perf_tracker, "上报FPS/内存", "事件发射")
-    Rel(ui_layer, perf_tracker, "上报交互延迟", "React Profiler")
+    Rel(ui_layer, perf_tracker, "上报交互延迟", "旧前端框架 Profiler")
     Rel(perf_tracker, scenario_runner, "场景性能测量", "API调用")
     Rel(scenario_runner, budget_enforcer, "预算检查", "阈值验证")
     Rel(perf_gate, baseline_mgr, "基线对比", "文件读写")
@@ -144,7 +144,7 @@ export interface BaselineSnapshot {
   metrics: Record<string, PerformanceMetric>;
   metadata: {
     nodeVersion: string;
-    electronVersion: string;
+    legacyShellVersion: string;
     os: string;
     cpu: string;
     memory: string;
@@ -202,7 +202,7 @@ export class BaselineManager {
     await this.saveBaseline(snapshot);
 
     console.log(
-      `📊 基线快照已创建: ${this.environment}@${snapshot.version} (${Object.keys(metrics).length}个指标)`
+      ` 基线快照已创建: ${this.environment}@${snapshot.version} (${Object.keys(metrics).length}个指标)`
     );
     return snapshot;
   }
@@ -348,13 +348,13 @@ export class BaselineManager {
     trends: TrendAnalysis[]
   ): string {
     if (violations.length === 0 && warnings.length === 0) {
-      return '✅ 所有性能指标均在预期范围内，继续保持！';
+      return ' 所有性能指标均在预期范围内，继续保持！';
     }
 
     const recommendations = [];
 
     if (violations.some(v => v.severity === 'critical')) {
-      recommendations.push('🚨 发现严重性能回归，建议立即回滚或修复');
+      recommendations.push(' 发现严重性能回归，建议立即回滚或修复');
     }
 
     const worseningTrends = trends.filter(
@@ -362,19 +362,19 @@ export class BaselineManager {
     );
     if (worseningTrends.length > 0) {
       recommendations.push(
-        `📈 检测到${worseningTrends.length}个恶化趋势，建议安排性能优化任务`
+        ` 检测到${worseningTrends.length}个恶化趋势，建议安排性能优化任务`
       );
     }
 
     if (violations.some(v => v.rule.includes('startup'))) {
-      recommendations.push('⚡ 启动性能回归，检查初始化逻辑和资源加载');
+      recommendations.push(' 启动性能回归，检查初始化逻辑和资源加载');
     }
 
     if (violations.some(v => v.rule.includes('memory'))) {
-      recommendations.push('🧠 内存使用异常，检查内存泄漏和对象池管理');
+      recommendations.push(' 内存使用异常，检查内存泄漏和对象池管理');
     }
 
-    return recommendations.join('；') || '⚠️ 发现性能异常，建议进一步分析';
+    return recommendations.join('；') || ' 发现性能异常，建议进一步分析';
   }
 
   // 性能门禁执行
@@ -409,7 +409,7 @@ export class BaselineManager {
         return { passed: true, exitCode: 0, report }; // 通过
       }
     } catch (error) {
-      const errorReport = `❌ 性能门禁执行失败: ${error instanceof Error ? error.message : error}`;
+      const errorReport = ` 性能门禁执行失败: ${error instanceof Error ? error.message : error}`;
       return { passed: false, exitCode: 1, report: errorReport };
     }
   }
@@ -662,17 +662,17 @@ export class BaselineManager {
   private generateReport(analysis: any): string {
     const { passed, violations, warnings, trends, recommendation } = analysis;
 
-    let report = '\n📊 性能基线漂移分析报告\n';
+    let report = '\n 性能基线漂移分析报告\n';
     report += '═'.repeat(50) + '\n';
 
     // 整体状态
-    report += `状态: ${passed ? '✅ 通过' : '❌ 失败'}\n`;
+    report += `状态: ${passed ? ' 通过' : ' 失败'}\n`;
     report += `时间: ${new Date().toISOString()}\n`;
     report += `环境: ${this.environment}\n\n`;
 
     // 违规报告
     if (violations.length > 0) {
-      report += '🚨 性能违规:\n';
+      report += ' 性能违规:\n';
       violations.forEach((v: any, i: number) => {
         report += `  ${i + 1}. [${v.severity.toUpperCase()}] ${v.rule}\n`;
         report += `     漂移: ${v.drift.toFixed(1)}% (阈值: ±${v.threshold}%)\n`;
@@ -683,7 +683,7 @@ export class BaselineManager {
 
     // 警告报告
     if (warnings.length > 0) {
-      report += '⚠️  性能警告:\n';
+      report += '  性能警告:\n';
       warnings.forEach((w: any, i: number) => {
         report += `  ${i + 1}. ${w.rule}: ${w.drift.toFixed(1)}% (${w.trend})\n`;
       });
@@ -692,7 +692,7 @@ export class BaselineManager {
 
     // 趋势分析
     if (trends.length > 0) {
-      report += '📈 趋势分析:\n';
+      report += ' 趋势分析:\n';
       const worseningTrends = trends.filter(
         (t: any) => t.direction === 'worsening' && t.confidence > 0.5
       );
@@ -710,7 +710,7 @@ export class BaselineManager {
     }
 
     // 建议
-    report += '💡 建议:\n';
+    report += ' 建议:\n';
     report += `  ${recommendation}\n\n`;
 
     return report;
@@ -748,7 +748,7 @@ export class BaselineManager {
       );
     } catch (error) {
       console.warn(
-        '⚠️ 保存分析结果失败:',
+        ' 保存分析结果失败:',
         error instanceof Error ? error.message : error
       );
     }
@@ -817,7 +817,7 @@ export interface TrendAnalysis {
 
 ## E) Lighthouse/Tracing 集成（可选）
 
-- Web 目标页引入 **Lighthouse CI** 断言；桌面应用用 **Chromium/Perfetto tracing** 进行深挖。
+- Web 目标页引入 **Lighthouse CI** 断言；桌面应用用 **旧浏览器运行时/Perfetto tracing** 进行深挖。
 
 ## F) 性能债务登记（可审计）
 
@@ -869,13 +869,13 @@ class PerformanceGateRunner {
           this.showHelp();
       }
     } catch (error) {
-      console.error('❌ 性能门禁执行失败:', error.message);
+      console.error(' 性能门禁执行失败:', error.message);
       process.exit(1);
     }
   }
 
   async captureBaseline() {
-    console.log('📊 开始采集性能基线...');
+    console.log(' 开始采集性能基线...');
 
     // 等待性能数据文件生成
     await this.waitForMetricsFile();
@@ -885,11 +885,11 @@ class PerformanceGateRunner {
     const metrics = JSON.parse(content);
 
     const snapshot = await this.manager.captureBaseline(metrics);
-    console.log(`✅ 基线快照已保存: ${snapshot.version}@${snapshot.commit}`);
+    console.log(` 基线快照已保存: ${snapshot.version}@${snapshot.commit}`);
   }
 
   async checkDrift() {
-    console.log('🔍 检查性能漂移...');
+    console.log(' 检查性能漂移...');
 
     await this.waitForMetricsFile();
     const metricsFile = '.perf-current.json';
@@ -902,14 +902,14 @@ class PerformanceGateRunner {
     console.log(this.formatAnalysisResult(analysis));
 
     if (!analysis.passed) {
-      console.log('⚠️  检测到性能回归，建议检查具体原因');
+      console.log('  检测到性能回归，建议检查具体原因');
     } else {
-      console.log('✅ 性能指标正常，无显著漂移');
+      console.log(' 性能指标正常，无显著漂移');
     }
   }
 
   async runGate() {
-    console.log('🚪 执行性能门禁...');
+    console.log(' 执行性能门禁...');
 
     const result = await this.manager.runPerformanceGate();
 
@@ -918,18 +918,18 @@ class PerformanceGateRunner {
 
     // 设置适当的退出码
     if (result.exitCode === 3) {
-      console.log('🚫 性能门禁失败，阻断部署');
+      console.log(' 性能门禁失败，阻断部署');
     } else if (result.exitCode === 2) {
-      console.log('⚠️  性能警告但允许部署');
+      console.log('  性能警告但允许部署');
     } else if (result.exitCode === 0) {
-      console.log('✅ 性能门禁通过');
+      console.log(' 性能门禁通过');
     }
 
     process.exit(result.exitCode);
   }
 
   async cleanupOldSnapshots() {
-    console.log('🧹 清理过期快照...');
+    console.log(' 清理过期快照...');
 
     const snapshotsDir = '.perf-baselines';
     const retentionDays = 30;
@@ -952,9 +952,9 @@ class PerformanceGateRunner {
         }
       }
 
-      console.log(`✅ 清理完成，删除了 ${cleanedCount} 个过期快照`);
+      console.log(` 清理完成，删除了 ${cleanedCount} 个过期快照`);
     } catch (error) {
-      console.log('⚠️  清理过程中出现问题:', error.message);
+      console.log('  清理过程中出现问题:', error.message);
     }
   }
 
@@ -976,11 +976,11 @@ class PerformanceGateRunner {
   }
 
   formatAnalysisResult(analysis) {
-    let output = '\n📊 性能漂移分析结果\n';
+    let output = '\n 性能漂移分析结果\n';
     output += '─'.repeat(40) + '\n';
 
     if (analysis.violations.length > 0) {
-      output += '🚨 发现性能违规:\n';
+      output += ' 发现性能违规:\n';
       analysis.violations.forEach((v, i) => {
         output += `  ${i + 1}. [${v.severity}] ${v.rule}\n`;
         output += `     漂移: ${v.drift.toFixed(1)}%，趋势: ${v.trend}\n`;
@@ -988,20 +988,20 @@ class PerformanceGateRunner {
     }
 
     if (analysis.warnings.length > 0) {
-      output += '\n⚠️  性能警告:\n';
+      output += '\n  性能警告:\n';
       analysis.warnings.forEach((w, i) => {
         output += `  ${i + 1}. ${w.rule}: ${w.drift.toFixed(1)}%\n`;
       });
     }
 
-    output += `\n💡 建议: ${analysis.recommendation}\n`;
+    output += `\n 建议: ${analysis.recommendation}\n`;
 
     return output;
   }
 
   showHelp() {
     console.log(`
-📊 性能基线管理工具
+ 性能基线管理工具
 
 用法:
   node scripts/performance_gate.mjs <command>
@@ -1067,7 +1067,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Setup 旧脚本运行时
         uses: actions/setup-node@v3
         with:
           node-version: '18'
@@ -1084,7 +1084,7 @@ jobs:
       - name: Check performance baseline exists
         run: |
           if [ ! -f .perf-baselines/baseline-${{ env.NODE_ENV }}-latest.json ]; then
-            echo "⚠️ 未找到性能基线，尝试采集..."
+            echo " 未找到性能基线，尝试采集..."
             npm run perf:capture-baseline
           fi
         env:

@@ -10,9 +10,9 @@
 
 ## 1. 背景与动机
 
-### 原版（vitegame）质量控制
-- Electron + JavaScript/TypeScript
-- Playwright E2E + Vitest 单元测试
+### 原版（旧项目）质量控制
+- 旧桌面壳 + JavaScript/TypeScript
+- 旧 E2E 工具 E2E + Vitest 单元测试
 - ESLint + Prettier 自动化
 - GitHub Actions 单一工作流
 
@@ -1066,7 +1066,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       
-      - name: Setup Node.js
+      - name: Setup 旧脚本运行时
         uses: actions/setup-node@v4
         with:
           node-version: '20'

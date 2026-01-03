@@ -26,7 +26,7 @@
 ## 章节导航（自动生成）
 
 - 01 约束与目标（v2 骨架）- arc42 §1 对齐版本：`docs/architecture/base/01-introduction-and-goals-v2.md`
-- 02 安全基线（Electron）v2 - 深度防御体系：`docs/architecture/base/02-security-baseline-electron-v2.md`
+- 02 安全基线（Godot）v2 - 深度防御体系：`docs/architecture/base/02-security-baseline-godot-v2.md`
 - .github/workflows/release-health-gate.yml：`docs/architecture/base/03-observability-sentry-logging-v2.md`
 - 04 system context c4 event flows v2：`docs/architecture/base/04-system-context-c4-event-flows-v2.md`
 - scripts/migration/run_migrations.mjs：`docs/architecture/base/05-data-models-and-storage-ports-v2.md`
@@ -41,7 +41,6 @@
 参考文件（Base 目录内）
 
 - `architecture-completeness-checklist.md`
-- `csp-policy-analysis.md`
 - `front-matter-standardization-example.md`
 
 ## Godot + C# 迁移口径（对齐 ADR-0018/0019）
@@ -51,17 +50,17 @@
   - 结构：Scenes（装配/信号）→ Adapters（仅封装 Godot API）→ Core（纯 C# 领域，可单测）。
   - 当前仓库路径映射：Core → `Game.Core`；Adapters → `Game.Godot`；Scenes → 工程根下 `.tscn` 资源；场景测试 → `Tests.Godot`；领域测试将于 Phase 4 恢复为 xUnit。
 - 安全基线
-  - 本目录新增 `02-security-baseline-godot-v2.md` 作为运行时基线（引用 ADR-0019），替代 Electron 版本的 02 章作为执行口径。
+  - 本目录新增 `02-security-baseline-godot-v2.md` 作为运行时基线（引用 ADR-0019），替代 旧桌面壳 版本的 02 章作为执行口径。
 - 契约 SSoT
   - 契约与事件仅落盘 `Game.Core/Contracts/**`（不依赖 Godot，不直接参与编译），各章节/用例引用路径，避免口径漂移。
 
 ## ADR 对齐（当前口径快照，自动生成）
 
-- Accepted：ADR-0001 / ADR-0002 / ADR-0003 / ADR-0004 / ADR-0005 / ADR-0006 / ADR-0007 / ADR-0008 / ADR-0010 / ADR-0011 / ADR-0015
-- Superseded：ADR-0009
+- Accepted：ADR-0003 / ADR-0004 / ADR-0005 / ADR-0006 / ADR-0007 / ADR-0008 / ADR-0010 / ADR-0011 / ADR-0015 / ADR-0018 / ADR-0019 / ADR-0020 / ADR-0021 / ADR-0022 / ADR-0023 / ADR-0024
+- Superseded：ADR-0001 / ADR-0002 / ADR-0009
 - Proposed：（无）
 
-提示：任何引用/删除/新增 ADR 后，请执行 `npm run prd:adr:sync` 与 `npm run guard:base` 确认无“未知/被替代”引用。
+提示：任何引用/删除/新增 ADR 后，请执行相关校验脚本确认无“未知/被替代”引用（本仓库默认以 Python/PowerShell 脚本为主）。
 
 ## 与 CI 的关系（Release Health & Perf）
 
@@ -71,7 +70,7 @@
 ## 注意事项（防漂移）
 
 - SSoT 始终以根目录 `architecture_base.index` 为准；本文件仅用于人工阅读，若与 SSoT 不一致，以 SSoT 为准。
-- 统一用 TypeScript/ESM；Electron 安全基线：`nodeIntegration=false`、`contextIsolation=true`、严格 CSP。
+- 工程主语言为 C#/.NET；自动化脚本以 Python 为主（Windows 环境请使用 `py -3`）；门禁入口见 `scripts/python/quality_gates.py`。
 - 任何“看起来像索引”的文件（含本文件）都不得被脚本消费为权威数据源。
 ## ADR Index (Godot Migration)
 
@@ -85,4 +84,8 @@
 Addenda
 - [ADR-0005 Addendum — Quality Gates for Godot+C#](../../adr/addenda/ADR-0005-godot-quality-gates-addendum.md)
 - [ADR-0006 Addendum — Data Storage for Godot](../../adr/addenda/ADR-0006-godot-data-storage-addendum.md)
-- [ADR-0015 Addendum — Performance Budgets for Godot](../../adr/addenda/ADR-0015-godot-performance-budgets-addendum.md)
+
+历史归档（不作为当前口径）
+
+- `docs/migration/legacy-base/02-security-baseline-legacy-v2.md`
+- `docs/migration/legacy-base/legacy-web-content-policy-analysis.md`

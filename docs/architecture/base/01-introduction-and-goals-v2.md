@@ -26,7 +26,7 @@ Stable anchors preserved for cross-references.
 ### 系统定位
 
 - **产品类型**: 深度生态模拟游戏 - 玩家作为 ${DOMAIN_GUILD} ${DOMAIN_LEADER} 管理完整虚拟生态系统
-- **技术栈核心**: Electron + React 19 + Phaser 3 + Vite + TypeScript + Tailwind CSS v4
+- **技术栈核心**: 旧桌面壳 + 旧前端框架 19 + 旧前端游戏引擎 3 + 旧构建工具 + TypeScript + Tailwind CSS v4
 - **平台约束**: Windows（主要）、macOS（次要），桌面端发行
 
 ### 核心边界
@@ -59,7 +59,7 @@ C4Context
     Person(player, "Game Player", "深度策略游戏玩家，管理虚拟生态系统")
     Person(dev_team, "Development Team", "游戏开发与维护团队")
     Person(ops_team, "Operations Team", "系统运维与发布管理")
-    System(game_app, "Unknown Product", "Electron深度生态模拟游戏")
+    System(game_app, "Unknown Product", "旧桌面壳深度生态模拟游戏")
     System_Ext(sentry, "dev-team", "错误追踪与性能监控平台")
     System_Ext(distribution, "Distribution Platform", "游戏分发平台（Steam等）")
     System_Ext(os_services, "OS Services", "Windows/macOS系统服务")
@@ -82,33 +82,33 @@ C4Context
 ```mermaid
 C4Container
     title Unknown Product System Containers
-    System_Boundary(electron_app, "Unknown Product Application") {
-        Container(main_process, "Main Process", "Electron/Node.js", "应用生命周期管理与系统集成")
-        Container(renderer_ui, "UI Renderer", "React 19/TypeScript", "用户界面与交互逻辑")
-        Container(game_engine, "Game Engine", "Phaser 3", "游戏渲染与物理引擎")
+    System_Boundary(LEGACY_SHELL_app, "Unknown Product Application") {
+        Container(main_process, "宿主进程", "旧桌面壳/旧脚本运行时", "应用生命周期管理与系统集成")
+        Container(renderer_ui, "UI Renderer", "旧前端框架 19/TypeScript", "用户界面与交互逻辑")
+        Container(game_engine, "Game Engine", "旧前端游戏引擎 3", "游戏渲染与物理引擎")
         Container(ai_system, "AI System", "TypeScript", "多层AI生态模拟")
         Container(event_bus, "Event Bus", "TypeScript", "事件池与事件处理")
         Container(data_layer, "Data Layer", "SQLite", "本地数据持久化")
     }
     System_Boundary(quality_infra, "Quality Infrastructure") {
-        Container(observability, "Observability SDK", "@sentry/electron", "错误追踪与性能监控")
+        Container(observability, "Observability SDK", "@sentry/旧桌面壳", "错误追踪与性能监控")
         Container(performance_tracker, "Performance Tracker", "TypeScript", "帧率与响应时间监控")
         Container(health_reporter, "Health Reporter", "TypeScript", "系统健康状态上报")
     }
     System_Boundary(security_layer, "Security Layer") {
-        Container(context_bridge, "Context Bridge", "Electron preload", "安全的IPC通信桥梁")
-        Container(csp_policy, "CSP Policy", "Security Headers", "内容安全策略执行")
-        Container(permission_handler, "Permission Handler", "Electron Security", "权限检查与控制")
+        Container(context_bridge, "Context Bridge", "旧桌面壳 preload", "安全的进程间通信通信桥梁")
+        Container(csp_policy, "Web 内容安全策略 Policy", "Security Headers", "内容安全策略执行")
+        Container(permission_handler, "Permission Handler", "旧桌面壳 Security", "权限检查与控制")
     }
     System_Ext(sentry_cloud, "dev-team", "云端监控服务")
     System_Ext(file_system, "File System", "操作系统文件存储")
 
-    Rel(main_process, renderer_ui, "IPC通信", "contextBridge")
+    Rel(main_process, renderer_ui, "进程间通信通信", "旧桥接层")
     Rel(renderer_ui, game_engine, "游戏控制", "JavaScript API")
     Rel(game_engine, ai_system, "AI交互", "事件调用")
     Rel(ai_system, event_bus, "事件发布", "事件总线")
     Rel(event_bus, data_layer, "数据持久化", "SQL操作")
-    Rel(main_process, context_bridge, "安全桥接", "preload script")
+    Rel(main_process, context_bridge, "安全桥接", "旧预加载脚本")
     Rel(context_bridge, permission_handler, "权限检查", "安全API")
     Rel(observability, sentry_cloud, "遥测上报", "HTTPS")
     Rel(performance_tracker, health_reporter, "性能数据", "内部API")
@@ -131,7 +131,7 @@ C4Container
 - 可观测性
   - 覆盖率（错误/日志/Sentry 采样）
 - 安全性
-  - Electron 基线（Node/Context/Sandbox/CSP/Policy）
+  - 旧桌面壳 基线（Node/Context/Sandbox/Web 内容安全策略/Policy）
 
 <!-- sec:1.2 -->
 
@@ -142,7 +142,7 @@ C4Container
 | NFR-1 | **可靠性**       | Crash-Free Sessions | `>= 99.5%`（滚动24h）    | Sentry Release Health   | 全局        |
 | NFR-2 | **性能效率**     | 帧率                | 60 FPS（≈ 16.7ms/frame） | 内置性能计与自定义埋点  | 游戏循环    |
 | NFR-3 | **事件处理时延** | TP95                | `<= 50ms`                | 自定义事件总线计量      | 事件处理    |
-| NFR-4 | **关键交互时延** | TP95                | `<= 100ms`               | Playwright E2E + 自埋点 | UI 关键操作 |
+| NFR-4 | **关键交互时延** | TP95                | `<= 100ms`               | 旧 E2E 工具 E2E + 自埋点 | UI 关键操作 |
 | NFR-5 | **可观测性**     | 错误上报覆盖率      | `>= 95%`（关键路径）     | Sentry/日志             | 全局        |
 
 **说明**
@@ -241,22 +241,22 @@ node scripts/release-health-gate.js   --window %RH_WINDOW_HOURS%   --adoption %R
 
 > 说明：具体阈值与窗口在 §07 门禁与 §03 报警模板中落地，且需干系人（PM/Dev/Ops）共同批准。
 
-## 1.5 硬约束（含 Electron 安全基线）
+## 1.5 硬约束（含 旧桌面壳 安全基线）
 
 <!-- sec:1.5 -->
 
-### Electron 安全基线（强制）
+### 旧桌面壳 安全基线（强制）
 
-- `nodeIntegration=false`、`contextIsolation=true`、`sandbox=true`
-- 严格 `Content-Security-Policy`（生产通过**响应头**注入；开发可 `meta` 兜底）
+- `旧脚本集成开关=false`、`旧隔离开关=true`、`sandbox=true`
+- 严格 `Web 内容安全策略`（生产通过**响应头**注入；开发可 `meta` 兜底）
 - 默认 **Permissions-Policy** 拒绝高危能力（例如 `geolocation=(), camera=(), microphone=()`）
 - `Cross-Origin-Opener-Policy: same-origin`；`Cross-Origin-Embedder-Policy: require-corp`（按特性开关）
-- IPC **白名单 + 双处理器**：`setPermissionCheckHandler` + `setPermissionRequestHandler`
+- 进程间通信 **白名单 + 双处理器**：`setPermissionCheckHandler` + `setPermissionRequestHandler`
 
 ### 技术栈与版本约束
 
-- Electron/Node/Chromium 主版本下限由 §7 质量门禁脚本校验
-- 前端栈：Electron + React 18 + Vite + TypeScript + Tailwind CSS + Phaser 3
+- 旧桌面壳/Node/旧浏览器运行时 主版本下限由 §7 质量门禁脚本校验
+- 前端栈：旧桌面壳 + 旧前端框架 18 + 旧构建工具 + TypeScript + Tailwind CSS + 旧前端游戏引擎 3
 
 ## 1.6 干系人（Stakeholders）
 
@@ -296,7 +296,7 @@ node scripts/release-health-gate.js   --window %RH_WINDOW_HOURS%   --adoption %R
 ### 核心假设
 
 - 允许在发布管道中拉取 Sentry Release Health 指标
-- 允许在 Electron 主进程注入响应头（自定义 `app://` 协议）
+- 允许在 旧桌面壳 主进程注入响应头（自定义 `app://` 协议）
 
 ## 1.8 术语表（Glossary）
 
@@ -336,7 +336,7 @@ node scripts/release-health-gate.js   --window %RH_WINDOW_HOURS%   --adoption %R
 
 - [ ] 小节完整（1.1–1.10）且 **锚点齐全**（`<!-- sec:X.X -->`）
 - [ ] **NFR/SLO 可量化**，并与 §1.4 放量门禁联动
-- [ ] **硬约束清晰**（Electron 安全基线、策略头、IPC 白名单）
+- [ ] **硬约束清晰**（旧桌面壳 安全基线、策略头、进程间通信 白名单）
 - [ ] **追踪矩阵**可双向检索（PRD ↔ NFR/SLO ↔ ADR ↔ 测试）
 - [ ] **契约代码/测试占位**存在并能 `pnpm test` 通过
 

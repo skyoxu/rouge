@@ -9,7 +9,7 @@
 Production-ready Godot 4.5 + C# game template with enterprise-grade tooling.
 
 ### Why This Template
-- **Migrated from**: vitegame (Electron + Phaser) → Godot 4.5 + C# .NET 8
+- **Migrated from**: legacy project → Godot 4.5 + C# .NET 8
 - **Purpose**: Eliminate setup overhead with pre-configured best practices
 - **For**: Windows desktop games (simulation, management, strategy)
 
@@ -23,7 +23,7 @@ Production-ready Godot 4.5 + C# game template with enterprise-grade tooling.
 
 ---
 
-## 3‑Minute From Zero to Export（3 分钟从 0 到导出）
+## 3-Minute From Zero to Export（3 分钟从 0 到导出）
 
 1) 安装 Godot .NET（mono）并设置环境：
    - `setx GODOT_BIN C:\Godot\Godot_v4.5.1-stable_mono_win64.exe`
@@ -35,7 +35,7 @@ Production-ready Godot 4.5 + C# game template with enterprise-grade tooling.
    - `./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Rouge.exe`
    - `./scripts/ci/smoke_exe.ps1 -ExePath build\Rouge.exe`
 
-One‑liner（已在 Editor 安装 Export Templates 后）：
+One-liner（已在 Editor 安装 Export Templates 后）：
 - PowerShell：`$env:GODOT_BIN='C:\\Godot\\Godot_v4.5.1-stable_mono_win64.exe'; ./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Rouge.exe; ./scripts/ci/smoke_exe.ps1 -ExePath build\Rouge.exe`
 
 ## What You Get（模板内容）

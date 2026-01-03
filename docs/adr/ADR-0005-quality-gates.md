@@ -6,8 +6,8 @@ decision-time: '2025-08-17'
 deciders: [架构团队, QA团队, DevOps团队]
 archRefs: [CH01, CH03, CH07, CH09]
 verification:
-  - path: tests/e2e/smoke.electron.spec.ts
-    assert: Electron 应用可启动且 preload API 可用
+  - path: tests/e2e/smoke.旧桌面壳.spec.ts
+    assert: 旧桌面壳 应用可启动且 preload API 可用
   - path: scripts/quality_gates.mjs
     assert: 单元测试覆盖率达标，阈值为硬编码且不可绕过
   - path: scripts/perf/assert-p95.mjs
@@ -15,8 +15,8 @@ verification:
   - path: scripts/release-health-gate.mjs
     assert: Release Health 阈值通过方可继续
 impact-scope:
-  [tests/, scripts/quality_gates.mjs, playwright.config.ts, vitest.config.ts]
-tech-tags: [playwright, vitest, testing, quality-gates, ci-cd, coverage]
+  [tests/, scripts/quality_gates.mjs, 旧 E2E 工具.config.ts, vitest.config.ts]
+tech-tags: [旧 E2E 工具, vitest, testing, quality-gates, ci-cd, coverage]
 depends-on: [ADR-0002, ADR-0003]
 depended-by: [ADR-0008]
 test-coverage: tests/meta/quality-gates.spec.ts
@@ -24,9 +24,9 @@ monitoring-metrics:
   [test_coverage, test_success_rate, build_time, gate_pass_rate]
 executable-deliverables:
   - scripts/quality_gates.mjs
-  - tests/e2e/smoke.electron.spec.ts
+  - tests/e2e/smoke.旧桌面壳.spec.ts
   - vitest.config.ts
-  - playwright.config.ts
+  - 旧 E2E 工具.config.ts
 supersedes: []
 ---
 
@@ -52,7 +52,7 @@ AI 驱动开发需要"能跑 → 能用 → 不退化"的自动门禁护栏。�
   - **覆盖率**：Lines ≥ 90%、Branches ≥ 85%、Functions ≥ 88%、Statements ≥ 90%
   - **E2E 通过率**：≥ 95%，关键路径 100% 通过
   - **性能预算**：应用启动时间、内存、CPU 使用等 P95 指标达标（详见门禁脚本）
-- **测试金字塔**：Vitest（单元/契约）+ Playwright×Electron（E2E/安全/性能冒烟）
+- **测试金字塔**：Vitest（单元/契约）+ 旧 E2E 工具×旧桌面壳（E2E/安全/性能冒烟）
 
 **职责分离原则**：专用工作流（Phase 7 AI 代码审查、Phase 10 文档同步验证）仅负责其特定领域验证，**不重复执行**覆盖率等通用质量检查。
 
@@ -61,7 +61,7 @@ AI 驱动开发需要"能跑 → 能用 → 不退化"的自动门禁护栏。�
   - **阻塞条件**：Critical 级别问题数量 > 0 时阻止 PR 合并
   - **安全规则覆盖**：
     - ESLint 安全插件（eslint-plugin-security, eslint-plugin-no-unsanitized 等 5+ 规则）
-    - 自定义 Electron 安全规则（no-node-integration, no-context-isolation-false, validate-ipc-params）
+    - 自定义 旧桌面壳 安全规则（no-node-integration, no-context-isolation-false, validate-进程间通信-params）
   - **AI 分析配置**：
     - 最小分析级别：medium severity
     - 上下文代码行数：±5 lines
@@ -76,18 +76,18 @@ AI 驱动开发需要"能跑 → 能用 → 不退化"的自动门禁护栏。�
     - 脚本：`scripts/ci/ai-semantic-review.mjs`, `scripts/ci/lint-to-json.mjs`
     - PR 集成：`scripts/pr-integration.mjs` (扩展 PRCommentGenerator 类)
     - npm 脚本：`phase7:review` (完整工作流), `ai:review` (仅 AI 分析)
-  - **相关 ADR**：ADR-0002 (Electron 安全基线), ADR-0004 (事件总线与契约)
+  - **相关 ADR**：ADR-0002 (旧桌面壳 安全基线), ADR-0004 (事件总线与契约)
 - **Phase 10: 文档同步验证门禁（Documentation Sync Validation Gate）**：
   - **目标**：自动检测代码-文档不一致，强制契约变更同步文档更新
   - **职责边界（关键原则）**：
-    - **doc-sync 工作流专注领域**：文档一致性验证（ADR 引用、契约-文档同步、testid 覆盖、Electron 安全配置）
+    - **doc-sync 工作流专注领域**：文档一致性验证（ADR 引用、契约-文档同步、testid 覆盖、旧桌面壳 安全配置）
     - **明确不负责代码质量检查**：doc-sync 工作流**不运行** `vitest --coverage`、`jscpd`、`complexity-report` 等代码质量工具
     - **覆盖率由 guard:ci 统一约束**：单元测试覆盖率（≥90% lines, ≥85% branches）、代码重复度、复杂度、依赖守卫等质量检查，统一在全局 `npm run guard:ci` 中执行，确保单一入口、避免重复检查
   - **验证规则（4 层）**：
     1. **ADR 引用一致性（MEDIUM 严重性）**：PR 引用的 ADR 必须存在且与变更相关，非阻塞
     2. **契约变更 → 08 章文档同步（HIGH 严重性）**：`src/shared/contracts/**` 变更必须同步更新对应 `docs/architecture/overlays/<PRD-ID>/08/**` 文档，阻塞合并
-    3. **data-testid 覆盖（LOW 严重性）**：新增 data-testid 应有对应 Playwright 测试，非阻塞
-    4. **Electron 安全配置同步（HIGH 严重性）**：`electron/main.ts` 或 `electron/preload.ts` 变更必须同步更新 `docs/adr/ADR-0002-electron-security.md`，阻塞合并
+    3. **data-testid 覆盖（LOW 严重性）**：新增 data-testid 应有对应 旧 E2E 工具 测试，非阻塞
+    4. **旧桌面壳 安全配置同步（HIGH 严重性）**：`旧桌面壳/main.ts` 或 `旧桌面壳/preload.ts` 变更必须同步更新 `docs/adr/ADR-0002-旧桌面壳-security.md`，阻塞合并
   - **阻塞逻辑**：仅 HIGH 严重性问题阻止 PR 合并，MEDIUM/LOW 问题仅警告
   - **工作流**：
     - 个别检查器 → `validate-doc-sync.mjs` 聚合 → `generate-doc-sync-report.mjs` → PR 评论
@@ -109,15 +109,15 @@ AI 驱动开发需要"能跑 → 能用 → 不退化"的自动门禁护栏。�
   - **测试覆盖**：
     - 单元测试：`tests/unit/scripts/ci/check-*.test.mjs`, `tests/unit/scripts/ci/validate-doc-sync.test.mjs`
     - E2E 测试：`tests/e2e/ci/doc-sync-workflow.spec.ts`
-  - **相关 ADR**：ADR-0002 (Electron 安全基线), ADR-0004 (事件总线与契约)
-- CI 规范（Windows-only）：所有 Job 运行在 `windows-latest` 且 `pwsh`；Playwright 安装使用 `npx playwright install`（Windows 无需 `--with-deps`）。
+  - **相关 ADR**：ADR-0002 (旧桌面壳 安全基线), ADR-0004 (事件总线与契约)
+- CI 规范（Windows-only）：所有 Job 运行在 `windows-latest` 且 `pwsh`；旧 E2E 工具 安装使用 `npx 旧 E2E 工具 install`（Windows 无需 `--with-deps`）。
 - 日志规约：构建/测试/门禁日志统一落盘 `logs/YYYYMMDD/{unit|guard|e2e}/`。
 - **分支保护要求（Branch Protection Rules）**：
   - **主分支强制门禁**：以下 CI 检查必须在 main 分支上配置为 Required Status Checks：
     - `Playable Smoke (T2 Gate)`：交互式可玩度测试，确保核心游戏循环可用
     - `Unit Tests (coverage)`：单元测试覆盖率门禁，确保代码质量基线
     - `AI-Assisted Code Review` **(Phase 7)**：AI 辅助代码审查，阻止 Critical 级别安全/质量问题合并
-    - `Documentation Sync Validation` **(Phase 10)**：文档同步验证，阻止 HIGH 严重性文档不一致问题合并（契约变更必须同步文档更新、Electron 安全配置变更必须同步 ADR-0002）
+    - `Documentation Sync Validation` **(Phase 10)**：文档同步验证，阻止 HIGH 严重性文档不一致问题合并（契约变更必须同步文档更新、旧桌面壳 安全配置变更必须同步 ADR-0002）
   - **PR 软门禁策略**：以下检查在 PR 上保持 `continue-on-error: true`，用于建立基线与发现趋势，但不阻塞合并：
     - `Static Quality Soft Gate`：代码重复、复杂度、依赖守卫（jscpd/complexity-report/depcruise/madge）
     - 其他性能与可观测性指标
@@ -138,12 +138,12 @@ AI 驱动开发需要"能跑 → 能用 → 不退化"的自动门禁护栏。�
 ## Verification
 
 - 单元：覆盖率报告 + 硬编码阈值校验。
-- E2E：Electron 启动冒烟、关键交互 P95、预加载安全。
+- E2E：旧桌面壳 启动冒烟、关键交互 P95、预加载安全。
 - 门禁：类型检查、Lint、安全扫描、依赖与循环依赖守卫。
 
 ## References
 
 - CH 章节：CH07、CH05
 - 相关 ADR：ADR‑0002（安全）、ADR‑0003（可观测性）
-- 工具：Vitest、Playwright、GitHub Actions（Windows）
+- 工具：Vitest、旧 E2E 工具、GitHub Actions（Windows）
 - 延伸：ADR‑0017（Quality Intelligence Dashboard and Governance）— 定义统一质量快照最小 schema、隐私与阈值治理、非阻断质量洞察集成

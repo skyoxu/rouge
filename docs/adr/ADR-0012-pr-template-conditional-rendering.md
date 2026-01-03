@@ -20,7 +20,7 @@ PR 模板系统面临以下核心问题:
    - 平均 PR 模板长度 500+ 行,填写率 <30%
 
 2. **质量门禁缺失精准触发**: 现有门禁无法根据变更类型动态调整检查项
-   - Electron 安全变更未强制 Electronegativity 扫描结果
+   - 旧桌面壳 安全变更未强制 Legacy Security Scanner 扫描结果
    - 数据模型变更未强制迁移脚本与回滚方案
    - Bundle 大小变更未强制 Lighthouse 性能分数
 
@@ -67,12 +67,12 @@ PR Event → file-change-analyzer.mjs → pr-template-renderer.mjs → GitHub Ac
    ```javascript
    const FILE_WEIGHTS = {
      // 核心安全模块 (权重 10)
-     'electron/main.ts': 10,
-     'electron/preload.ts': 10,
-     'index.html': 10, // CSP 定义位置
+     '旧桌面壳/main.ts': 10,
+     '旧桌面壳/preload.ts': 10,
+     'index.html': 10, // Web 内容安全策略 定义位置
 
      // 构建与配置 (权重 5)
-     'vite.config.ts': 5,
+     '旧构建工具.config.ts': 5,
      'package.json': 5,
      '.github/workflows/**': 5,
 
@@ -92,8 +92,8 @@ PR Event → file-change-analyzer.mjs → pr-template-renderer.mjs → GitHub Ac
    ```javascript
    const CHANGE_TYPE_PATTERNS = {
      ui: [/src\/components\//i, /\.css$/i],
-     security: [/electron\/main\./i, /index\.html$/i],
-     performance: [/vite\.config/i, /bundle/i],
+     security: [/旧桌面壳\/main\./i, /index\.html$/i],
+     performance: [/旧构建工具\.config/i, /bundle/i],
      data: [/src\/shared\/contracts\//i, /migrations\//i],
      test: [/tests?\//i, /\.test\./i],
      config: [/package\.json$/i, /tsconfig/i],
@@ -111,7 +111,7 @@ PR Event → file-change-analyzer.mjs → pr-template-renderer.mjs → GitHub Ac
   "totalFiles": 15,
   "totalScore": 120,
   "changeTypes": {
-    "security": { "count": 3, "totalScore": 30, "files": ["electron/main.ts", ...] },
+    "security": { "count": 3, "totalScore": 30, "files": ["旧桌面壳/main.ts", ...] },
     "ui": { "count": 8, "totalScore": 12, "files": ["src/components/Button.tsx", ...] }
   },
   "summary": {
@@ -145,7 +145,7 @@ PR Event → file-change-analyzer.mjs → pr-template-renderer.mjs → GitHub Ac
        suggest: ['visual_regression', 'responsive_testing'], // 建议字段
      },
      security: {
-       trigger: ['electronegativity_scan', 'csp_impact', 'security_review'],
+       trigger: ['legacy_security_scanner_scan', 'csp_impact', 'security_review'],
        suggest: ['penetration_test'],
      },
      performance: {
@@ -164,15 +164,15 @@ PR Event → file-change-analyzer.mjs → pr-template-renderer.mjs → GitHub Ac
    ```
 
 2. **9 个详细字段模板**:
-   - `screenshots_videos`: 📸 截图/视频证据 (UI 变更必填)
-   - `a11y_impact`: ♿ 可访问性影响评估
-   - `electronegativity_scan`: 🛡️ Electronegativity 扫描结果
-   - `csp_impact`: 🔒 CSP 影响评估
-   - `security_review`: 🔍 安全审查记录
-   - `bundle_size_check`: 📦 Bundle 大小检查
-   - `lighthouse_score`: 🚀 Lighthouse 性能分数
-   - `migration_script`: 🗄️ 数据迁移脚本
-   - `config_change_reason`: ⚙️ 配置变更原因
+   - `screenshots_videos`:  截图/视频证据 (UI 变更必填)
+   - `a11y_impact`:  可访问性影响评估
+   - `legacy_security_scanner_scan`:  Legacy Security Scanner 扫描结果
+   - `csp_impact`:  Web 内容安全策略 影响评估
+   - `security_review`:  安全审查记录
+   - `bundle_size_check`:  Bundle 大小检查
+   - `lighthouse_score`:  Lighthouse 性能分数
+   - `migration_script`:  数据迁移脚本
+   - `config_change_reason`:  配置变更原因
 
 3. **渐进式渲染策略**:
    ```javascript
@@ -187,7 +187,7 @@ PR Event → file-change-analyzer.mjs → pr-template-renderer.mjs → GitHub Ac
 
 ```json
 {
-  "template": "## 📝 变更概述\n...\n## 📸 截图/视频证据...",
+  "template": "##  变更概述\n...\n##  截图/视频证据...",
   "requiredFields": ["screenshots_videos", "a11y_impact"],
   "suggestedFields": ["visual_regression"],
   "metadata": {
@@ -213,10 +213,10 @@ PR Event → file-change-analyzer.mjs → pr-template-renderer.mjs → GitHub Ac
 
    ```javascript
    // 检测是否已有自动生成内容
-   if (existingBody.includes('🤖 自动生成说明')) {
+   if (existingBody.includes(' 自动生成说明')) {
      // 仅替换自动生成部分 (从 --- 分隔符到末尾)
      updatedBody = existingBody.replace(
-       /---\s*>\s*\*\*🤖[\s\S]*$/,
+       /---\s*>\s*\*\*[\s\S]*$/,
        newTemplate
      );
    } else {
@@ -329,7 +329,7 @@ export function analyzeFileChanges(options = {}) {
   const output = execFn(`git diff --name-only ${baseSha} ${headSha}`);
 
   // 测试环境：注入 Mock 函数返回预设数据
-  // execFn = (cmd) => 'src/components/Button.tsx\nelectron/main.ts'
+  // execFn = (cmd) => 'src/components/Button.tsx\nlegacy-shell/main.ts'
 }
 ```
 
@@ -337,7 +337,7 @@ export function analyzeFileChanges(options = {}) {
 
 ```javascript
 it('should analyze file changes with injected exec function', () => {
-  const mockExec = cmd => 'src/components/Button.tsx\nelectron/main.ts';
+  const mockExec = cmd => 'src/components/Button.tsx\nlegacy-shell/main.ts';
   const result = analyzeFileChanges({ execFn: mockExec });
   expect(result.summary.ui).toBe(true);
   expect(result.summary.security).toBe(true);
@@ -449,17 +449,17 @@ it('should render template for UI changes', () => {
 
 **场景**：未来需要从外部文件读取模板片段
 
-**❌ 错误做法**：
+** 错误做法**：
 
 ```javascript
 // 直接在 renderer 中引入副作用
 import { readFileSync } from 'fs';
 export function renderPrTemplate(changeAnalysis) {
-  const template = readFileSync('./templates/base.md', 'utf-8'); // ❌ 破坏纯函数
+  const template = readFileSync('./templates/base.md', 'utf-8'); //  破坏纯函数
 }
 ```
 
-**✅ 正确做法**（适配器模式 - 已实施）：
+** 正确做法**（适配器模式 - 已实施）：
 
 ```javascript
 // Step 1: 创建适配器模块 (scripts/ci/render-cli.mjs)
@@ -507,8 +507,8 @@ main();
 
 ### Positive Consequences
 
-1. **质量门禁精准触发** (✅ 符合 ADR-0005):
-   - Electron 安全变更自动要求 Electronegativity 扫描结果
+1. **质量门禁精准触发** ( 符合 ADR-0005):
+   - 旧桌面壳 安全变更自动要求 Legacy Security Scanner 扫描结果
    - 数据模型变更自动要求迁移脚本与回滚方案
    - 性能变更自动要求 Bundle 大小与 Lighthouse 分数
 
@@ -523,7 +523,7 @@ main();
    - 渐进式渲染策略可根据反馈调整
 
 4. **遵循现有 ADR**:
-   - **ADR-0002 (Security Baseline)**: 强制 Electron 安全字段 (Electronegativity/CSP)
+   - **ADR-0002 (Security Baseline)**: 强制 旧桌面壳 安全字段 (Legacy Security Scanner/Web 内容安全策略)
    - **ADR-0005 (Quality Gates)**: 自动触发性能/覆盖率字段
    - **ADR-0011 (Windows-only)**: PowerShell 脚本 + `windows-latest` runner
 
@@ -555,7 +555,7 @@ main();
 ### File Structure
 
 ```
-vitegame/
+旧项目/
 ├── scripts/ci/
 │   ├── file-change-analyzer.mjs       # Component 1: 文件变更分析器 (338 lines)
 │   ├── pr-template-renderer.mjs       # Component 2a: PR 模板渲染器（纯函数层，422 lines）
@@ -585,14 +585,14 @@ vitegame/
 - [x] Windows 兼容性 (PowerShell 脚本 + `windows-latest` runner)
 - [x] 文档完善 (Phase 4 计划 + Phase 4.2 完成总结 + ADR-0012)
 - [ ] 单元测试 (Vitest - 待补充)
-- [ ] E2E 测试 (Playwright - 待补充)
+- [ ] E2E 测试 (旧 E2E 工具 - 待补充)
 
 ---
 
 ## References
 
 - **Related ADRs**:
-  - [ADR-0002: Electron Security Baseline](./ADR-0002-electron-security-baseline-v2.md)
+  - [ADR-0002: 旧桌面壳 Security Baseline](./ADR-0002-旧桌面壳-security-baseline-v2.md)
   - [ADR-0005: Quality Gates](./ADR-0005-quality-gates.md)
   - [ADR-0011: Windows-only Platform and CI](./ADR-0011-windows-only-platform-and-ci.md)
 
@@ -607,10 +607,10 @@ vitegame/
 
 - **Standards**:
   - [GitHub Actions Documentation](https://docs.github.com/en/actions)
-  - [Node.js ES Modules](https://nodejs.org/api/esm.html)
+  - [旧脚本运行时 ES Modules](https://旧脚本运行时.org/api/esm.html)
 
 ---
 
 **Decision Date**: 2025-10-26
 **Last Updated**: 2025-10-26
-**Status**: ✅ Accepted & Implemented
+**Status**:  Accepted & Implemented

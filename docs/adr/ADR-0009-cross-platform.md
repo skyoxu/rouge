@@ -13,7 +13,7 @@ verification:
   - path: scripts/perf/os-baselines.json
     assert: Per-OS performance baselines are within drift threshold
 impact-scope:
-  - electron/
+  - 旧桌面壳/
   - scripts/platform/
   - tests/e2e/platform/
 tech-tags:
@@ -30,7 +30,7 @@ monitoring-metrics:
   - compliance_rate
 executable-deliverables:
   - scripts/platform-detection.mjs
-  - electron/platform-specific.ts
+  - 旧桌面壳/platform-specific.ts
   - tests/e2e/platform/cross-platform.spec.ts
 supersedes: []
 superseded-by: [ADR-0011]
@@ -40,7 +40,7 @@ superseded-by: [ADR-0011]
 
 ## Context and Problem Statement
 
-Electron游戏应用需要在Windows、macOS、Linux三大平台上提供一致的用户体验，同时充分利用各平台的原生特性。需要处理平台间的差异，包括UI设计规范、文件系统、快捷键、系统集成、性能优化等方面，确保应用在各平台上都能正常运行并符合用户预期。
+旧桌面壳游戏应用需要在Windows、macOS、Linux三大平台上提供一致的用户体验，同时充分利用各平台的原生特性。需要处理平台间的差异，包括UI设计规范、文件系统、快捷键、系统集成、性能优化等方面，确保应用在各平台上都能正常运行并符合用户预期。
 
 ## Decision Drivers
 
@@ -187,7 +187,7 @@ export class WindowsFileSystemAdapter extends FileSystemAdapter {
   }
 
   async openFileExplorer(filePath: string): Promise<void> {
-    const { shell } = require('electron');
+    const { shell } = require('旧桌面壳');
     await shell.openPath(filePath);
   }
 
@@ -234,7 +234,7 @@ export class MacOSFileSystemAdapter extends FileSystemAdapter {
   }
 
   async openFileExplorer(filePath: string): Promise<void> {
-    const { shell } = require('electron');
+    const { shell } = require('旧桌面壳');
     await shell.showItemInFolder(filePath);
   }
 
@@ -502,7 +502,7 @@ export class WindowsThemeAdapter extends ThemeAdapter {
 
   isDarkMode(): boolean {
     // Windows系统主题检测
-    const { systemPreferences } = require('electron');
+    const { systemPreferences } = require('旧桌面壳');
     return systemPreferences.shouldUseDarkColors();
   }
 
@@ -546,7 +546,7 @@ export class MacOSThemeAdapter extends ThemeAdapter {
   }
 
   isDarkMode(): boolean {
-    const { systemPreferences } = require('electron');
+    const { systemPreferences } = require('旧桌面壳');
     return systemPreferences.isDarkMode();
   }
 
@@ -621,8 +621,8 @@ export interface WindowConfig {
 
 export abstract class WindowAdapter {
   abstract getWindowConfig(): WindowConfig;
-  abstract setupWindow(window: BrowserWindow): void;
-  abstract handleWindowEvents(window: BrowserWindow): void;
+  abstract setupWindow(window: 旧窗口容器): void;
+  abstract handleWindowEvents(window: 旧窗口容器): void;
 }
 
 export class WindowsWindowAdapter extends WindowAdapter {
@@ -639,7 +639,7 @@ export class WindowsWindowAdapter extends WindowAdapter {
     };
   }
 
-  setupWindow(window: BrowserWindow): void {
+  setupWindow(window: 旧窗口容器): void {
     // Windows特定的窗口设置
     window.setMenuBarVisibility(false);
 
@@ -652,7 +652,7 @@ export class WindowsWindowAdapter extends WindowAdapter {
     }
   }
 
-  handleWindowEvents(window: BrowserWindow): void {
+  handleWindowEvents(window: 旧窗口容器): void {
     window.on('minimize', () => {
       // Windows最小化行为
       window.hide();
@@ -681,7 +681,7 @@ export class MacOSWindowAdapter extends WindowAdapter {
     };
   }
 
-  setupWindow(window: BrowserWindow): void {
+  setupWindow(window: 旧窗口容器): void {
     // macOS特定的窗口设置
     window.setWindowButtonVisibility(true);
 
@@ -692,7 +692,7 @@ export class MacOSWindowAdapter extends WindowAdapter {
     window.setFullScreenable(true);
   }
 
-  handleWindowEvents(window: BrowserWindow): void {
+  handleWindowEvents(window: 旧窗口容器): void {
     window.on('close', event => {
       // macOS标准行为：隐藏窗口而不是退出应用
       if (!app.isQuittingAll) {
@@ -722,7 +722,7 @@ export class LinuxWindowAdapter extends WindowAdapter {
     };
   }
 
-  setupWindow(window: BrowserWindow): void {
+  setupWindow(window: 旧窗口容器): void {
     // Linux特定的窗口设置
     window.setIcon(path.join(__dirname, '../assets/icon.png'));
 
@@ -732,7 +732,7 @@ export class LinuxWindowAdapter extends WindowAdapter {
     }
   }
 
-  handleWindowEvents(window: BrowserWindow): void {
+  handleWindowEvents(window: 旧窗口容器): void {
     window.on('close', () => {
       // Linux标准行为：直接关闭应用
       app.quit();
@@ -757,7 +757,7 @@ export abstract class SystemIntegrationAdapter {
 
 export class WindowsSystemIntegrationAdapter extends SystemIntegrationAdapter {
   async setupAutoStart(enabled: boolean): Promise<void> {
-    const { app } = require('electron');
+    const { app } = require('旧桌面壳');
 
     app.setLoginItemSettings({
       openAtLogin: enabled,
@@ -768,7 +768,7 @@ export class WindowsSystemIntegrationAdapter extends SystemIntegrationAdapter {
   }
 
   async createDesktopShortcut(): Promise<void> {
-    const { shell, app } = require('electron');
+    const { shell, app } = require('旧桌面壳');
     const shortcutPath = path.join(os.homedir(), 'Desktop', 'BuildGame.lnk');
 
     shell.writeShortcutLink(shortcutPath, 'create', {
@@ -781,7 +781,7 @@ export class WindowsSystemIntegrationAdapter extends SystemIntegrationAdapter {
   }
 
   setupSystemTray(): Tray | null {
-    const { Tray, Menu, nativeImage } = require('electron');
+    const { Tray, Menu, nativeImage } = require('旧桌面壳');
     const iconPath = path.join(__dirname, '../assets/tray-icon.ico');
     const icon = nativeImage.createFromPath(iconPath);
 
@@ -800,7 +800,7 @@ export class WindowsSystemIntegrationAdapter extends SystemIntegrationAdapter {
   }
 
   handleDeepLinks(protocol: string): void {
-    const { app } = require('electron');
+    const { app } = require('旧桌面壳');
 
     if (process.defaultApp) {
       if (process.argv.length >= 2) {
@@ -921,23 +921,23 @@ export class PlatformAdapterFactory {
 }
 ```
 
-### React跨平台UI组件
+### 旧前端框架跨平台UI组件
 
 **平台感知UI组件**：
 
 ```tsx
 // src/components/platform/PlatformButton.tsx
-import React from 'react';
+import 旧前端框架 from '旧前端框架';
 import { PlatformAdapterFactory } from '../../shared/platform/platform-adapter.factory';
 
 interface PlatformButtonProps {
-  children: React.ReactNode;
+  children: 旧前端框架.ReactNode;
   onClick: () => void;
   variant?: 'primary' | 'secondary';
   className?: string;
 }
 
-export const PlatformButton: React.FC<PlatformButtonProps> = ({
+export const PlatformButton: 旧前端框架.FC<PlatformButtonProps> = ({
   children,
   onClick,
   variant = 'primary',
@@ -1013,7 +1013,7 @@ export class PlatformPerformanceOptimizer {
 
   private static optimizeForWindows(): void {
     // Windows特定优化
-    const { app } = require('electron');
+    const { app } = require('旧桌面壳');
 
     // 启用Windows硬件加速
     app.commandLine.appendSwitch('enable-gpu-rasterization');
@@ -1026,7 +1026,7 @@ export class PlatformPerformanceOptimizer {
 
   private static optimizeForMacOS(): void {
     // macOS特定优化
-    const { app } = require('electron');
+    const { app } = require('旧桌面壳');
 
     // 启用macOS原生渲染
     app.commandLine.appendSwitch('enable-quartz-compositor');
@@ -1040,7 +1040,7 @@ export class PlatformPerformanceOptimizer {
 
   private static optimizeForLinux(): void {
     // Linux特定优化
-    const { app } = require('electron');
+    const { app } = require('旧桌面壳');
 
     // 启用GPU加速
     app.commandLine.appendSwitch('enable-gpu');
@@ -1121,9 +1121,9 @@ export class PlatformPerformanceOptimizer {
 ## References
 
 - **CH章节关联**: CH09, CH01, CH10
-- **相关ADR**: ADR-0001-tech-stack, ADR-0008-deployment-release, ADR-0002-electron-security
+- **相关ADR**: ADR-0001-tech-stack, ADR-0008-deployment-release, ADR-0002-旧桌面壳-security
 - **外部文档**:
-  - [Electron Platform APIs](https://www.electronjs.org/docs/api/process)
+  - [旧桌面壳 Platform APIs](https://www.legacy-shell.invalid/docs/api/process)
   - [Windows Design Guidelines](https://docs.microsoft.com/en-us/windows/apps/design/)
   - [macOS Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/macos)
   - [GNOME Human Interface Guidelines](https://developer.gnome.org/hig/)

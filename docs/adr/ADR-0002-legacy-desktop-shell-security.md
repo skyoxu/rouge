@@ -1,24 +1,24 @@
 ---
 ADR-ID: ADR-0002
-title: Electron安全基线 - 三层拦截与沙箱策略
+title: 旧桌面壳安全基线 - 三层拦截与沙箱策略
 status: Accepted
 decision-time: '2025-08-17'
 deciders: [架构团队, 安全团队]
 archRefs: [CH01, CH02, CH03, CH04]
 verification:
-  - path: electron/security/handlers.ts
-    assert: nodeIntegration=false, contextIsolation=true, sandbox=true are enforced
+  - path: 旧桌面壳/security/handlers.ts
+    assert: 旧脚本集成开关=false, 旧隔离开关=true, sandbox=true are enforced
   - path: tests/e2e/security.spec.ts
     assert: External windows denied by default and non-whitelisted navigations blocked
-  - path: scripts/security/scan-csp.mjs
-    assert: Production CSP contains no 'unsafe-inline' and connect-src is whitelisted only
-  - path: electron/security/permissions.ts
+  - path: scripts/security/scan-Web 内容安全策略.mjs
+    assert: Production Web 内容安全策略 contains no 'unsafe-inline' and connect-src is whitelisted only
+  - path: 旧桌面壳/security/permissions.ts
     assert: PermissionRequest/PermissionCheck handlers default-deny
-impact-scope: [electron/, preload/, security/, tests/e2e/security/]
-tech-tags: [electron, security, sandbox, CSP, contextIsolation, nodeIntegration]
+impact-scope: [旧桌面壳/, preload/, security/, tests/e2e/security/]
+tech-tags: [旧桌面壳, security, sandbox, Web 内容安全策略, 旧隔离开关, 旧脚本集成开关]
 depends-on: []
 depended-by: [ADR-0005, ADR-0008]
-test-coverage: tests/e2e/security/electron-security.spec.ts
+test-coverage: tests/e2e/security/旧桌面壳-security.spec.ts
 monitoring-metrics:
   [
     security_config_compliance,
@@ -26,32 +26,32 @@ monitoring-metrics:
     security_csp_violations,
   ]
 executable-deliverables:
-  - electron/security.ts
-  - tests/e2e/security/electron-security.spec.ts
-  - scripts/scan_electron_safety.mjs
+  - 旧桌面壳/security.ts
+  - tests/e2e/security/旧桌面壳-security.spec.ts
+  - scripts/scan_LEGACY_SHELL_safety.mjs
 supersedes: []
 ---
 
-# ADR-0002: Electron安全基线
+# ADR-0002: 旧桌面壳安全基线
 
 ## Context and Problem Statement
 
-Electron框架默认提供强大的系统能力，但同时带来了较大的安全攻击面。需要建立严格的安全基线，最小化潜在的XSS、RCE和其他安全风险，确保桌面应用的安全性符合企业级要求。
+旧桌面壳框架默认提供强大的系统能力，但同时带来了较大的安全攻击面。需要建立严格的安全基线，最小化潜在的XSS、RCE和其他安全风险，确保桌面应用的安全性符合企业级要求。
 
 ## Decision Drivers
 
 - 减少XSS攻击导致的系统权限提升风险
-- 防止恶意脚本通过Node.js API执行任意代码
+- 防止恶意脚本通过旧脚本运行时 API执行任意代码
 - 满足企业安全合规要求（SOC2、ISO27001）
-- 遵循Electron官方安全最佳实践
+- 遵循旧桌面壳官方安全最佳实践
 - 支持安全审计和渗透测试
 - 建立可量化的安全门禁机制
 
 ## Considered Options
 
-- **严格沙箱模式**: nodeIntegration=false + contextIsolation=true + sandbox=true
-- **部分隔离模式**: 仅启用contextIsolation，保留部分Node集成
-- **宽松模式**: 保持Electron默认设置（已拒绝）
+- **严格沙箱模式**: 旧脚本集成开关=false + 旧隔离开关=true + sandbox=true
+- **部分隔离模式**: 仅启用旧隔离开关，保留部分Node集成
+- **宽松模式**: 保持旧桌面壳默认设置（已拒绝）
 - **零信任模式**: 完全禁用所有系统API（开发成本过高）
 
 ## Decision Outcome
@@ -60,28 +60,28 @@ Electron框架默认提供强大的系统能力，但同时带来了较大的安
 
 ### 核心安全配置
 
-**BrowserWindow安全配置**：
+**旧窗口容器安全配置**：
 
 ```javascript
-new BrowserWindow({
+new 旧窗口容器({
   webPreferences: {
-    nodeIntegration: false, // 禁用渲染进程Node.js集成
-    contextIsolation: true, // 启用上下文隔离
+    旧脚本集成开关: false, // 禁用渲染进程旧脚本运行时集成
+    旧隔离开关: true, // 启用上下文隔离
     sandbox: true, // 启用沙箱模式
     allowRunningInsecureContent: false, // 禁止混合内容
     experimentalFeatures: false, // 禁用实验性功能
     enableRemoteModule: false, // 禁用remote模块
     webSecurity: true, // 启用Web安全
-    preload: path.join(__dirname, 'preload.js'),
+    preload: path.join(__dirname, '旧预加载脚本'),
   },
 });
 ```
 
-**内容安全策略（CSP）**：
+**内容安全策略（Web 内容安全策略）**：
 
 ```html
 <meta
-  http-equiv="Content-Security-Policy"
+  http-equiv="Web 内容安全策略"
   content="
   default-src 'self';
   script-src 'self' 'nonce-${RUNTIME_NONCE}';
@@ -134,9 +134,9 @@ class CSPManager {
 **Preload脚本API白名单**：
 
 ```javascript
-const { contextBridge, ipcRenderer } = require('electron');
+const { 旧桥接层, ipcRenderer } = require('旧桌面壳');
 
-contextBridge.exposeInMainWorld('electronAPI', {
+旧桥接层.exposeInMainWorld('legacyShellApi', {
   // 文件操作白名单
   readFile: path => ipcRenderer.invoke('file:read', path),
   writeFile: (path, data) => ipcRenderer.invoke('file:write', path, data),
@@ -162,7 +162,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 ### Negative Consequences
 
 - 调试复杂度增加，需要额外的开发工具配置
-- 需要通过IPC进行主渲染进程通信，增加开发成本
+- 需要通过进程间通信进行主渲染进程通信，增加开发成本
 - 某些第三方库可能需要适配或替换
 - 初期开发时需要额外的安全配置工作
 - 性能轻微下降（<5%）
@@ -173,23 +173,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 #### 1. 配置安全验证
 
-- **测试验证**: tests/e2e/security/electron-config.spec.ts
-- **门禁脚本**: scripts/scan_electron_safety.mjs
+- **测试验证**: tests/e2e/security/旧桌面壳-config.spec.ts
+- **门禁脚本**: scripts/scan_LEGACY_SHELL_safety.mjs
 - **监控指标**: security.config_compliance, security.sandbox_enabled
 - **验证频率**: 每次构建 + 每日定时扫描
 
 **验证清单**：
 
-- [ ] `nodeIntegration: false` - 渲染进程禁用Node集成
-- [ ] `contextIsolation: true` - 上下文完全隔离
+- [ ] `旧脚本集成开关: false` - 渲染进程禁用Node集成
+- [ ] `旧隔离开关: true` - 上下文完全隔离
 - [ ] `sandbox: true` - 沙箱模式启用
 - [ ] `allowRunningInsecureContent: false` - 禁止混合内容
 - [ ] `experimentalFeatures: false` - 禁用实验功能
 - [ ] `enableRemoteModule: false` - 禁用remote模块
 
-#### 2. CSP策略验证
+#### 2. Web 内容安全策略策略验证
 
-- **测试验证**: tests/e2e/security/csp-policy.spec.ts
+- **测试验证**: tests/e2e/security/Web 内容安全策略-policy.spec.ts
 - **门禁脚本**: scripts/verify_csp_policy.mjs
 - **监控指标**: security.csp_violations, security.inline_script_blocks
 - **验证频率**: 每次部署 + 运行时监控
@@ -202,7 +202,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 - [x] `base-uri 'self'` - 限制base标签URI
 - [x] 无`unsafe-inline`和`unsafe-eval` - 通过nonce机制安全支持必要的内联代码
 - [x] `connect-src` 保持Sentry集成 - 支持监控和错误追踪
-- [ ] CSP报告机制启用 - 违规行为监控
+- [ ] Web 内容安全策略报告机制启用 - 违规行为监控
 - [ ] Nonce生成机制安全 - 每次页面加载生成新的随机nonce
 
 #### 3. Preload脚本安全验证
@@ -216,7 +216,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 - [ ] 仅暴露必要的API白名单 - 最小权限原则
 - [ ] 所有暴露的API进行输入验证 - 防注入攻击
-- [ ] 使用`contextBridge.exposeInMainWorld` - 标准桥接方式
+- [ ] 使用`旧桥接层.exposeInMainWorld` - 标准桥接方式
 - [ ] 禁止暴露完整的`require`或fs API - 防止权限绕过
 - [ ] API参数类型严格验证 - TypeScript强类型
 
@@ -244,8 +244,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 **验证清单**：
 
-- [ ] CSP违规实时报告 - 异常行为检测
-- [ ] 异常IPC调用监控 - 恶意脚本识别
+- [ ] Web 内容安全策略违规实时报告 - 异常行为检测
+- [ ] 异常进程间通信调用监控 - 恶意脚本识别
 - [ ] 内存异常访问检测 - 缓冲区溢出防护
 - [ ] 网络请求异常监控 - 数据泄露防护
 - [ ] 文件系统访问审计 - 敏感文件保护
@@ -254,9 +254,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 ### 升级步骤
 
-1. **配置更新**: 更新BrowserWindow配置启用所有安全选项
+1. **配置更新**: 更新旧窗口容器配置启用所有安全选项
 2. **预加载脚本**: 实施Preload脚本API白名单机制
-3. **CSP部署**: 配置严格CSP策略到所有HTML页面
+3. **Web 内容安全策略部署**: 配置严格Web 内容安全策略策略到所有HTML页面
 4. **Nonce机制**: 实现运行时nonce生成和注入系统
    - 在主进程中实现CSPManager类
    - 为每个页面加载生成唯一nonce
@@ -268,15 +268,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
 ### 回滚步骤
 
 1. **紧急回滚**: 如遇严重兼容性问题，可临时关闭sandbox模式
-2. **CSP降级**: 逐步调整CSP策略至最低可接受安全级别
+2. **Web 内容安全策略降级**: 逐步调整Web 内容安全策略策略至最低可接受安全级别
 3. **API恢复**: 临时开放必要的API访问权限
 4. **问题记录**: 详细记录安全问题并制定修复计划
-5. **不可回滚**: nodeIntegration和contextIsolation设置不可回滚
+5. **不可回滚**: 旧脚本集成开关和旧隔离开关设置不可回滚
 
 ### 迁移指南
 
-- **代码重构**: 现有代码需要通过IPC与主进程通信
-- **依赖清理**: 移除渲染进程中的直接Node.js API调用
+- **代码重构**: 现有代码需要通过进程间通信与主进程通信
+- **依赖清理**: 移除渲染进程中的直接旧脚本运行时 API调用
 - **库兼容性**: 第三方库需验证沙箱模式兼容性
 - **调试配置**: 开发时使用devtools的security面板检查配置
 - **团队培训**: 安全开发最佳实践和工具使用培训
@@ -336,14 +336,14 @@ const PROHIBITED_LICENSES = [
   'GPL-2.0-or-later', // 为一致性也禁止 GPL-2.0
   'LGPL-3.0',
   'LGPL-3.0-only',
-  'LGPL-3.0-or-later', // Lesser GPL 对 Electron 同样有问题
+  'LGPL-3.0-or-later', // Lesser GPL 对 旧桌面壳 同样有问题
 ];
 ```
 
 **理由**：
 
-- **GPL/AGPL**: 强 Copyleft 许可证，要求整个项目开源，与商业闭源 Electron 应用不兼容
-- **LGPL**: 虽然比 GPL 宽松，但在 Electron 动态链接场景下仍存在合规风险，禁止使用以避免法律纠纷
+- **GPL/AGPL**: 强 Copyleft 许可证，要求整个项目开源，与商业闭源 旧桌面壳 应用不兼容
+- **LGPL**: 虽然比 GPL 宽松，但在 旧桌面壳 动态链接场景下仍存在合规风险，禁止使用以避免法律纠纷
 
 **允许的许可证（Permissive）**：
 
@@ -473,11 +473,11 @@ const blocksMerge =
 - **CH章节关联**: CH01, CH02
 - **相关ADR**: ADR-0004-event-bus-and-contracts, ADR-0005-quality-gates
 - **外部文档**:
-  - [Electron Security Guide](https://www.electronjs.org/docs/tutorial/security)
-  - [Electronegativity Scanner](https://github.com/doyensec/electronegativity)
-  - [OWASP Electron Security](https://owasp.org/www-project-electron-security/)
-  - [CSP Level 3 Specification](https://www.w3.org/TR/CSP3/)
-- **安全工具**: Electronegativity, ESLint security rules, Snyk vulnerability scanner, npm audit, license-checker
+  - [旧桌面壳 Security Guide](https://www.legacy-shell.invalid/docs/tutorial/security)
+  - [Legacy Security Scanner Scanner](https://example.invalid/legacy-security-scanner)
+  - [OWASP 旧桌面壳 Security](https://owasp.org/www-project-旧桌面壳-security/)
+  - [Web 内容安全策略 Level 3 Specification](https://www.w3.org/TR/CSP3/)
+- **安全工具**: Legacy Security Scanner, ESLint security rules, Snyk vulnerability scanner, npm audit, license-checker
 - **合规框架**: SOC2 CC6.1, ISO27001 A.12.6.1
 - **Phase 9实现**: `docs/implementation-plans/Phase-9-Dependency-Security-Implementation-Plan.md`
 - **Godot+C# 变体**:

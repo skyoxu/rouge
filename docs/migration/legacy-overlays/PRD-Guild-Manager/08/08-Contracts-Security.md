@@ -17,7 +17,7 @@ Status: Proposed
 
 变更意图（引用）
 
-- Electron 安全基线：见 ADR‑0002（CSP、contextIsolation 等）。
+- 旧桌面壳 安全基线：见 ADR‑0002（Web 内容安全策略、旧隔离开关 等）。
 - 契约与事件统一：见 ADR‑0004。
 - 质量门禁与发布健康：见 ADR‑0005。
 

@@ -46,15 +46,15 @@ interface GlossaryTerm {
 
 export const GlossaryTerms: Record<string, GlossaryTerm> = {
   contentSecurityPolicy: {
-    term: 'CSP',
+    term: 'Web 内容安全策略',
     definition: 'Content Security Policy',
     type: 'abbr',
     zhCN: '内容安全策略',
     enUS: 'Content Security Policy',
     source: 'ADR-0002',
     owner: 'Security',
-    aliases: ['content-security-policy', 'csp'],
-    i18nKey: 'glossary.security.csp',
+    aliases: ['Web 内容安全策略', 'Web 内容安全策略'],
+    i18nKey: 'glossary.security.Web 内容安全策略',
   },
   crashFreeSessions: {
     term: 'Crash‑Free Sessions',
@@ -116,12 +116,12 @@ const duplicates = detectDuplicates(terms);
 const i18nIssues = validateI18nConsistency(GlossaryTerms, i18nKeys);
 
 if (duplicates.duplicates.length || duplicates.aliases.length) {
-  console.error('❌ 发现重复术语:', duplicates);
+  console.error(' 发现重复术语:', duplicates);
   process.exit(1);
 }
 if (i18nIssues.missing.length || i18nIssues.invalid.length) {
-  console.error('❌ i18n不一致:', i18nIssues);
+  console.error(' i18n不一致:', i18nIssues);
   process.exit(1);
 }
-console.log(`✅ 词汇表校验通过 (${terms.length}个术语)`);
+console.log(` 词汇表校验通过 (${terms.length}个术语)`);
 ```

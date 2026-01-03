@@ -20,16 +20,16 @@ C4Container
     Person(dev, "Developer", "开发者提交代码")
     System_Boundary(devenv, "Development Environment") {
         Container(vscode, "VS Code/IDE", "TypeScript", "代码编辑与调试")
-        Container(vite, "Vite Dev Server", "Rollup", "热更新与开发构建")
-        Container(electron_main, "Electron Main", "Node.js", "主进程开发调试")
-        Container(electron_renderer, "Electron Renderer", "React 19", "渲染进程开发")
+        Container(旧构建工具, "旧构建工具 Dev Server", "Rollup", "热更新与开发构建")
+        Container(LEGACY_SHELL_main, "旧桌面壳 Main", "旧脚本运行时", "主进程开发调试")
+        Container(LEGACY_SHELL_renderer, "旧桌面壳 Renderer", "旧前端框架 19", "渲染进程开发")
     }
     System_Boundary(buildtools, "Build & Quality Tools") {
         Container(tsc, "TypeScript Compiler", "tsc", "类型检查与编译")
         Container(eslint, "ESLint", "AST", "代码质量检查")
         Container(vitest, "Vitest", "Testing", "单元测试与覆盖率")
-        Container(playwright, "Playwright", "E2E", "端到端测试")
-        Container(security_scan, "Security Scanner", "Node.js", "Electron安全扫描")
+        Container(旧 E2E 工具, "旧 E2E 工具", "E2E", "端到端测试")
+        Container(security_scan, "Security Scanner", "旧脚本运行时", "旧桌面壳安全扫描")
     }
     System_Boundary(cicd, "CI/CD Pipeline") {
         Container(github_actions, "GitHub Actions", "YAML", "自动化构建与部署")
@@ -37,15 +37,15 @@ C4Container
     }
     System_Ext(sentry, "dev-team", "监控与发布健康")
 
-    Rel(dev, vscode, "编写代码", "TypeScript/React")
-    Rel(vscode, vite, "启动开发服务器", "npm run dev")
-    Rel(vite, electron_main, "构建主进程", "esbuild")
-    Rel(vite, electron_renderer, "构建渲染进程", "HMR")
+    Rel(dev, vscode, "编写代码", "TypeScript/旧前端框架")
+    Rel(vscode, 旧构建工具, "启动开发服务器", "npm run dev")
+    Rel(旧构建工具, LEGACY_SHELL_main, "构建主进程", "esbuild")
+    Rel(旧构建工具, LEGACY_SHELL_renderer, "构建渲染进程", "HMR")
     Rel(dev, tsc, "类型检查", "tsc --noEmit")
     Rel(dev, eslint, "代码检查", "eslint .")
     Rel(dev, vitest, "运行单元测试", "vitest run")
-    Rel(dev, playwright, "运行E2E测试", "playwright test")
-    Rel(dev, security_scan, "安全扫描", "scan_electron_safety.mjs")
+    Rel(dev, 旧 E2E 工具, "运行E2E测试", "旧 E2E 工具 test")
+    Rel(dev, security_scan, "安全扫描", "scan_LEGACY_SHELL_safety.mjs")
     Rel(github_actions, release_health, "检查发布健康", "API调用")
     Rel(release_health, sentry, "获取crash-free指标", "HTTPS")
 ```
@@ -64,8 +64,8 @@ C4Dynamic
     Person(dev, "Developer")
     Container(local_env, "Local Environment", "开发环境")
     Container(ci_runner, "CI Runner", "GitHub Actions")
-    Container(quality_gates, "Quality Gates Script", "Node.js")
-    Container(security_scan, "Security Scanner", "scan_electron_safety.mjs")
+    Container(quality_gates, "Quality Gates Script", "旧脚本运行时")
+    Container(security_scan, "Security Scanner", "scan_LEGACY_SHELL_safety.mjs")
     Container(release_health, "Release Health", "release_health_check.mjs")
     System_Ext(sentry, "dev-team")
 
@@ -76,7 +76,7 @@ C4Dynamic
     Rel(quality_gates, quality_gates, "5. ESLint检查", "eslint .")
     Rel(quality_gates, quality_gates, "6. 单元测试", "vitest --coverage")
     Rel(quality_gates, security_scan, "7. 安全扫描", "执行脚本")
-    Rel(quality_gates, quality_gates, "8. E2E测试", "playwright test")
+    Rel(quality_gates, quality_gates, "8. E2E测试", "旧 E2E 工具 test")
     Rel(quality_gates, release_health, "9. 健康检查", "执行脚本")
     Rel(release_health, sentry, "10. 获取指标", "API调用")
     Rel(sentry, release_health, "11. 返回crash-free数据", "JSON响应")
@@ -91,8 +91,8 @@ C4Dynamic
 | TS            | `tsc --noEmit`             | 严格模式                      | fail     |
 | Lint          | `eslint`                   | `maxWarnings:0`               | fail     |
 | Unit          | `vitest --coverage`        | lines≥90%/branches≥85%        | fail     |
-| E2E           | `playwright`               | retries=2（CI）               | fail     |
-| Security      | `scan_electron_safety.mjs` | nodeIntegration=false 等      | fail     |
+| E2E           | `旧 E2E 工具`               | retries=2（CI）               | fail     |
+| Security      | `scan_LEGACY_SHELL_safety.mjs` | 旧脚本集成开关=false 等      | fail     |
 | Base          | `verify_base_clean.mjs`    | 禁业务耦合/占位符齐全         | fail     |
 | ReleaseHealth | `release_health_check.mjs` | crash‑free 用户/会话 + 采用率 | fail     |
 
@@ -103,25 +103,25 @@ C4Dynamic
 npm run typecheck
 npm run lint
 npm run test:unit:node
-npm run guard:electron
+npm run guard:旧桌面壳
 npm run test:e2e
 node scripts/release_health_check.mjs
 npm run guard:base
 ```
 
-## C) Electron 安全基线 & CSP 验证
+## C) 旧桌面壳 安全基线 & Web 内容安全策略 验证
 
 ```js
 // scripts/verify_csp.mjs（片段）
 import fs from 'node:fs';
 import { JSDOM } from 'jsdom';
 const html = fs.readFileSync('dist/index.html', 'utf-8');
-const csp = new JSDOM(html).window.document.querySelector(
-  'meta[http-equiv="Content-Security-Policy"]'
+const Web 内容安全策略 = new JSDOM(html).window.document.querySelector(
+  'meta[http-equiv="Web 内容安全策略"]'
 );
-if (!csp) throw new Error('Missing CSP meta');
-if (!/default-src 'self'/.test(csp.getAttribute('content')))
-  throw new Error("CSP must restrict to 'self'");
+if (!Web 内容安全策略) throw new Error('Missing Web 内容安全策略 meta');
+if (!/default-src 'self'/.test(Web 内容安全策略.getAttribute('content')))
+  throw new Error("Web 内容安全策略 must restrict to 'self'");
 ```
 
 ## D) Release Health（含 ENV 覆盖）
@@ -144,18 +144,18 @@ if (!/default-src 'self'/.test(csp.getAttribute('content')))
 | Release Health Gate | ADR-0003 | T07-RH-01  |
 | 质量门禁聚合        | ADR-0005 | T07-QG-01  |
 
-## F) Playwright官方API升级（Windows兼容性）
+## F) 旧 E2E 工具官方API升级（Windows兼容性）
 
 ```typescript
-// tests/e2e/utils/electron-launcher.ts（官方API模式）
-import { _electron as electron, ElectronApplication } from '@playwright/test';
+// tests/e2e/utils/旧桌面壳-launcher.ts（官方API模式）
+import { _legacy_shell as 旧桌面壳, LegacyShellApplication } from '@旧 E2E 工具/test';
 
 export async function launchApp(
   extraArgs: string[] = []
-): Promise<ElectronApplication> {
-  const appEntry = path.resolve(__dirname, '../../../dist-electron/main.js');
+): Promise<LegacyShellApplication> {
+  const appEntry = path.resolve(__dirname, '../../../dist-旧桌面壳/main.js');
 
-  return electron.launch({
+  return 旧桌面壳.launch({
     args: [appEntry, ...extraArgs],
     timeout: 30000, // 30秒启动超时
 
@@ -163,11 +163,11 @@ export async function launchApp(
     env: {
       ...process.env,
       // Windows需要此配置避免Chrome沙箱问题
-      ELECTRON_DISABLE_SANDBOX: 'true',
+      LEGACY_SHELL_DISABLE_SANDBOX: 'true',
       // 测试模式标识
       NODE_ENV: 'test',
       // 禁用GPU加速（CI环境兼容）
-      ELECTRON_DISABLE_GPU: 'true',
+      LEGACY_SHELL_DISABLE_GPU: 'true',
     },
 
     // 开发调试选项（仅非CI环境）
@@ -185,10 +185,10 @@ export async function launchApp(
 
 | 配置项                     | Windows值     | 说明                      |
 | -------------------------- | ------------- | ------------------------- |
-| `ELECTRON_DISABLE_SANDBOX` | `'true'`      | 避免Chrome沙箱权限问题    |
-| `ELECTRON_DISABLE_GPU`     | `'true'`      | CI环境GPU加速兼容         |
+| `LEGACY_SHELL_DISABLE_SANDBOX` | `'true'`      | 避免Chrome沙箱权限问题    |
+| `LEGACY_SHELL_DISABLE_GPU`     | `'true'`      | CI环境GPU加速兼容         |
 | `timeout`                  | `30000ms`     | Windows启动较慢，增加超时 |
-| `workers`                  | `1`（CI环境） | 避免Electron进程冲突      |
+| `workers`                  | `1`（CI环境） | 避免旧桌面壳进程冲突      |
 
 ### F.2) 测试启动器种类（按场景优化）
 
@@ -196,10 +196,10 @@ export async function launchApp(
 // 安全测试专用启动器
 export async function launchAppForSecurity(
   extraArgs: string[] = []
-): Promise<ElectronApplication> {
+): Promise<LegacyShellApplication> {
   return launchApp([
     '--test-mode',
-    '--enable-features=ElectronSerialChooser',
+    '--enable-features=LegacyShellSerialChooser',
     '--disable-features=VizDisplayCompositor',
     ...extraArgs,
   ]);
@@ -208,7 +208,7 @@ export async function launchAppForSecurity(
 // 性能测试专用启动器
 export async function launchAppForPerformance(
   extraArgs: string[] = []
-): Promise<ElectronApplication> {
+): Promise<LegacyShellApplication> {
   return launchApp([
     '--disable-web-security', // 仅测试环境
     '--disable-extensions',
@@ -224,32 +224,20 @@ export async function launchAppForPerformance(
 - [ ] `pnpm guard:ci` 全绿（本地与 CI）
 - [ ] `.ps1` 变体可在 Windows 运行
 - [ ] `.release-health.json` 的 crash-free 与 adoption 达标
-- [ ] `index.html` 含 CSP meta 且限制 `default-src 'self'`
-- [ ] 所有E2E测试使用官方 `_electron as electron` API
-- [ ] `tests/e2e/utils/electron-launcher.ts` 提供跨平台启动器
-- [ ] Windows环境下 `ELECTRON_DISABLE_SANDBOX=true` 生效
+- [ ] `index.html` 含 Web 内容安全策略 meta 且限制 `default-src 'self'`
+- [ ] 所有E2E测试使用官方 `_legacy_shell as 旧桌面壳` API
+- [ ] `tests/e2e/utils/旧桌面壳-launcher.ts` 提供跨平台启动器
+- [ ] Windows环境下 `LEGACY_SHELL_DISABLE_SANDBOX=true` 生效
 
-## 7.x 性能门禁（Electron 环境）
+## 7.x 性能门禁（Godot Headless）
 
-为 Electron 渲染路径的 FCP P95 测试提供“软/硬门禁 + 环境阈值 + 稳定采样”。策略在 ADR‑0015 附注中定义，这里给出可执行脚本与环境变量。
+为 Godot 运行时提供最小可执行的帧时间 P95 门禁：通过 Autoload `PerformanceTracker` 输出 `[PERF] ... p95_ms=...`，CI 侧解析 `headless.log` 并对比预算阈值。
 
-- 运行脚本（Windows 兼容，使用 cross-env）
-  - `npm run perf:fcp:dev:soft`：开发环境软门禁（默认 5 次采样）
-  - `npm run perf:fcp:dev:hard`：开发环境硬门禁
-  - `npm run perf:fcp:staging:soft`：预发软门禁
-  - `npm run perf:fcp:staging:hard`：预发硬门禁
-  - `npm run perf:fcp:prod:soft`：生产软门禁（仅告警）
-  - `npm run perf:fcp:prod:hard`：生产硬门禁（阈值不达直接失败）
-  - `npm run perf:fcp:ci`：CI 默认（软门禁，单 worker，稳定配置）
-
-- 环境变量（可覆盖默认）
-  - `FP_P95_THRESHOLD_MS`：覆盖阈值（默认按环境：dev≤400 / staging≤300 / prod≤200）
-  - `FP_RUNS`：采样次数（默认 5）
-  - `FP_SOFT_GATE` 或 `PERF_GATE_MODE`：`soft|hard`（CI 推荐 soft；预发/生产使用 hard）
-
-- 采样稳定化（测试侧）
-  - 复用单个 Electron 实例，多轮 `page.reload()`
-  - 业务就绪信号（`data-app-ready=true`）后，执行两帧 `requestAnimationFrame` 预热
-  - 报告输出：`logs/e2e/<YYYY-MM-DD>/performance-first-paint/fcp-performance.json`
-
-详见：`docs/adr/ADR-0015-performance-budgets-and-gates.md` 的“Electron 环境附注”与“门禁策略”。
+- 前置：`Game.Godot/Scripts/Perf/PerformanceTracker.cs` 已启用（Autoload，默认按窗口采样并周期性输出 `[PERF]` 标记）。
+- 运行与产物（Windows）：
+  - 生成 headless 日志：`pwsh -File scripts/ci/smoke_headless.ps1 -GodotBin "$env:GODOT_BIN" -Scene "res://Game.Godot/Scenes/Main.tscn" -TimeoutSec 5`
+  - 门禁判定（直接脚本）：`pwsh -File scripts/ci/check_perf_budget.ps1 -MaxP95Ms <ms>`
+  - 门禁判定（质量门禁入口）：`pwsh -File scripts/ci/quality_gate.ps1 -GodotBin "$env:GODOT_BIN" -PerfP95Ms <ms>`
+- 说明：
+  - `check_perf_budget.ps1` 自动寻找 `logs/ci/**/smoke/headless.log` 的最新一份，并使用最后一次 `[PERF]` 刷新的 `p95_ms` 做比较。
+  - 阈值口径与环境策略以 `docs/adr/ADR-0015-performance-budgets-and-gates.md` 为准（本节不重复阈值表）。

@@ -1,6 +1,6 @@
 ﻿# ADR Sync Guide (Windows-only)
 
-This guide explains how to keep ADR references in Base docs and PRD chunks consistent with the accepted ADR inventory, and how to triage failures. All commands and scripts are Windows-first and require Node.js. No body content is changed — only front‑matter (FM) ADR lists are updated.
+This guide explains how to keep ADR references in Base docs and PRD chunks consistent with the accepted ADR inventory, and how to triage failures. All commands and scripts are Windows-first and require 旧脚本运行时. No body content is changed — only front‑matter (FM) ADR lists are updated.
 
 ## What This Covers
 
@@ -59,7 +59,7 @@ This guide explains how to keep ADR references in Base docs and PRD chunks consi
 
 ## Prerequisites
 
-- Installed: Node.js (Windows). Python is optional and not required for ADR sync scripts.
+- Installed: 旧脚本运行时 (Windows). Python is optional and not required for ADR sync scripts.
 
 ## Commit Guidance
 

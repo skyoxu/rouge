@@ -1,5 +1,5 @@
 ---
-title: 02 security baseline electron v2
+title: 02 security baseline 旧桌面壳 v2
 status: base-SSoT
 adr_refs: [ADR-0002, ADR-0005]
 placeholders: unknown-app, Unknown Product, unknown-product, gamedev, dev-team, dev-project, dev, 0.0.0, production
@@ -9,14 +9,14 @@ placeholders: unknown-app, Unknown Product, unknown-product, gamedev, dev-team, 
 THIS IS THE V2 BASE VERSION - CLEAN TEMPLATE WITH PLACEHOLDERS.
 All domain-specific terms replaced with ${DOMAIN_*} placeholders.
 Stable anchors preserved for cross-references.
-References: ADR-0002 (Electron Security Baseline), ADR-0005 (Quality Gates)
+References: ADR-0002 (旧桌面壳 Security Baseline), ADR-0005 (Quality Gates)
 -->
 
-# 02 安全基线（Electron）v2 - 深度防御体系
+# 02 安全基线（旧桌面壳）v2 - 深度防御体系
 
-> **目的**: 建立 Electron 应用的全面安全基线，覆盖进程隔离、IPC 安全、供应链防护等关键维度，确保 Unknown Product 在桌面环境下的安全运行。
+> **目的**: 建立 旧桌面壳 应用的全面安全基线，覆盖进程隔离、进程间通信 安全、供应链防护等关键维度，确保 Unknown Product 在桌面环境下的安全运行。
 
-> **v2 改进**: 对齐最新 Electron 安全最佳实践，强化自动化验证机制，整合 CSP 2.0 规范，建立完整的安全追踪体系。
+> **v2 改进**: 对齐最新 旧桌面壳 安全最佳实践，强化自动化验证机制，整合 Web 内容安全策略 2.0 规范，建立完整的安全追踪体系。
 
 ---
 
@@ -28,7 +28,7 @@ C4Context
     Person(user, "End User", "使用桌面应用程序")
     Person(dev, "Development Team", "开发与维护应用")
     Person(ops, "Operations Team", "监控安全合规性")
-    System(app, "Unknown Product", "Electron桌面应用")
+    System(app, "Unknown Product", "旧桌面壳桌面应用")
     System_Ext(ca, "Certificate Authority", "数字证书颁发机构")
     System_Ext(codesign, "Code Signing Service", "代码签名服务")
     System_Ext(updater, "Update Server", "自动更新分发服务")
@@ -49,20 +49,20 @@ C4Context
 C4Container
     title Security Containers for Unknown Product
     System_Boundary(app_boundary, "Unknown Product Application") {
-        Container(main_process, "Main Process", "Node.js/Electron", "应用主进程，具有完整系统访问权限")
-        Container(renderer, "Renderer Process", "Chromium", "沙盒化的UI渲染进程")
-        Container(preload, "Preload Script", "JavaScript", "安全的IPC桥接层")
-        Container(node_backend, "Node.js Backend", "Node.js", "本地服务与数据处理")
+        Container(main_process, "宿主进程", "旧脚本运行时/旧桌面壳", "应用主进程，具有完整系统访问权限")
+        Container(renderer, "渲染进程", "旧浏览器运行时", "沙盒化的UI渲染进程")
+        Container(preload, "旧预加载脚本", "JavaScript", "安全的进程间通信桥接层")
+        Container(node_backend, "旧脚本运行时 Backend", "旧脚本运行时", "本地服务与数据处理")
     }
     System_Boundary(security_boundary, "Security Infrastructure") {
         Container(cert_store, "Certificate Store", "OS Keychain", "数字证书安全存储")
         Container(file_system, "Secured File System", "OS FS", "受保护的文件访问")
-        Container(ipc_channel, "IPC Channel", "Electron IPC", "进程间安全通信")
+        Container(ipc_channel, "进程间通信 Channel", "旧桌面壳 进程间通信", "进程间安全通信")
     }
     System_Ext(os_security, "OS Security Layer", "操作系统安全机制")
 
-    Rel(renderer, preload, "contextBridge API", "白名单接口")
-    Rel(preload, main_process, "IPC调用", "validate & sanitize")
+    Rel(renderer, preload, "旧桥接层 API", "白名单接口")
+    Rel(preload, main_process, "进程间通信调用", "validate & sanitize")
     Rel(main_process, node_backend, "业务逻辑", "内部API")
     Rel(main_process, cert_store, "证书验证", "secure access")
     Rel(main_process, file_system, "文件操作", "权限控制")
@@ -86,7 +86,7 @@ C4Container
 
 **Tier-1 重要安全目标**:
 
-- **网络通信安全**: HTTPS 强制、CSP 合规、安全标头完整
+- **网络通信安全**: HTTPS 强制、Web 内容安全策略 合规、安全标头完整
 - **本地存储保护**: 敏感数据加密、临时文件清理
 - **更新机制安全**: 签名验证、完整性校验
 
@@ -94,7 +94,7 @@ C4Container
 
 | 威胁类型                   | 具体风险             | 缓解策略           | 验证方法        |
 | -------------------------- | -------------------- | ------------------ | --------------- |
-| **Spoofing**               | 恶意网站冒充应用内容 | 严格CSP + 同源策略 | E2E CSP违规检测 |
+| **Spoofing**               | 恶意网站冒充应用内容 | 严格Web 内容安全策略 + 同源策略 | E2E Web 内容安全策略违规检测 |
 | **Tampering**              | 注入恶意脚本/资源    | 内容完整性校验     | 资源哈希验证    |
 | **Repudiation**            | 安全事件不可追踪     | 结构化安全日志     | 审计日志完整性  |
 | **Information Disclosure** | 敏感信息泄露         | 内存清零、安全存储 | 内存扫描测试    |
@@ -117,13 +117,13 @@ const SECURITY_DOMAINS: readonly SecurityDomain[] = [
     name: 'main',
     trustLevel: 'trusted',
     allowedOperations: ['fs', 'net', 'os', 'crypto'],
-    communicationChannels: ['ipc-main'],
+    communicationChannels: ['进程间通信-main'],
   },
   {
     name: 'renderer',
     trustLevel: 'sandboxed',
     allowedOperations: ['dom', 'webapi'],
-    communicationChannels: ['ipc-renderer', 'context-bridge'],
+    communicationChannels: ['进程间通信-renderer', 'context-bridge'],
   },
   {
     name: 'preload',
@@ -151,17 +151,17 @@ const SECURITY_DOMAINS: readonly SecurityDomain[] = [
 ```mermaid
 C4Container
     title Multi-Process Security Model for Unknown Product
-    System_Boundary(electron_app, "Electron Application Security Boundary") {
-        Container(main_proc, "Main Process", "Node.js", "完整系统权限，安全策略执行器")
-        Container(renderer_proc, "Renderer Process", "Chromium Sandbox", "沙盒化Web运行时，仅DOM/WebAPI")
-        Container(preload_script, "Preload Script", "Context Bridge", "安全API桥接，白名单控制")
+    System_Boundary(LEGACY_SHELL_app, "旧桌面壳 Application Security Boundary") {
+        Container(main_proc, "宿主进程", "旧脚本运行时", "完整系统权限，安全策略执行器")
+        Container(renderer_proc, "渲染进程", "旧浏览器运行时 Sandbox", "沙盒化Web运行时，仅DOM/WebAPI")
+        Container(preload_script, "旧预加载脚本", "Context Bridge", "安全API桥接，白名单控制")
         Container(security_manager, "Security Policy Manager", "TypeScript", "安全策略与违规监控")
     }
 
     Rel(main_proc, renderer_proc, "spawn & manage", "进程创建与生命周期")
     Rel(main_proc, preload_script, "inject securely", "安全注入预加载")
     Rel(preload_script, renderer_proc, "exposeInMainWorld", "有限API暴露")
-    Rel(renderer_proc, preload_script, "IPC via contextBridge", "类型安全通信")
+    Rel(renderer_proc, preload_script, "进程间通信 via 旧桥接层", "类型安全通信")
     Rel(security_manager, main_proc, "enforce policies", "策略执行与审计")
     UpdateRelStyle(preload_script, renderer_proc, $textColor="green", $offsetY="-5")
     UpdateRelStyle(security_manager, main_proc, $textColor="red", $offsetX="5")
@@ -169,12 +169,12 @@ C4Container
 
 ### 进程权限矩阵
 
-| 进程类型       | Node.js API         | 文件系统    | 网络访问    | 系统调用    | IPC通信        |
+| 进程类型       | 旧脚本运行时 API         | 文件系统    | 网络访问    | 系统调用    | 进程间通信通信        |
 | -------------- | ------------------- | ----------- | ----------- | ----------- | -------------- |
-| **主进程**     | ✅ 完全访问         | ✅ 完全访问 | ✅ 完全访问 | ✅ 完全访问 | ✅ 服务端      |
-| **渲染进程**   | ❌ 禁止             | ❌ 禁止     | ⚠️ 仅HTTPS  | ❌ 禁止     | ✅ 客户端      |
-| **预加载脚本** | ⚠️ 仅Context Bridge | ❌ 禁止     | ❌ 禁止     | ❌ 禁止     | ✅ 桥接        |
-| **Web Worker** | ❌ 禁止             | ❌ 禁止     | ⚠️ 仅HTTPS  | ❌ 禁止     | ⚠️ PostMessage |
+| **主进程**     |  完全访问         |  完全访问 |  完全访问 |  完全访问 |  服务端      |
+| **渲染进程**   |  禁止             |  禁止     |  仅HTTPS  |  禁止     |  客户端      |
+| **预加载脚本** |  仅Context Bridge |  禁止     |  禁止     |  禁止     |  桥接        |
+| **Web Worker** |  禁止             |  禁止     |  仅HTTPS  |  禁止     |  PostMessage |
 
 ### 关键配置强制要求
 
@@ -183,8 +183,8 @@ C4Container
 export const MANDATORY_SECURITY_CONFIG = {
   webPreferences: {
     // === 核心安全三要素（不可更改） ===
-    nodeIntegration: false, // 硬约束：禁用Node.js集成
-    contextIsolation: true, // 硬约束：启用上下文隔离
+    旧脚本集成开关: false, // 硬约束：禁用旧脚本运行时集成
+    旧隔离开关: true, // 硬约束：启用上下文隔离
     sandbox: true, // 硬约束：启用沙箱模式
 
     // === 辅助安全措施 ===
@@ -202,8 +202,8 @@ export const MANDATORY_SECURITY_CONFIG = {
 // 编译时配置验证
 type SecurityConfigValidator<T> = T extends {
   webPreferences: {
-    nodeIntegration: false;
-    contextIsolation: true;
+    旧脚本集成开关: false;
+    旧隔离开关: true;
     sandbox: true;
   };
 }
@@ -219,7 +219,7 @@ export type ValidSecurityConfig = SecurityConfigValidator<
 ### 进程间通信安全策略
 
 ```typescript
-// src/shared/contracts/ipc-security.ts
+// src/shared/contracts/进程间通信-security.ts
 export interface SecureIpcChannel {
   readonly channel: `${string}:${string}`; // 强制命名空间格式
   readonly direction: 'main-to-renderer' | 'renderer-to-main' | 'bidirectional';
@@ -230,7 +230,7 @@ export interface SecureIpcChannel {
   };
 }
 
-// 白名单IPC通道定义
+// 白名单进程间通信通道定义
 export const ALLOWED_IPC_CHANNELS: readonly SecureIpcChannel[] = [
   {
     channel: 'app:getVersion',
@@ -255,7 +255,7 @@ export const ALLOWED_IPC_CHANNELS: readonly SecureIpcChannel[] = [
 
 ---
 
-## 2.3 BrowserWindow 安全配置清单（Security Configuration Checklist）
+## 2.3 旧窗口容器 安全配置清单（Security Configuration Checklist）
 
 <!-- sec:2.3 -->
 
@@ -263,8 +263,8 @@ export const ALLOWED_IPC_CHANNELS: readonly SecureIpcChannel[] = [
 
 ```typescript
 // src/main/security/secure-window.ts
-export function createSecureWindow(options: SecureWindowOptions): BrowserWindow {
-  const window = new BrowserWindow({
+export function createSecureWindow(options: SecureWindowOptions): 旧窗口容器 {
+  const window = new 旧窗口容器({
     title: options.title,
     ...MANDATORY_SECURITY_CONFIG, // 继承核心安全配置
     show: false, // 延迟显示确保安全检查
@@ -279,7 +279,7 @@ export function createSecureWindow(options: SecureWindowOptions): BrowserWindow 
   return window;
 }
 
-function setupSecurityEventHandlers(window: BrowserWindow): void {
+function setupSecurityEventHandlers(window: 旧窗口容器): void {
   const webContents = window.webContents;
 
   // 增强窗口导航安全：协调will-navigate和setWindowOpenHandler
@@ -320,7 +320,7 @@ function setupEnhancedNavigationSecurity(webContents: WebContents): void {
     });
 
     if (!navigationDecision.allowed) {
-      console.warn(`🔒 导航被阻止: ${navigationUrl} (原因: ${navigationDecision.reason})`);
+      console.warn(` 导航被阻止: ${navigationUrl} (原因: ${navigationDecision.reason})`);
       event.preventDefault();
 
       // 发送安全事件到渲染进程
@@ -356,7 +356,7 @@ function setupEnhancedNavigationSecurity(webContents: WebContents): void {
     });
 
     if (windowOpenDecision.action === 'deny') {
-      console.warn(`🔒 新窗口创建被阻止: ${url} (原因: ${windowOpenDecision.reason})`);
+      console.warn(` 新窗口创建被阻止: ${url} (原因: ${windowOpenDecision.reason})`);
 
       // 通知渲染进程窗口创建被阻止
       webContents.send('security:window-open-blocked', {
@@ -378,7 +378,7 @@ function setupEnhancedNavigationSecurity(webContents: WebContents): void {
   // Step 3: 协调安全监控
   webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
     if (isMainFrame && errorCode === -3) { // ERR_ABORTED，可能是安全拦截导致
-      console.log(`🔒 主框架加载中止，可能被安全策略拦截: ${validatedURL}`);
+      console.log(` 主框架加载中止，可能被安全策略拦截: ${validatedURL}`);
     }
   });
 
@@ -503,8 +503,8 @@ function evaluateWindowOpenSecurity(context: {
 
   // 内部URL：允许但应用安全配置
   const secureWindowOptions = {
-    nodeIntegration: false,
-    contextIsolation: true,
+    旧脚本集成开关: false,
+    旧隔离开关: true,
     sandbox: true,
     webSecurity: true,
     allowRunningInsecureContent: false,
@@ -544,13 +544,13 @@ function setupDualPermissionHandlers(session: Session, webContents: WebContents)
     const matchedOrigin = allowedOrigins.find(allowed => origin.startsWith(allowed));
 
     if (!matchedOrigin) {
-      console.warn(`🔒 权限检查拒绝：未授权来源 ${origin} 请求权限 ${permission}`);
+      console.warn(` 权限检查拒绝：未授权来源 ${origin} 请求权限 ${permission}`);
       return false;
     }
 
     const allowed = staticPermissions[matchedOrigin]?.includes(permission) || false;
     if (!allowed) {
-      console.warn(`🔒 权限检查拒绝：来源 ${matchedOrigin} 无权限 ${permission}`);
+      console.warn(` 权限检查拒绝：来源 ${matchedOrigin} 无权限 ${permission}`);
     }
     return allowed;
   });
@@ -573,7 +573,7 @@ function setupDualPermissionHandlers(session: Session, webContents: WebContents)
 
     if (highRiskPermissions.includes(permission)) {
       // 高风险权限：记录并拒绝（未来可增加用户确认对话框）
-      console.error(`🔒 高风险权限请求被拒绝: ${permission} from ${origin}`);
+      console.error(` 高风险权限请求被拒绝: ${permission} from ${origin}`);
 
       // 发送安全事件到监控系统
       webContents.send('security:permission-denied', {
@@ -597,13 +597,13 @@ function setupDualPermissionHandlers(session: Session, webContents: WebContents)
         webContents
       });
 
-      console.log(`🔒 中风险权限决策: ${permission} -> ${shouldAllow ? '允许' : '拒绝'}`);
+      console.log(` 中风险权限决策: ${permission} -> ${shouldAllow ? '允许' : '拒绝'}`);
       callback(shouldAllow);
       return;
     }
 
     // 默认拒绝未知权限
-    console.warn(`🔒 未知权限请求被拒绝: ${permission} from ${origin}`);
+    console.warn(` 未知权限请求被拒绝: ${permission} from ${origin}`);
     callback(false);
   });
 }
@@ -656,8 +656,8 @@ import path from 'node:path';
 
 const SECURITY_REQUIREMENTS = {
   mandatory: {
-    nodeIntegration: false,
-    contextIsolation: true,
+    旧脚本集成开关: false,
+    旧隔离开关: true,
     sandbox: true,
     webSecurity: true,
     allowRunningInsecureContent: false,
@@ -700,11 +700,11 @@ export function verifySecurityConfig(configPath) {
 if (process.argv[2]) {
   const violations = verifySecurityConfig(process.argv[2]);
   if (violations.length > 0) {
-    console.error('❌ Security violations detected:');
+    console.error(' Security violations detected:');
     violations.forEach(v => console.error(`  - ${v}`));
     process.exit(1);
   } else {
-    console.log('✅ Security configuration verified');
+    console.log(' Security configuration verified');
   }
 }
 ```
@@ -722,23 +722,23 @@ export interface SecurityAuditResult {
 
 export class SecurityConfigAuditor {
   private static readonly CRITICAL_CONFIGS = [
-    'nodeIntegration',
-    'contextIsolation',
+    '旧脚本集成开关',
+    '旧隔离开关',
     'sandbox',
   ] as const;
 
-  public static auditBrowserWindow(window: BrowserWindow): SecurityAuditResult {
+  public static auditBrowserWindow(window: 旧窗口容器): SecurityAuditResult {
     const webPrefs = window.webContents.getWebPreferences();
     const violations: string[] = [];
     const warnings: string[] = [];
 
     // 审计关键安全配置
-    if (webPrefs.nodeIntegration !== false) {
-      violations.push('nodeIntegration must be false');
+    if (webPrefs.旧脚本集成开关 !== false) {
+      violations.push('旧脚本集成开关 must be false');
     }
 
-    if (webPrefs.contextIsolation !== true) {
-      violations.push('contextIsolation must be true');
+    if (webPrefs.旧隔离开关 !== true) {
+      violations.push('旧隔离开关 must be true');
     }
 
     if (webPrefs.sandbox !== true) {
@@ -753,7 +753,7 @@ export class SecurityConfigAuditor {
 
     // 检查预加载脚本路径
     if (webPrefs.preload && !path.isAbsolute(webPrefs.preload)) {
-      violations.push('preload script path must be absolute');
+      violations.push('旧预加载脚本 path must be absolute');
     }
 
     return {
@@ -768,16 +768,16 @@ export class SecurityConfigAuditor {
 
 ---
 
-## 2.4 严格 CSP（Content Security Policy）
+## 2.4 严格 Web 内容安全策略（Content Security Policy）
 
 <!-- sec:2.4 -->
 
-### CSP增强策略v2（Nonce/Hash机制，移除unsafe-inline）
+### Web 内容安全策略增强策略v2（Nonce/Hash机制，移除unsafe-inline）
 
 ```typescript
-// src/main/security/csp-manager-v2.ts
+// src/main/security/Web 内容安全策略-manager-v2.ts
 import crypto from 'crypto';
-import { Session } from 'electron';
+import { Session } from '旧桌面壳';
 
 export class CspManagerV2 {
   private static instance: CspManagerV2;
@@ -875,7 +875,7 @@ export class CspManagerV2 {
   }
 }
 
-// 完整生产CSP配置示例（与ADR-0002保持一致）
+// 完整生产Web 内容安全策略配置示例（与ADR-0002保持一致）
 const productionCSPExample = `
   default-src 'self';
   script-src 'self' 'nonce-\${RUNTIME_NONCE}';
@@ -892,7 +892,7 @@ const productionCSPExample = `
   .replace(/\s+/g, ' ')
   .trim();
 
-// 在主进程中注册增强CSP拦截器
+// 在主进程中注册增强Web 内容安全策略拦截器
 export function installCspHeaderV2(ses: Session, env = process.env.NODE_ENV) {
   const cspManager = CspManagerV2.getInstance();
 
@@ -903,14 +903,14 @@ export function installCspHeaderV2(ses: Session, env = process.env.NODE_ENV) {
     callback({
       responseHeaders: {
         ...details.responseHeaders,
-        'Content-Security-Policy': [
+        'Web 内容安全策略': [
           cspManager.getCSPHeader(environment, requestId),
         ],
         // 基础安全标头
         'X-Content-Type-Options': ['nosniff'],
         'X-Frame-Options': ['DENY'],
         'Referrer-Policy': ['strict-origin-when-cross-origin'],
-        // 🆕 现代跨源隔离安全头（防御Spectre攻击）
+        //  现代跨源隔离安全头（防御Spectre攻击）
         'Cross-Origin-Opener-Policy': ['same-origin'],
         'Cross-Origin-Embedder-Policy': ['require-corp'],
         'Cross-Origin-Resource-Policy': ['cross-origin'],
@@ -926,7 +926,7 @@ export function installCspHeaderV2(ses: Session, env = process.env.NODE_ENV) {
 ```html
 <!-- public/index.html - 开发环境兜底（使用nonce机制，符合ADR-0002安全基线）-->
 <meta
-  http-equiv="Content-Security-Policy"
+  http-equiv="Web 内容安全策略"
   content="
   default-src 'self' localhost:*; object-src 'none'; frame-ancestors 'none';
   script-src 'self' 'nonce-${RUNTIME_NONCE}' localhost:*; 
@@ -936,11 +936,11 @@ export function installCspHeaderV2(ses: Session, env = process.env.NODE_ENV) {
 />
 
 <!-- 生产环境构建时替换为hash版本 -->
-<!-- CSP_PRODUCTION_PLACEHOLDER: 构建工具将替换为含hash的生产CSP -->
+<!-- CSP_PRODUCTION_PLACEHOLDER: 构建工具将替换为含hash的生产Web 内容安全策略 -->
 ```
 
 ```typescript
-// scripts/build-csp-hash.mjs - 构建时CSP hash生成器
+// scripts/build-Web 内容安全策略-hash.mjs - 构建时Web 内容安全策略 hash生成器
 import fs from 'node:fs';
 import crypto from 'crypto';
 import path from 'path';
@@ -984,7 +984,7 @@ export function generateCspHashes(distDir: string): {
   return { scripts: scriptHashes, styles: styleHashes };
 }
 
-// 更新index.html的生产CSP
+// 更新index.html的生产Web 内容安全策略
 export function updateProductionCsp(distDir: string): void {
   const { scripts, styles } = generateCspHashes(distDir);
 
@@ -1005,23 +1005,23 @@ export function updateProductionCsp(distDir: string): void {
   const indexPath = path.join(distDir, 'index.html');
   let indexHtml = fs.readFileSync(indexPath, 'utf8');
 
-  // 替换开发CSP为生产CSP
+  // 替换开发Web 内容安全策略为生产Web 内容安全策略
   indexHtml = indexHtml.replace(
-    /<meta http-equiv="Content-Security-Policy"[^>]*>/,
-    `<meta http-equiv="Content-Security-Policy" content="${productionCsp}">`
+    /<meta http-equiv="Web 内容安全策略"[^>]*>/,
+    `<meta http-equiv="Web 内容安全策略" content="${productionCsp}">`
   );
 
   fs.writeFileSync(indexPath, indexHtml);
   console.log(
-    `✅ CSP生产配置已更新，包含${scripts.length}个脚本hash和${styles.length}个样式hash`
+    ` Web 内容安全策略生产配置已更新，包含${scripts.length}个脚本hash和${styles.length}个样式hash`
   );
 }
 ```
 
-### CSP违规监控
+### Web 内容安全策略违规监控
 
 ```typescript
-// src/main/security/csp-reporter.ts
+// src/main/security/Web 内容安全策略-reporter.ts
 export class CspReporter {
   private violations: Array<{
     violatedDirective: string;
@@ -1037,7 +1037,7 @@ export class CspReporter {
 
     // 严重违规立即记录
     if (['script-src', 'object-src'].includes(report.violatedDirective)) {
-      console.error('🔒 Critical CSP violation:', report);
+      console.error(' Critical Web 内容安全策略 violation:', report);
     }
   }
 
@@ -1056,7 +1056,7 @@ export class CspReporter {
 
 ---
 
-## 2.5 IPC/ContextBridge 白名单策略（Secure Inter-Process Communication）
+## 2.5 进程间通信/旧桥接层 白名单策略（Secure Inter-Process Communication）
 
 <!-- sec:2.5 -->
 
@@ -1064,7 +1064,7 @@ export class CspReporter {
 
 ```typescript
 // src/preload/security-bridge.ts
-import { contextBridge, ipcRenderer } from 'electron';
+import { 旧桥接层, ipcRenderer } from '旧桌面壳';
 
 // 白名单通道定义
 const ALLOWED_CHANNELS = [
@@ -1076,7 +1076,7 @@ const ALLOWED_CHANNELS = [
   'security:reportViolation',
 ] as const;
 
-// 安全IPC包装器
+// 安全进程间通信包装器
 class SecureIpcWrapper {
   private rateLimit = new Map<string, { count: number; resetTime: number }>();
 
@@ -1135,15 +1135,15 @@ const secureApi = {
   },
 };
 
-contextBridge.exposeInMainWorld('unknown-productApi', secureApi);
+旧桥接层.exposeInMainWorld('unknown-productApi', secureApi);
 export type ExposedApi = typeof secureApi;
 ```
 
-### 主进程IPC处理器
+### 主进程进程间通信处理器
 
 ```typescript
-// src/main/ipc/secure-handlers.ts
-import { ipcMain } from 'electron';
+// src/main/进程间通信/secure-handlers.ts
+import { ipcMain } from '旧桌面壳';
 
 class SecureIpcRegistry {
   private rateLimits = new Map<string, { count: number; resetTime: number }>();
@@ -1279,13 +1279,13 @@ jobs:
 
 ```typescript
 // scripts/build-and-sign.ts
-import { build } from 'electron-builder';
-import { notarize } from '@electron/notarize';
+import { build } from '旧桌面壳-builder';
+import { notarize } from '@旧桌面壳/notarize';
 import { createHash } from 'crypto';
 import { writeFileSync, readdirSync, readFileSync } from 'fs';
 
 export async function buildAndSign() {
-  console.log('🔨 Building and signing application...');
+  console.log(' Building and signing application...');
 
   // 1. 构建应用
   await build({
@@ -1317,7 +1317,7 @@ export async function buildAndSign() {
 
   // 3. 生成校验和
   generateChecksums();
-  console.log('✅ Build complete');
+  console.log(' Build complete');
 }
 
 function generateChecksums() {
@@ -1349,11 +1349,11 @@ function generateChecksums() {
     <key>com.apple.security.cs.allow-jit</key>
     <true/>
 
-    <!-- 允许未签名的可执行内存 (Electron/Node.js需要) -->
+    <!-- 允许未签名的可执行内存 (旧桌面壳/旧脚本运行时需要) -->
     <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
     <true/>
 
-    <!-- 禁用库验证 (Node.js原生模块需要) -->
+    <!-- 禁用库验证 (旧脚本运行时原生模块需要) -->
     <key>com.apple.security.cs.disable-library-validation</key>
     <true/>
 
@@ -1382,19 +1382,19 @@ function generateChecksums() {
 
 <!-- sec:2.7 -->
 
-### Playwright Electron 安全测试
+### 旧 E2E 工具 旧桌面壳 安全测试
 
 ```typescript
 // tests/e2e/security.smoke.spec.ts
-import { test, expect } from '@playwright/test';
-import { _electron as electron } from 'playwright';
+import { test, expect } from '@旧 E2E 工具/test';
+import { _legacy_shell as 旧桌面壳 } from '旧 E2E 工具';
 import path from 'node:path';
 
 test.describe('安全基线验证', () => {
   let app: any, page: any;
 
   test.beforeAll(async () => {
-    app = await electron.launch({
+    app = await 旧桌面壳.launch({
       args: [path.join(__dirname, '../../dist/main.js')],
       env: { ...process.env, NODE_ENV: 'test' },
     });
@@ -1415,7 +1415,7 @@ test.describe('安全基线验证', () => {
     );
     expect(apiAvailable).toBe(true);
 
-    // 验证Node.js API不可访问
+    // 验证旧脚本运行时 API不可访问
     const nodeApis = await page.evaluate(() => ({
       require: typeof require,
       process: typeof process,
@@ -1426,14 +1426,14 @@ test.describe('安全基线验证', () => {
     expect(nodeApis.Buffer).toBe('undefined');
   });
 
-  test('CSP策略有效', async () => {
-    const cspMeta = await page.$('meta[http-equiv="Content-Security-Policy"]');
+  test('Web 内容安全策略策略有效', async () => {
+    const cspMeta = await page.$('meta[http-equiv="Web 内容安全策略"]');
     expect(cspMeta).not.toBeNull();
 
     const cspContent = await page.evaluate(
       () =>
         document
-          .querySelector('meta[http-equiv="Content-Security-Policy"]')
+          .querySelector('meta[http-equiv="Web 内容安全策略"]')
           ?.getAttribute('content') || ''
     );
     expect(cspContent).toContain("default-src 'self'");
@@ -1464,14 +1464,14 @@ import { execSync } from 'child_process';
 const SECURITY_PATTERNS = [
   { pattern: /eval\s*\(/g, severity: 'high', message: 'eval() usage detected' },
   {
-    pattern: /nodeIntegration:\s*true/g,
+    pattern: /旧脚本集成开关:\s*true/g,
     severity: 'critical',
-    message: 'nodeIntegration enabled',
+    message: '旧脚本集成开关 enabled',
   },
   {
-    pattern: /contextIsolation:\s*false/g,
+    pattern: /旧隔离开关:\s*false/g,
     severity: 'critical',
-    message: 'contextIsolation disabled',
+    message: '旧隔离开关 disabled',
   },
   {
     pattern: /sandbox:\s*false/g,
@@ -1489,7 +1489,7 @@ const scanFiles = async () => {
     const content = fs.readFileSync(file, 'utf-8');
     for (const { pattern, severity, message } of SECURITY_PATTERNS) {
       if (pattern.test(content) && ['critical', 'high'].includes(severity)) {
-        console.log(`❌ ${file} [${severity}] ${message}`);
+        console.log(` ${file} [${severity}] ${message}`);
         violations++;
       }
     }
@@ -1510,10 +1510,10 @@ const auditDeps = () => {
 // 执行完整扫描
 const violations = (await scanFiles()) + auditDeps();
 if (violations > 0) {
-  console.log('💥 Security scan failed');
+  console.log(' Security scan failed');
   process.exit(1);
 }
-console.log('✅ Security scan passed');
+console.log(' Security scan passed');
 ```
 
 ---
@@ -1526,11 +1526,11 @@ console.log('✅ Security scan passed');
 
 | ID      | 需求                 | ADR引用            | 测试覆盖                          | 状态 |
 | ------- | -------------------- | ------------------ | --------------------------------- | ---- |
-| SEC-001 | 进程隔离             | ADR-0002           | tests/e2e/security.smoke.spec.ts  | ✅   |
-| SEC-002 | Context Bridge白名单 | ADR-0002, ADR-0004 | tests/e2e/security.smoke.spec.ts  | ✅   |
-| SEC-003 | 严格CSP防护          | ADR-0002           | tests/e2e/security.smoke.spec.ts  | ✅   |
-| SEC-004 | 供应链安全           | ADR-0002           | scripts/security-static-scan.mjs  | 🔄   |
-| SEC-005 | 安全监控             | ADR-0003           | src/main/security/csp-reporter.ts | ✅   |
+| SEC-001 | 进程隔离             | ADR-0002           | tests/e2e/security.smoke.spec.ts  |    |
+| SEC-002 | Context Bridge白名单 | ADR-0002, ADR-0004 | tests/e2e/security.smoke.spec.ts  |    |
+| SEC-003 | 严格Web 内容安全策略防护          | ADR-0002           | tests/e2e/security.smoke.spec.ts  |    |
+| SEC-004 | 供应链安全           | ADR-0002           | scripts/security-static-scan.mjs  |    |
+| SEC-005 | 安全监控             | ADR-0003           | src/main/security/Web 内容安全策略-reporter.ts |    |
 
 ---
 
@@ -1543,33 +1543,33 @@ console.log('✅ Security scan passed');
 ```markdown
 # 安全基线验收清单
 
-## 开发配置 ✅
+## 开发配置 
 
-- [ ] Electron: nodeIntegration=false, contextIsolation=true, sandbox=true
-- [ ] CSP: 严格策略，object-src='none', script-src='self'
+- [ ] 旧桌面壳: 旧脚本集成开关=false, 旧隔离开关=true, sandbox=true
+- [ ] Web 内容安全策略: 严格策略，object-src='none', script-src='self'
 - [ ] Context Bridge: 白名单API，参数验证，速率限制
 
-## 代码质量 ✅
+## 代码质量 
 
 - [ ] 静态扫描: 无eval()、innerHTML直接赋值、document.write()
 - [ ] 依赖安全: npm audit通过，许可证合规
-- [ ] IPC安全: 白名单通道，类型验证，频率限制
+- [ ] 进程间通信安全: 白名单通道，类型验证，频率限制
 
-## 自动化测试 ✅
+## 自动化测试 
 
-- [ ] E2E测试: Playwright覆盖关键安全场景
+- [ ] E2E测试: 旧 E2E 工具覆盖关键安全场景
 - [ ] 单元测试: 安全配置验证≥90%覆盖率
-- [ ] CSP测试: 违规阻止和报告功能验证
+- [ ] Web 内容安全策略测试: 违规阻止和报告功能验证
 
-## 构建分发 ✅
+## 构建分发 
 
 - [ ] 代码签名: Windows Authenticode, macOS公证, Linux GPG
 - [ ] 构建安全: 环境隔离，SHA256校验和生成
 - [ ] 依赖扫描: 构建流程集成安全扫描
 
-## 生产监控 ✅
+## 生产监控 
 
-- [ ] 监控配置: 安全事件监控，CSP违规报告
+- [ ] 监控配置: 安全事件监控，Web 内容安全策略违规报告
 - [ ] 应急响应: 响应流程文档化，紧急更新机制
 ```
 
@@ -1586,29 +1586,29 @@ const execAsync = promisify(exec);
 let results = { passed: 0, failed: 0, warnings: 0 };
 
 const log = (status, msg) => {
-  const icon = status === 'passed' ? '✅' : status === 'failed' ? '❌' : '⚠️';
+  const icon = status === 'passed' ? '' : status === 'failed' ? '' : '';
   console.log(`  ${icon} ${msg}`);
   results[status]++;
 };
 
-// 验证Electron安全配置
-const validateElectronConfig = async () => {
-  console.log('\n📋 Phase 1: Electron安全配置验证...');
+// 验证旧桌面壳安全配置
+const validateLegacyShellConfig = async () => {
+  console.log('\n Phase 1: 旧桌面壳安全配置验证...');
   const files = await glob('src/main/**/*.{js,ts}');
   const patterns = {
-    'nodeIntegration: false': /nodeIntegration:\s*false/,
-    'contextIsolation: true': /contextIsolation:\s*true/,
+    '旧脚本集成开关: false': /旧脚本集成开关:\s*false/,
+    '旧隔离开关: true': /旧隔离开关:\s*true/,
     'sandbox: true': /sandbox:\s*true/,
   };
 
   for (const file of files) {
     const content = fs.readFileSync(file, 'utf-8');
-    if (content.includes('new BrowserWindow')) {
+    if (content.includes('new 旧窗口容器')) {
       const missing = Object.entries(patterns).filter(
         ([_, pattern]) => !pattern.test(content)
       );
       if (missing.length === 0) {
-        log('passed', 'Electron安全配置验证通过');
+        log('passed', '旧桌面壳安全配置验证通过');
       } else {
         missing.forEach(([desc]) =>
           log('failed', `Missing: ${desc} in ${file}`)
@@ -1617,12 +1617,12 @@ const validateElectronConfig = async () => {
       return;
     }
   }
-  log('failed', '未找到BrowserWindow配置文件');
+  log('failed', '未找到旧窗口容器配置文件');
 };
 
-// 验证CSP配置
+// 验证Web 内容安全策略配置
 const validateCSP = () => {
-  console.log('\n📋 Phase 2: CSP配置验证...');
+  console.log('\n Phase 2: Web 内容安全策略配置验证...');
   const indexPath = 'public/index.html';
   if (!fs.existsSync(indexPath)) {
     log('failed', 'index.html文件不存在');
@@ -1630,9 +1630,9 @@ const validateCSP = () => {
   }
 
   const content = fs.readFileSync(indexPath, 'utf-8');
-  const cspMeta = content.match(/<meta[^>]*Content-Security-Policy[^>]*>/i);
+  const cspMeta = content.match(/<meta[^>]*Web 内容安全策略[^>]*>/i);
   if (!cspMeta) {
-    log('failed', 'CSP meta标签未找到');
+    log('failed', 'Web 内容安全策略 meta标签未找到');
     return;
   }
 
@@ -1643,18 +1643,18 @@ const validateCSP = () => {
   ];
   const missing = required.filter(dir => !cspMeta[0].includes(dir));
   if (missing.length === 0) {
-    log('passed', 'CSP配置验证通过');
+    log('passed', 'Web 内容安全策略配置验证通过');
   } else {
-    missing.forEach(dir => log('failed', `CSP缺少指令: ${dir}`));
+    missing.forEach(dir => log('failed', `Web 内容安全策略缺少指令: ${dir}`));
   }
 };
 
 // 完整验收执行
 const runFullValidation = async () => {
-  console.log('🔒 Security Acceptance Validation');
+  console.log(' Security Acceptance Validation');
   console.log('================================');
 
-  await validateElectronConfig();
+  await validateLegacyShellConfig();
   validateCSP();
 
   // 依赖安全检查
@@ -1666,16 +1666,16 @@ const runFullValidation = async () => {
   }
 
   // 生成报告
-  console.log('\n📊 最终报告');
+  console.log('\n 最终报告');
   console.log(
-    `✅ 通过: ${results.passed}, ❌ 失败: ${results.failed}, ⚠️ 警告: ${results.warnings}`
+    ` 通过: ${results.passed},  失败: ${results.failed},  警告: ${results.warnings}`
   );
 
   if (results.failed > 0) {
-    console.log('💥 安全验收失败');
+    console.log(' 安全验收失败');
     process.exit(1);
   } else {
-    console.log('🎉 安全验收通过');
+    console.log(' 安全验收通过');
   }
 };
 
@@ -1687,13 +1687,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
 ---
 
-**📋 第2部分完成确认**
+** 第2部分完成确认**
 
-- ✅ **小节2.5**: IPC/ContextBridge 白名单策略完整实现
-- ✅ **小节2.6**: 供应链/签名与公证配置详细
-- ✅ **小节2.7**: 自动化验证（Playwright E2E + 静态扫描）
-- ✅ **小节2.8**: 追踪表（Overlay/ADR/Test/SLO 映射）
-- ✅ **小节2.9**: 验收清单（6阶段完整流程）
-- ✅ **硬约束覆盖**: nodeIntegration=false, contextIsolation=true, sandbox=true, 严格CSP, preload仅白名单导出
-- ✅ **ADR引用**: ADR-0002, ADR-0005明确引用
-- ✅ **稳定锚点**: 所有小节包含 `<!-- sec:X.X -->` 交叉引用标识
+-  **小节2.5**: 进程间通信/旧桥接层 白名单策略完整实现
+-  **小节2.6**: 供应链/签名与公证配置详细
+-  **小节2.7**: 自动化验证（旧 E2E 工具 E2E + 静态扫描）
+-  **小节2.8**: 追踪表（Overlay/ADR/Test/SLO 映射）
+-  **小节2.9**: 验收清单（6阶段完整流程）
+-  **硬约束覆盖**: 旧脚本集成开关=false, 旧隔离开关=true, sandbox=true, 严格Web 内容安全策略, preload仅白名单导出
+-  **ADR引用**: ADR-0002, ADR-0005明确引用
+-  **稳定锚点**: 所有小节包含 `<!-- sec:X.X -->` 交叉引用标识

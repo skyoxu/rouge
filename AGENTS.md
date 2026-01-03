@@ -15,7 +15,7 @@ This file provides guidance to Codex Cli when working with code in this reposito
 
 ## 设计原则：
 
-- 本项目是 Windows only 的 Godot + C# 游戏模板，开箱即用、可复制。以下规范用于保障一致性与可维护性。
+- 本项目是 Windows only 的 Godot + C# 游戏项目。
 - AI 优先 + arc42/C4 思维：按 不可回退 → 跨切面 → 运行时骨干 → 功能纵切 顺序
 - 删除无用代码，修改功能不保留旧的兼容性代码
 - **完整实现**，禁止MVP/占位/TODO，必须完整可运行
@@ -32,7 +32,7 @@ This file provides guidance to Codex Cli when working with code in this reposito
 
 **Starting a fresh session? Read these in order:**
 
-1. **This file** (`AGENTS.md`) - You're already here ✓
+1. **This file** (`AGENTS.md`) - You're already here 
 2. **Project indexes** - Context entry points:
    - `architecture_base.index` - Architecture docs (CH01-CH12 + ADRs)
    - `prd_chunks.index` - PRD fragments index
@@ -96,7 +96,7 @@ docs/
   architecture/
     base/                 # SSoT：跨切面与系统骨干（01–07、09、10）
       01-introduction-and-goals-v2.md
-      02-security-baseline-electron-v2.md
+      02-security-baseline-godot-v2.md
       03-observability-sentry-logging-v2.md
       04-system-context-c4-event-flows-v2.md
       05-data-models-and-storage-ports-v2.md
@@ -117,18 +117,17 @@ docs/
 
 ### 默认 ADR 映射（可扩展）
 
-- **ADR-0001-tech-stack**：技术栈选型
-- **ADR-0002-electron-security**：安全基线
+- **ADR-0018-godot-runtime-and-distribution**：技术栈与运行时/发布策略
+- **ADR-0019-godot-security-baseline**：安全基线
 - **ADR-0003-observability-release-health**：可观测性和发布健康 (Sentry, 崩溃率阈值, 结构化日志)
 - **ADR-0004-event-bus-and-contracts**：事件总线和契约 (CloudEvents, 类型定义, 端口适配)
-- **ADR-0005-quality-gates**：质量门禁 (覆盖率, ESLint, 性能阈值, Bundle大小)
+- **ADR-0005-quality-gates**：质量门禁 (覆盖率, 静态分析, 性能门禁, Release Health)
 - **ADR-0006-data-storage**：数据存储 (SQLite, 数据模型, 备份策略)
 - **ADR-0007-ports-adapters**：端口适配器 (架构模式, 依赖注入, 接口设计)
 - **ADR-0008-deployment-release**：部署发布 (CI/CD, 分阶段发布, 回滚策略)
-- **ADR-0009-cross-platform**：跨平台 (Windows/macOS/Linux 支持, 原生集成)
 - **ADR-0010-internationalization**：国际化 (多语言支持, 本地化流程, 文本资源管理)
 - **ADR-0011-windows-only-platform-and-ci**：确立Windows-only平台策略
-- **ADR-0015-performance-budgets-and-gates**：定义性能预算与门禁统一标准，包括P95阈值、Bundle大小限制和首屏优化策略
+- **ADR-0015-performance-budgets-and-gates**：定义性能预算与门禁统一标准（帧耗时、启动时间等）
 
 > 任何章节/Story 若改变上述口径，**必须**新增或 Supersede 对应 ADR。
 
@@ -162,7 +161,7 @@ docs/
 - 需要新增 ADR 时，自动生成 `docs/adr/ADR-xxxx-<slug>.md` 的 _Proposed_ 草案并提示审阅。
 
 > **备注**：本 Rulebook 与项目中的脚本/模板、Base/Overlay 结构**强关联**。请保持这些文件存在且更新：  
-> `scripts/scan_electron_safety.mjs` · `scripts/quality_gates.mjs` · `scripts/verify_base_clean.mjs` · `.github/PULL_REQUEST_TEMPLATE.md` · `docs/architecture/base/08-功能纵切-template.md`。
+> `scripts/python/scan_doc_stack_terms.py` · `scripts/python/quality_gates.py` · `scripts/ci/verify_base_clean.ps1` · `.github/PULL_REQUEST_TEMPLATE.md` · `docs/architecture/base/08-crosscutting-and-feature-slices.base.md`。
 
 ---
 
@@ -472,8 +471,8 @@ This template comes pre-configured with the following technology stack:
   - 产出：见 6.3（release-health.json）
 - package（Windows 导出）
   - 准备 export templates 缓存（Godot 4.5）
-  - 导出发布：godot.exe --headless --export-release "Windows Desktop" build/Rouge.exe
-  - 产出：build/Rouge.exe、build/Game.pck；导出日志见 6.3（export.log）
+  - 导出发布：godot.exe --headless --export-release "Windows Desktop" build/Game.exe
+  - 产出：build/Game.exe、build/Game.pck；导出日志见 6.3（export.log）
   - 仅在前置门禁全绿时运行
 - dotnet：actions/setup-dotnet（.NET 8）
 - 缓存建议：
@@ -485,7 +484,7 @@ This template comes pre-configured with the following technology stack:
 - E2E（headless）：py -3 scripts/python/godot_tests.py --headless --suite smoke,security,perf
 - 任务/回链：py -3 scripts/python/task_links_validate.py
 - 发布健康：py -3 scripts/python/release_health_gate.py --project <sentry_project> --env <env>
-- 导出：godot.exe --headless --export-release "Windows Desktop" build/Rouge.exe
+- 导出：godot.exe --headless --export-release "Windows Desktop" build/Game.exe
 
 **分支保护与开关**
 - 受保护分支启用 Required checks：godot-e2e、dotnet-unit、task-links-validate、release-health（可加 superclaude-review）

@@ -1,6 +1,6 @@
 # Phase 14: Godot 安全基线与审计
 
-> **核心目标**：实现与 Electron ADR-0002 等价的 Godot 安全基线，建立 URL 白名单、HTTPRequest 约束、文件系统保护、审计日志的完整体系。  
+> **核心目标**：实现与 旧桌面壳 ADR-0002 等价的 Godot 安全基线，建立 URL 白名单、HTTPRequest 约束、文件系统保护、审计日志的完整体系。  
 > **工作量**：5-7 人天  
 > **依赖**：Phase 8（场景设计）、Phase 12（Headless 测试）  
 > **交付物**：Security.cs Autoload + 8+ 个 GdUnit4 测试 + ADR-0018 草案 + CI 集成  
@@ -10,20 +10,20 @@
 
 ## 1. 背景与动机
 
-### 原版（vitegame）安全基线
+### 原版（旧项目）安全基线
 
-**Electron 实现（ADR-0002）**：
-- nodeIntegration=false, contextIsolation=true, sandbox=true
-- 严格 CSP：无 unsafe-inline/eval，connect-src 白名单
+**旧桌面壳 实现（ADR-0002）**：
+- 旧脚本集成开关=false, 旧隔离开关=true, sandbox=true
+- 严格 Web 内容安全策略：无 unsafe-inline/eval，connect-src 白名单
 - Preload 脚本白名单暴露 API，主进程验证参数
 - HTTP 请求强制 HTTPS，域/路径白名单
 
 **代码示例**：
 ```javascript
-// electron/main.ts
-const window = new BrowserWindow({
-  nodeIntegration: false,
-  contextIsolation: true,
+// 旧桌面壳/main.ts
+const window = new 旧窗口容器({
+  旧脚本集成开关: false,
+  旧隔离开关: true,
   webPreferences: { preload: path.join(__dirname, 'preload.ts') }
 });
 
@@ -40,7 +40,7 @@ window.webContents.session.webRequest.onBeforeSendHeaders(
 
 | 挑战 | 根因 | Godot 解决方案 |
 |-----|-----|--------------|
-| 无浏览器 CSP | 脚本语言自由度高 | 应用层白名单 + 运行时检查 |
+| 无浏览器 Web 内容安全策略 | 脚本语言自由度高 | 应用层白名单 + 运行时检查 |
 | HTTPRequest API 不同 | Godot 内置类型 | 自定义适配层（HTTPSecurityWrapper） |
 | 文件系统无沙箱 | 脚本可访问任意路径 | user:// 约束 + 运行时守卫 |
 | Signal 无类型安全 | 弱类型信号系统 | 契约定义 + 测试覆盖 + Lint |
@@ -878,7 +878,7 @@ public partial class Security : Node
 ### ADR-0018: Godot 安全基线与运行时防护
 
 **Status**: Proposed  
-**Context**: 将 Electron CSP + preload 安全模型迁移到 Godot 环境  
+**Context**: 将 旧桌面壳 Web 内容安全策略 + preload 安全模型迁移到 Godot 环境  
 **Decision**:
 1. 建立 Security.cs Autoload 作为全局安全守卫
 2. URL 白名单机制（硬编码 + 动态加载）
@@ -893,7 +893,7 @@ public partial class Security : Node
 - 需定期维护白名单（新域名需更新）
 
 **References**:
-- ADR-0002: Electron 安全基线（原版对标）
+- ADR-0002: 旧桌面壳 安全基线（原版对标）
 - OWASP Top 10: A01/A02/A04（注入、认证、不安全设计）
 - Godot 文档：File System Access（user:// 机制）
 - Sentry Godot SDK：Error Tracking
@@ -1010,7 +1010,7 @@ exit 0
 
 ## 9. 参考与链接
 
-- **ADR-0002**：Electron 安全基线（原版对标）
+- **ADR-0002**：旧桌面壳 安全基线（原版对标）
 - **ADR-0003**：可观测性与审计日志
 - **Phase 8**：场景设计（Signal 定义）
 - **Phase 12**：Headless 测试框架

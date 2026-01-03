@@ -199,8 +199,8 @@ dotnet tool install --global dotnet-reportgenerator-globaltool
 
 **安装步骤**:
 ```powershell
-# 安装 Node.js (如未安装)
-winget install OpenJS.NodeJS.LTS
+# 安装 旧脚本运行时 (如未安装)
+winget install OpenJS.旧脚本运行时.LTS
 
 # 安装 jscpd
 npm install -g jscpd
@@ -266,8 +266,8 @@ dir $env:APPDATA\Godot\export_templates\4.5.x.stable.mono\
 ### 创建新分支
 
 ```powershell
-# 切换到 vitegame 仓库
-cd C:\buildgame\vitegame
+# 切换到 旧项目 仓库
+cd C:\buildgame\旧项目
 
 # 创建迁移分支（基于当前 main）
 git checkout -b migration/godot-csharp
@@ -283,7 +283,7 @@ mkdir -p docs/migration
 ### 目录结构规划
 
 ```
-vitegame/                      # 保持现有结构不变
+旧项目/                      # 保持现有结构不变
 ├── docs/
 │   ├── migration/             # 新增：迁移文档
 │   │   ├── MIGRATION_INDEX.md
@@ -311,7 +311,7 @@ rouge/                     # 新建：Godot 项目根目录
 
 **执行步骤**:
 ```powershell
-# 在 vitegame 同级创建 rouge
+# 在 旧项目 同级创建 rouge
 cd C:\buildgame
 mkdir rouge
 cd rouge
@@ -486,4 +486,4 @@ git config --global i18n.logoutputencoding utf-8
 
 完成本阶段后，继续：
 
-➡️ [Phase-2-ADR-Updates.md](Phase-2-ADR-Updates.md) — ADR 更新与新增
+ [Phase-2-ADR-Updates.md](Phase-2-ADR-Updates.md) — ADR 更新与新增

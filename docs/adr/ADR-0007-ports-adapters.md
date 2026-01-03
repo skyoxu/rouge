@@ -39,7 +39,7 @@ supersedes: []
 
 ## Context and Problem Statement
 
-游戏应用需要与多种外部系统交互（数据库、文件系统、网络服务、Electron APIs），同时保持核心业务逻辑的独立性和可测试性。需要建立清晰的架构边界，使得业务逻辑不依赖于具体的技术实现，便于测试、维护和技术栈变更。
+游戏应用需要与多种外部系统交互（数据库、文件系统、网络服务、旧桌面壳 APIs），同时保持核心业务逻辑的独立性和可测试性。需要建立清晰的架构边界，使得业务逻辑不依赖于具体的技术实现，便于测试、维护和技术栈变更。
 
 ## Decision Drivers
 
@@ -529,9 +529,9 @@ export class SQLitePlayerRepositoryAdapter implements PlayerRepositoryPort {
 **文件系统适配器**：
 
 ```typescript
-// src/infrastructure/adapters/secondary/electron-file-system.adapter.ts
-export class ElectronFileSystemAdapter implements FileSystemPort {
-  constructor(private readonly app: Electron.App) {}
+// src/infrastructure/adapters/secondary/旧桌面壳-file-system.adapter.ts
+export class LegacyShellFileSystemAdapter implements FileSystemPort {
+  constructor(private readonly app: 旧桌面壳.App) {}
 
   public async readFile(filePath: string): Promise<string> {
     try {
@@ -636,7 +636,7 @@ container
 
 container
   .bind<FileSystemPort>(TYPES.FileSystem)
-  .to(ElectronFileSystemAdapter)
+  .to(LegacyShellFileSystemAdapter)
   .inSingletonScope();
 
 container

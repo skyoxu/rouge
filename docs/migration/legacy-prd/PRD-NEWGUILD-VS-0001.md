@@ -16,9 +16,9 @@ Chapter-Refs:
   - CH07
   - CH10
 Overlay-Refs:
-  - docs/architecture/overlays/PRD-Guild-Manager/08/_index.md
-  - docs/architecture/overlays/PRD-Guild-Manager/08/08-功能纵切-公会管理器.md
-  - docs/architecture/overlays/PRD-Guild-Manager/08/ACCEPTANCE_CHECKLIST.md
+  - docs/migration/legacy-overlays/PRD-Guild-Manager/08/_index.md
+  - docs/migration/legacy-overlays/PRD-Guild-Manager/08/08-功能纵切-公会管理器.md
+  - docs/migration/legacy-overlays/PRD-Guild-Manager/08/ACCEPTANCE_CHECKLIST.md
 Test-Refs:
   - Game.Core.Tests/Domain/GuildCoreTests.cs
   - Game.Core.Tests/Domain/GuildMemberTests.cs
@@ -218,7 +218,7 @@ Base 文档使用 `${DOMAIN_PREFIX}` 占位符：
 ### A.1 ADR 文件
 ```
 docs/adr/ADR-0004-event-bus-and-contracts.md
-docs/adr/ADR-0018-godot-csharp-tech-stack.md
+docs/adr/ADR-0018-godot-runtime-and-distribution.md
 docs/adr/ADR-0005-quality-gates.md
 docs/adr/ADR-0023-settings-ssot-configfile.md
 docs/adr/ADR-0011-windows-only-platform-and-ci.md
@@ -243,9 +243,9 @@ Tests.Godot/tests/Integration/test_guild_workflow.gd
 
 ### A.4 Overlay 文档路径
 ```
-docs/architecture/overlays/PRD-Guild-Manager/08/_index.md
-docs/architecture/overlays/PRD-Guild-Manager/08/08-功能纵切-公会管理器.md
-docs/architecture/overlays/PRD-Guild-Manager/08/ACCEPTANCE_CHECKLIST.md
+docs/migration/legacy-overlays/PRD-Guild-Manager/08/_index.md
+docs/migration/legacy-overlays/PRD-Guild-Manager/08/08-功能纵切-公会管理器.md
+docs/migration/legacy-overlays/PRD-Guild-Manager/08/ACCEPTANCE_CHECKLIST.md
 ```
 
 ---

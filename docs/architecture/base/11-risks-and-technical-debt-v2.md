@@ -105,10 +105,10 @@ C4Container
     Person(devops, "DevOps Engineer")
 
     Container_Boundary(risk_system, "unknown-app Risk Management System") {
-        Container(risk_api, "Risk Assessment API", "Node.js/Express", "RESTful API for risk operations")
+        Container(risk_api, "Risk Assessment API", "旧脚本运行时/Express", "RESTful API for risk operations")
         Container(risk_engine, "Risk Assessment Engine", "TypeScript Service", "Core P×I calculation and SLO integration")
         Container(sentry_adapter, "Sentry Integration", "TypeScript Service", "Risk event sampling and telemetry")
-        Container(ci_gate, "CI Gate Script", "Node.js Script", "Automated risk threshold validation")
+        Container(ci_gate, "CI Gate Script", "旧脚本运行时 Script", "Automated risk threshold validation")
         Container(trace_validator, "Traceability Validator", "TypeScript Service", "Risk-ADR-SLO-Test matrix validation")
         Container(risk_storage, "Risk Database", "JSON Files/SQLite", "Persistent risk and TDR storage")
         Container(config_mgmt, "Configuration Manager", "TypeScript Service", "Environment-specific risk thresholds")
@@ -140,7 +140,7 @@ C4Container
 
 ```ts
 // src/services/sentry-risk.ts（对齐 §03）
-import * as Sentry from '@sentry/electron/renderer';
+import * as Sentry from '@sentry/旧桌面壳/renderer';
 
 export interface RiskTelemetryConfig {
   dsn: string;
@@ -237,19 +237,19 @@ try {
   // 生成详细报告
   await generateRiskReport(result, stats, risks);
 
-  console.log(`🔍 Risk Gate Analysis: ${risks.length} risks evaluated`);
+  console.log(` Risk Gate Analysis: ${risks.length} risks evaluated`);
   console.log(
-    `📊 Stats: Critical=${stats.critical}, High=${stats.high}, Max Score=${stats.maxScore}`
+    ` Stats: Critical=${stats.critical}, High=${stats.high}, Max Score=${stats.maxScore}`
   );
 
   if (!result.passed) {
-    console.error('❌ Risk gate failed:', result.failures);
+    console.error(' Risk gate failed:', result.failures);
     if (CONFIG.exitOnFailure) process.exit(1);
   } else {
-    console.log('✅ Risk gate passed - all thresholds met');
+    console.log(' Risk gate passed - all thresholds met');
   }
 } catch (error) {
-  console.error('💥 Risk gate error:', error.message);
+  console.error(' Risk gate error:', error.message);
   if (CONFIG.exitOnFailure) process.exit(1);
 }
 
@@ -440,10 +440,10 @@ export function generateTraceReport(result: ValidationResult): string {
 - ADR关联: ${coverage.tdrsWithADR}/${coverage.totalTdrs}
 
 ### 问题清单
-${result.issues.map(i => `- ❌ ${i}`).join('\n')}
+${result.issues.map(i => `-  ${i}`).join('\n')}
 
 ### 警告清单  
-${result.warnings.map(w => `- ⚠️ ${w}`).join('\n')}
+${result.warnings.map(w => `-  ${w}`).join('\n')}
   `.trim();
 }
 ```
@@ -522,7 +522,7 @@ graph TD
 
 | 检查类型           | Critical阈值           | 检测方法    | 触发动作 |
 | ------------------ | ---------------------- | ----------- | -------- |
-| **安全基线**       | contextIsolation=false | 扫描main.ts | 立即回滚 |
+| **安全基线**       | 旧隔离开关=false | 扫描main.ts | 立即回滚 |
 | **Release Health** | Crash-Free < 99.5%     | Sentry API  | 立即回滚 |
 | **核心服务**       | 数据库不可用           | 依赖检查    | 阻止发布 |
 | **性能**           | 启动时间 > 10s         | 基线对比    | 立即回滚 |
@@ -551,10 +551,10 @@ npm run critical:check
 
 **输出格式**：
 
-- ✅ PASS - 可安全发布
-- ⚠️ WARN - 谨慎继续
-- ❌ FAIL - 阻止发布
-- 🚨 CRITICAL - 立即回滚
+-  PASS - 可安全发布
+-  WARN - 谨慎继续
+-  FAIL - 阻止发布
+-  CRITICAL - 立即回滚
 
 ## H) 验收清单（最小合规）
 

@@ -1,5 +1,5 @@
-Feature: 02 Electron 安全基线
+Feature: 02 旧桌面壳 安全基线
   Scenario: 基线护栏启用
     Given 应用以生产配置启动
     Then 渲染进程应禁用 Node 能力
-    And 存在严格 CSP 元标签
+    And 存在严格 Web 内容安全策略 元标签

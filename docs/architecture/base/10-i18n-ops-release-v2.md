@@ -16,7 +16,7 @@ C4Context
     title Release Operations Context for Unknown Product
     Person(admin, "Release Admin", "管理发布流程和监控")
     Person(user, "End User", "接收自动更新")
-    System(app, "Unknown Product (Electron App)", "桌面应用程序")
+    System(app, "Unknown Product (旧桌面壳 App)", "桌面应用程序")
     System_Ext(cdn, "${RELEASE_CDN}", "发布分发网络")
     System_Ext(sentry, "dev-team", "监控与健康指标")
     System_Ext(notary, "Apple Notary Service", "macOS公证服务")
@@ -35,16 +35,16 @@ C4Context
 ```mermaid
 C4Container
     title Unknown Product Release Containers
-    Container(main, "Main Process", "Node.js", "发布更新逻辑")
-    Container(renderer, "Renderer Process", "React", "用户更新提示")
-    Container(updater, "Auto Updater", "electron-updater", "自动更新引擎")
+    Container(main, "宿主进程", "旧脚本运行时", "发布更新逻辑")
+    Container(renderer, "渲染进程", "旧前端框架", "用户更新提示")
+    Container(updater, "Auto Updater", "旧桌面壳-updater", "自动更新引擎")
     Container(notifier, "Health Reporter", "TypeScript", "健康指标上报")
     ContainerDb(metadata, "Release Metadata", "JSON", "版本信息存储")
     System_Ext(cdn, "${RELEASE_CDN}", "分发服务")
 
-    Rel(main, updater, "检查更新", "IPC")
+    Rel(main, updater, "检查更新", "进程间通信")
     Rel(updater, cdn, "获取latest.yml", "HTTPS")
-    Rel(main, renderer, "显示更新状态", "contextBridge")
+    Rel(main, renderer, "显示更新状态", "旧桥接层")
     Rel(notifier, cdn, "上报指标", "POST /health")
     Rel(updater, metadata, "缓存版本信息", "File I/O")
 ```
