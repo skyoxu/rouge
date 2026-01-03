@@ -17,15 +17,15 @@ FILES_TO_CONVERT = [
     'adr/ADR-0010-internationalization.md',
     'adr/ADR-0012-pr-template-conditional-rendering.md',
     'adr/addenda/ADR-0006-godot-data-storage-addendum.md',
-    'architecture/base/02-security-baseline-electron-v2.md',
     'architecture/base/03-observability-sentry-logging-v2.md',
     'architecture/base/05-data-models-and-storage-ports-v2.md',
     'architecture/base/06-runtime-view-loops-state-machines-error-paths-v2.md',
     'architecture/base/09-performance-and-capacity-v2.md',
     'architecture/base/11-risks-and-technical-debt-v2.md',
-    'architecture/base/csp-policy-analysis.md',
     'architecture/base/front-matter-standardization-example.md',
-    'architecture/overlays/PRD-Guild-Manager/08/ACCEPTANCE_CHECKLIST.md',
+    'migration/legacy-base/02-security-baseline-legacy-v2.md',
+    'migration/legacy-base/legacy-web-content-policy-analysis.md',
+    'migration/legacy-overlays/PRD-Guild-Manager/08/ACCEPTANCE_CHECKLIST.md',
 ]
 
 def calculate_md5(content: bytes) -> str:

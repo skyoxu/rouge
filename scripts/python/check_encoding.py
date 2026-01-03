@@ -102,12 +102,33 @@ def check_utf8(path: str):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('--root', default=None, help='Recursively scan a root folder (e.g. docs)')
     ap.add_argument('--since-today', action='store_true')
     ap.add_argument('--since', default=None)
     ap.add_argument('--files', nargs='*')
     args = ap.parse_args()
 
-    if args.files:
+    if args.root:
+        root = args.root
+        files = []
+        for dirpath, dirnames, filenames in os.walk(root):
+            rel = dirpath.replace('\\', '/')
+            if '/.git' in rel or rel.startswith('.git'):
+                continue
+            if '/logs' in rel or rel.startswith('logs'):
+                continue
+            if '/demo' in rel or rel.startswith('demo'):
+                continue
+            if '/build' in rel or rel.startswith('build'):
+                continue
+            if '/.godot' in rel or rel.startswith('.godot'):
+                continue
+
+            for name in filenames:
+                fpath = os.path.join(dirpath, name)
+                if os.path.isfile(fpath) and is_text_file(fpath):
+                    files.append(fpath)
+    elif args.files:
         files = args.files
     elif args.since:
         files = git_changed_since(args.since)
@@ -141,9 +162,11 @@ def main():
         'generated': dt.datetime.now().isoformat(),
     }
 
-    with io.open(os.path.join(out_dir,'session-details.json'),'w',encoding='utf-8') as f:
+    suffix = 'root' if args.root else 'session'
+
+    with io.open(os.path.join(out_dir,f'{suffix}-details.json'),'w',encoding='utf-8') as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
-    with io.open(os.path.join(out_dir,'session-summary.json'),'w',encoding='utf-8') as f:
+    with io.open(os.path.join(out_dir,f'{suffix}-summary.json'),'w',encoding='utf-8') as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
 
     print(f"ENCODING_CHECK scanned={summary['scanned']} bad={summary['bad']} out={out_dir}")

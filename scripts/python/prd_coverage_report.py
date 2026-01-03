@@ -3,17 +3,15 @@
 """
 Produce a soft PRD coverage report between:
 
-- .taskmaster/docs/prd-*.txt (PRD text files)
-- .taskmaster/tasks/tasks_back.json
-- .taskmaster/tasks/tasks_gameplay.json
-- .taskmaster/tasks/tasks_newguild.json
+- .taskmaster/docs/prd*.txt (PRD text files)
+- .taskmaster/tasks/tasks.json (Task Master tasks by tag)
 
 This script does NOT act as a CI gate. It generates a heuristic report
 showing, for each PRD file, roughly how many tasks appear to reference it
 based on filename tokens.
 
 Usage:
-    py -3 scripts/python/prd_coverage_report.py
+    py -3 scripts/python/prd_coverage_report.py --tag master
 
 Output:
     - Human-readable summary printed to stdout
@@ -22,6 +20,7 @@ Output:
 
 from __future__ import annotations
 
+import argparse
 import json
 from dataclasses import dataclass, asdict
 from datetime import date
@@ -31,18 +30,17 @@ from typing import Dict, List
 
 PRD_DIR = Path(".taskmaster/docs")
 TASKS_DIR = Path(".taskmaster/tasks")
+DEFAULT_TASKS_FILE = TASKS_DIR / "tasks.json"
 
 
 @dataclass
 class PrdCoverage:
     prd_file: str
     tokens: List[str]
-    back_tasks: int
-    gameplay_tasks: int
-    newguild_tasks: int
+    tasks: int
 
 
-def load_tasks(path: Path) -> List[dict]:
+def load_tasks(path: Path, tag: str) -> List[dict]:
     if not path.exists():
         return []
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -50,6 +48,9 @@ def load_tasks(path: Path) -> List[dict]:
         return data
     if isinstance(data, dict) and "tasks" in data:
         return data["tasks"]
+    if isinstance(data, dict) and tag in data and isinstance(data[tag], dict) and "tasks" in data[tag]:
+        tasks = data[tag]["tasks"]
+        return tasks if isinstance(tasks, list) else []
     return []
 
 
@@ -64,7 +65,7 @@ def extract_tokens_from_prd_name(name: str) -> List[str]:
     # split by '-' and ignore very short/common tokens
     raw_tokens = stem.replace("_", "-").split("-")
     tokens: List[str] = []
-    stop = {"and", "the", "for", "with", "godot", "csharp", "newguild", "vitegame"}
+    stop = {"and", "the", "for", "with", "godot", "csharp", "rouge", "vitegame"}
     for tok in raw_tokens:
         tok = tok.strip().lower()
         if not tok:
@@ -99,27 +100,20 @@ def count_tasks_referencing_tokens(tasks: List[dict], tokens: List[str]) -> int:
     return count
 
 
-def build_coverage() -> Dict[str, PrdCoverage]:
-    prd_files = sorted(p for p in PRD_DIR.glob("prd-*.txt") if p.is_file())
-
-    tasks_back = load_tasks(TASKS_DIR / "tasks_back.json")
-    tasks_gameplay = load_tasks(TASKS_DIR / "tasks_gameplay.json")
-    tasks_newguild = load_tasks(TASKS_DIR / "tasks_newguild.json")
+def build_coverage(tasks_file: Path, tag: str) -> Dict[str, PrdCoverage]:
+    prd_files = sorted(p for p in PRD_DIR.glob("prd*.txt") if p.is_file())
+    tasks = load_tasks(tasks_file, tag=tag)
 
     coverage: Dict[str, PrdCoverage] = {}
 
     for prd in prd_files:
         name = prd.name
         tokens = extract_tokens_from_prd_name(name)
-        back_count = count_tasks_referencing_tokens(tasks_back, tokens)
-        gm_count = count_tasks_referencing_tokens(tasks_gameplay, tokens)
-        ng_count = count_tasks_referencing_tokens(tasks_newguild, tokens)
+        task_count = count_tasks_referencing_tokens(tasks, tokens)
         coverage[name] = PrdCoverage(
             prd_file=name,
             tokens=tokens,
-            back_tasks=back_count,
-            gameplay_tasks=gm_count,
-            newguild_tasks=ng_count,
+            tasks=task_count,
         )
 
     return coverage
@@ -136,17 +130,22 @@ def write_report(coverage: Dict[str, PrdCoverage], root: Path) -> Path:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Generate a heuristic PRD coverage report (non-blocking).")
+    parser.add_argument("--tasks-file", default=str(DEFAULT_TASKS_FILE), help="Path to Task Master tasks.json")
+    parser.add_argument("--tag", default="master", help="Task Master tag to read tasks from (default: master)")
+    args = parser.parse_args()
+
     root = Path(__file__).resolve().parents[2]
     print("=== PRD Coverage Report (heuristic, non-blocking) ===")
     print(f"Project root: {root}")
 
-    coverage = build_coverage()
+    tasks_file = Path(args.tasks_file)
+    coverage = build_coverage(tasks_file=tasks_file, tag=args.tag)
 
-    print("\nPRD file coverage (task counts by source):")
+    print("\nPRD file coverage (task counts):")
     for name, cov in sorted(coverage.items()):
         print(
-            f"- {name}: back={cov.back_tasks}, gameplay={cov.gameplay_tasks}, "
-            f"tasks_newguild={cov.newguild_tasks}, tokens={cov.tokens}"
+            f"- {name}: tasks={cov.tasks}, tokens={cov.tokens}"
         )
 
     out_path = write_report(coverage, root)

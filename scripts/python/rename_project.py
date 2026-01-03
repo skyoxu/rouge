@@ -24,7 +24,7 @@ SKIP_DIR_NAMES = {
 }
 
 SKIP_DIR_PREFIXES = (
-    "_backup_pre_godotgame_",
+    "_backup_pre_",
 )
 
 SKIP_TOP_DIRS = {
@@ -78,6 +78,34 @@ def iter_files(root: Path) -> Iterable[Path]:
         if any(_is_skipped_dir(p) for p in path.parents):
             continue
         yield path
+
+
+def detect_current_project_name(root: Path) -> str | None:
+    project_godot = root / "project.godot"
+    if project_godot.exists():
+        data = project_godot.read_bytes()
+        text = decode_text(data)
+        if text:
+            for pattern in (
+                r'^project/assembly_name="([^"]+)"\r?$',
+                r'^config/name="([^"]+)"\r?$',
+                r'^project/project_path="res://([^"]+)\.csproj"\r?$',
+            ):
+                m = re.search(pattern, text, flags=re.M)
+                if m:
+                    val = m.group(1).strip()
+                    if val:
+                        return val
+
+    slns = sorted(root.glob("*.sln"))
+    if len(slns) == 1:
+        return slns[0].stem
+
+    csprojs = sorted(root.glob("*.csproj"))
+    if len(csprojs) == 1:
+        return csprojs[0].stem
+
+    return None
 
 
 def decode_text(data: bytes) -> str | None:
@@ -285,15 +313,26 @@ def update_text_files(root: Path, spec: RenameSpec, dry_run: bool) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Rename project from GodotGame/godotgame to a new name and normalize text files to UTF-8.")
+    parser = argparse.ArgumentParser(description="Rename project name and normalize text files to UTF-8.")
+    parser.add_argument(
+        "--old",
+        default=None,
+        help="Existing project name (PascalCase). If omitted, tries to detect from project.godot / *.sln / *.csproj.",
+    )
+    parser.add_argument("--old-lower", default=None, help="Existing lowercase name (defaults to lowercased --old)")
     parser.add_argument("--new", required=True, help="New project name (PascalCase), e.g. Rouge")
     parser.add_argument("--new-lower", default=None, help="New lowercase name, e.g. rouge (defaults to lowercased --new)")
     parser.add_argument("--dry-run", action="store_true", help="Show what would change without writing")
     args = parser.parse_args()
 
+    old_pascal = args.old or detect_current_project_name(REPO_ROOT)
+    if not old_pascal:
+        print("Error: unable to detect current project name; pass --old explicitly.")
+        return 2
+
     spec = RenameSpec(
-        old_pascal="GodotGame",
-        old_lower="godotgame",
+        old_pascal=old_pascal,
+        old_lower=(args.old_lower or old_pascal.lower()),
         new_pascal=args.new,
         new_lower=(args.new_lower or args.new.lower()),
     )
