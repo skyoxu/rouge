@@ -37,6 +37,7 @@ logs/
 gitlog/
 godot_local/
 tmp/
+_tmp/
 **/bin/
 **/obj/
 .vs/
