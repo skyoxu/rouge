@@ -165,10 +165,15 @@ def main() -> int:
     for t in tag_tasks:
         if not isinstance(t, dict):
             continue
-        tm_id = t.get("id")
-        if not isinstance(tm_id, int):
+        tm_id_raw = t.get("id")
+        tm_id_int: int | None = None
+        if isinstance(tm_id_raw, int):
+            tm_id_int = tm_id_raw
+        elif isinstance(tm_id_raw, str) and tm_id_raw.strip().isdigit():
+            tm_id_int = int(tm_id_raw.strip())
+        if tm_id_int is None:
             continue
-        overlay_refs = overlay_by_tm_id.get(tm_id)
+        overlay_refs = overlay_by_tm_id.get(tm_id_int)
         if not overlay_refs:
             continue
 
@@ -198,4 +203,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

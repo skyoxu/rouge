@@ -140,6 +140,6 @@
   - 测试框架与金字塔：docs/testing-framework.md
   - Windows-only 快速指引：docs/migration/Phase-17-Windows-Only-Quickstart.md
   - 安全基线：docs/migration/Phase-14-Godot-Security-Baseline.md
-  - Release / Sentry / 工作流说明：docs/workflows/GM-NG-T2-playable-guide.md
+  - Release / Sentry / 工作流说明：docs/workflows/acceptance-check-and-llm-review.md
 
   > 派生新项目时，可以直接复制本文件并按实际仓库名、主工程名（例如 Rouge）做极少量替换，即可获得一份完整的「Godot+C# Windows-only 快速开始」文档。

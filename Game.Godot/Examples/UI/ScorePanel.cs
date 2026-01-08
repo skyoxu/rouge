@@ -41,7 +41,7 @@ public partial class ScorePanel : Control
 
     private void OnDomainEventEmitted(string type, string source, string dataJson, string id, string specVersion, string dataContentType, string timestampIso)
     {
-        if (type == "core.score.updated" || type == "score.changed")
+        if (type == "core.score.updated")
         {
             try
             {

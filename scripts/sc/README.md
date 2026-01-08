@@ -43,7 +43,7 @@
 `py -3 scripts/sc/acceptance_check.py ...` 提供一个“可重复、可审计”的验收门禁脚本，用确定性检查替代 Claude Code 的多 Subagent 口头审查。
 
 它把“6 个 subagents”映射为本仓库的可执行检查（部分为软门禁）：
-- ADR 合规（硬）：任务 `adrRefs/archRefs/overlay`、ADR 文件存在、ADR 状态为 Accepted
+- ADR 合规（硬）：以 `.taskmaster/tasks/tasks.json` 的 `adrRefs/archRefs/overlay` 为准（由 NG/GM 视图任务的 `adr_refs/chapter_refs/overlay_refs` 回填）；ADR 文件存在；ADR 状态为 Accepted
 - 任务回链（硬）：`scripts/python/task_links_validate.py`
 - Overlay 校验（硬）：`scripts/python/validate_task_overlays.py`
 - 契约一致性（硬）：`scripts/python/validate_contracts.py`
@@ -68,7 +68,7 @@
 py -3 scripts/sc/analyze.py --format report
 
 # 构建（warn as error）
-py -3 scripts/sc/build.py GodotGame.csproj --type dev --clean
+py -3 scripts/sc/build.py Rouge.csproj --type dev --clean
 
 # TDD 门禁编排
 py -3 scripts/sc/build.py tdd --stage red --generate-red-test

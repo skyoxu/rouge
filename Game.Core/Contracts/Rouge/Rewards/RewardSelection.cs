@@ -7,8 +7,7 @@ namespace Game.Core.Contracts.Rouge.Rewards;
 /// Stored under Game.Core/Contracts/** per ADR-0020.
 /// </remarks>
 public sealed record RewardSelection(
-    string RewardType, // card_pick | gold | heal | relic | remove_card | upgrade_card
+    string RewardType, // see RewardTypes
     string? SelectedItemId,
     int? Amount
 );
-

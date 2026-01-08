@@ -1,7 +1,7 @@
 ---
 title: 01 introduction and goals v2
 status: base-SSoT
-adr_refs: [ADR-0001, ADR-0002, ADR-0003, ADR-0004, ADR-0005, ADR-0011]
+adr_refs: [ADR-0018, ADR-0011, ADR-0019, ADR-0003, ADR-0004, ADR-0005, ADR-0020, ADR-0021]
 placeholders: unknown-app, Unknown Product, unknown-product, gamedev, dev-team, dev-project, dev, 0.0.0, production, 99.5
 ---
 
@@ -26,8 +26,8 @@ Stable anchors preserved for cross-references.
 ### 系统定位
 
 - **产品类型**: 深度生态模拟游戏 - 玩家作为 ${DOMAIN_GUILD} ${DOMAIN_LEADER} 管理完整虚拟生态系统
-- **技术栈核心**: 旧桌面壳 + 旧前端框架 19 + 旧前端游戏引擎 3 + 旧构建工具 + TypeScript + Tailwind CSS v4
-- **平台约束**: Windows（主要）、macOS（次要），桌面端发行
+- **技术栈核心**: Godot 4.5（.NET/mono）+ C#/.NET 8；三层结构（Scenes→Adapters→Core）+ 纯 C# 契约（见 ADR-0018/ADR-0020/ADR-0021）
+- **平台约束**: Windows-only 桌面发行（见 ADR-0011）
 
 ### 核心边界
 
@@ -59,10 +59,10 @@ C4Context
     Person(player, "Game Player", "深度策略游戏玩家，管理虚拟生态系统")
     Person(dev_team, "Development Team", "游戏开发与维护团队")
     Person(ops_team, "Operations Team", "系统运维与发布管理")
-    System(game_app, "Unknown Product", "旧桌面壳深度生态模拟游戏")
+    System(game_app, "Unknown Product", "Godot 游戏客户端（Windows-only）")
     System_Ext(sentry, "dev-team", "错误追踪与性能监控平台")
     System_Ext(distribution, "Distribution Platform", "游戏分发平台（Steam等）")
-    System_Ext(os_services, "OS Services", "Windows/macOS系统服务")
+    System_Ext(os_services, "OS Services", "Windows 系统服务")
     System_Ext(game_assets, "Game Assets CDN", "游戏资源内容分发网络")
 
     Rel(player, game_app, "游戏体验", "桌面应用")
@@ -82,39 +82,30 @@ C4Context
 ```mermaid
 C4Container
     title Unknown Product System Containers
-    System_Boundary(LEGACY_SHELL_app, "Unknown Product Application") {
-        Container(main_process, "宿主进程", "旧桌面壳/旧脚本运行时", "应用生命周期管理与系统集成")
-        Container(renderer_ui, "UI Renderer", "旧前端框架 19/TypeScript", "用户界面与交互逻辑")
-        Container(game_engine, "Game Engine", "旧前端游戏引擎 3", "游戏渲染与物理引擎")
-        Container(ai_system, "AI System", "TypeScript", "多层AI生态模拟")
-        Container(event_bus, "Event Bus", "TypeScript", "事件池与事件处理")
-        Container(data_layer, "Data Layer", "SQLite", "本地数据持久化")
+    System_Boundary(game_app, "Unknown Product (Godot)") {
+        Container(godot_runtime, "Godot Runtime", "Godot 4.5 (.NET/mono)", "引擎主循环/渲染/输入/资源")
+        Container(scenes_ui, "Scenes/UI", "Godot Scenes + Control", "装配、信号路由、最小 UI Glue")
+        Container(adapters, "Adapters", "C# (Godot API)", "封装 Godot API，通过接口注入 Core")
+        Container(core_domain, "Core Domain", "C#/.NET 8 (no Godot)", "纯领域模型/状态机/服务，可 xUnit 单测")
+        Container(contracts, "Contracts", "C# records (SSoT)", "事件/DTO/端口契约（`Game.Core/Contracts/**`）")
+        Container(data_layer, "Data Store", "SQLite (user://)", "本地数据持久化（仅 user:// 可写）")
     }
     System_Boundary(quality_infra, "Quality Infrastructure") {
-        Container(observability, "Observability SDK", "@sentry/旧桌面壳", "错误追踪与性能监控")
-        Container(performance_tracker, "Performance Tracker", "TypeScript", "帧率与响应时间监控")
-        Container(health_reporter, "Health Reporter", "TypeScript", "系统健康状态上报")
+        Container(observability, "Observability SDK", "Sentry SDK (optional)", "错误追踪与发布健康（Release Health）")
+        Container(performance_tracker, "Performance Metrics", "JSON summary", "帧耗时/启动耗时等指标归档到 logs/perf")
     }
     System_Boundary(security_layer, "Security Layer") {
-        Container(context_bridge, "Context Bridge", "旧桌面壳 preload", "安全的进程间通信通信桥梁")
-        Container(csp_policy, "Web 内容安全策略 Policy", "Security Headers", "内容安全策略执行")
-        Container(permission_handler, "Permission Handler", "旧桌面壳 Security", "权限检查与控制")
+        Container(security_guard, "Security Guard", "C# (Adapters)", "路径/外链/权限 default-deny + 审计（见 ADR-0019）")
     }
     System_Ext(sentry_cloud, "dev-team", "云端监控服务")
     System_Ext(file_system, "File System", "操作系统文件存储")
 
-    Rel(main_process, renderer_ui, "进程间通信通信", "旧桥接层")
-    Rel(renderer_ui, game_engine, "游戏控制", "JavaScript API")
-    Rel(game_engine, ai_system, "AI交互", "事件调用")
-    Rel(ai_system, event_bus, "事件发布", "事件总线")
-    Rel(event_bus, data_layer, "数据持久化", "SQL操作")
-    Rel(main_process, context_bridge, "安全桥接", "旧预加载脚本")
-    Rel(context_bridge, permission_handler, "权限检查", "安全API")
+    Rel(scenes_ui, adapters, "调用接口", "ports/adapters")
+    Rel(adapters, core_domain, "调用领域服务", "interfaces")
+    Rel(core_domain, data_layer, "读写数据", "ports")
+    Rel(security_guard, adapters, "拦截/校验", "default-deny")
     Rel(observability, sentry_cloud, "遥测上报", "HTTPS")
-    Rel(performance_tracker, health_reporter, "性能数据", "内部API")
-    Rel(health_reporter, observability, "健康指标", "SDK集成")
     Rel(data_layer, file_system, "文件存储", "SQLite文件")
-    Rel(csp_policy, renderer_ui, "安全约束", "HTTP Headers")
 ```
 
 ## 1.2 质量目标（TOP 3-5 NFR 优先级）
@@ -131,7 +122,7 @@ C4Container
 - 可观测性
   - 覆盖率（错误/日志/Sentry 采样）
 - 安全性
-  - 旧桌面壳 基线（Node/Context/Sandbox/Web 内容安全策略/Policy）
+  - Godot 安全基线（res:// / user:// + 外链/网络白名单 + 审计日志；见 ADR-0019）
 
 <!-- sec:1.2 -->
 
@@ -225,10 +216,10 @@ business_goals:
 ### CI 阶段脚本（占位）
 
 ```bash
-node scripts/release-health-gate.js   --window %RH_WINDOW_HOURS%   --adoption %RH_MIN_ADOPTION%   --min-cfs %RH_CRASH_FREE_SESSIONS_MIN%   --min-cfu %RH_CRASH_FREE_USERS_MIN%   --no-regression %RH_NO_REGRESSION%
+py -3 scripts/python/check_sentry_secrets.py
 ```
 
-> 数据来源：Sentry Release Health API；若无足够样本量（adoption 过低），则推迟放量。
+> 说明：Release Health 门禁脚本在本仓库的实现与接入属于规划项；当前先保留 Sentry secrets/环境审计的软检查入口，确保流水线可追溯。
 
 ### 错误预算（Error Budget）与策略（Policy）
 
@@ -241,22 +232,22 @@ node scripts/release-health-gate.js   --window %RH_WINDOW_HOURS%   --adoption %R
 
 > 说明：具体阈值与窗口在 §07 门禁与 §03 报警模板中落地，且需干系人（PM/Dev/Ops）共同批准。
 
-## 1.5 硬约束（含 旧桌面壳 安全基线）
+## 1.5 硬约束（含 Godot 安全基线）
 
 <!-- sec:1.5 -->
 
-### 旧桌面壳 安全基线（强制）
+### Godot 安全基线（强制，见 ADR-0019）
 
-- `旧脚本集成开关=false`、`旧隔离开关=true`、`sandbox=true`
-- 严格 `Web 内容安全策略`（生产通过**响应头**注入；开发可 `meta` 兜底）
-- 默认 **Permissions-Policy** 拒绝高危能力（例如 `geolocation=(), camera=(), microphone=()`）
-- `Cross-Origin-Opener-Policy: same-origin`；`Cross-Origin-Embedder-Policy: require-corp`（按特性开关）
-- 进程间通信 **白名单 + 双处理器**：`setPermissionCheckHandler` + `setPermissionRequestHandler`
+- 文件系统：仅允许 `res://`（只读）与 `user://`（读写）；拒绝绝对路径与越权访问；失败统一审计（落 `logs/**`）。
+- 外链与网络：仅 HTTPS；主机白名单 `ALLOWED_EXTERNAL_HOSTS`；`GD_OFFLINE_MODE=1` 时拒绝所有出网并审计。
+- OS.execute 与权限：默认禁用；CI/headless 下摄像头/麦克风/文件选择默认拒绝。
+- 插件与代码：禁止运行期动态加载外部程序集/脚本；发布剔除 dev-only 插件；禁用远程调试与编辑器残留。
+- 可观测性与隐私：敏感字段脱敏；结构化日志采样；Sentry（如启用）在最早 Autoload 初始化。
 
-### 技术栈与版本约束
+### 技术栈与版本约束（见 ADR-0018/ADR-0011）
 
-- 旧桌面壳/Node/旧浏览器运行时 主版本下限由 §7 质量门禁脚本校验
-- 前端栈：旧桌面壳 + 旧前端框架 18 + 旧构建工具 + TypeScript + Tailwind CSS + 旧前端游戏引擎 3
+- 平台：Windows-only；CI/本地以 PowerShell + Python（`py -3`）驱动门禁。
+- 运行时：Godot 4.5.x（.NET/mono）；主语言 C#/.NET 8；领域逻辑落 `Game.Core`，不得引用 `Godot.*`。
 
 ## 1.6 干系人（Stakeholders）
 
@@ -287,16 +278,16 @@ node scripts/release-health-gate.js   --window %RH_WINDOW_HOURS%   --adoption %R
 
 | 风险ID | 描述                                               | 影响 | 概率 | 缓解/应对                                            |
 | ------ | -------------------------------------------------- | ---- | ---- | ---------------------------------------------------- |
-| R-01   | 第三方依赖安全缺陷导致被动升版                     | 高   | 中   | §07 流水线开启 `npm audit` 严格模式 + 例外白名单评审 |
-| R-02   | COEP 打开后第三方资源未带 CORS/CORP 导致功能不可用 | 中   | 中   | 以**特性旗标**灰度 COEP，提供回退                    |
+| R-01   | 第三方依赖安全缺陷导致被动升版                     | 高   | 中   | §07 执行依赖漏洞扫描（NuGet）+ 例外白名单评审        |
+| R-02   | Godot 版本/导出模板不一致导致导出失败或运行时崩溃  | 高   | 中   | 固定 `GODOT_BIN` + Export Templates；CI 导出+冒烟     |
 | R-03   | Sentry 采样或上报策略不当影响 Crash-Free 可信度    | 中   | 低   | 校准采样率，低使用量阶段用更长观测窗                 |
-| R-04   | 跨平台差异（Windows/macOS/Linux）导致行为不一致    | 中   | 中   | 在 §07 引入三平台矩阵 E2E 冒烟                       |
-| R-05   | 性能回退（帧率/TP95）未被及时发现                  | 中   | 中   | §03 可观测+§07 门禁双重监控，回退自动阻断            |
+| R-04   | 性能回退（启动/帧耗时）未被及时发现                | 中   | 中   | §09/§07 性能烟测 + 门禁双重监控，回退自动阻断        |
+| R-05   | `user://` 路径处理不当导致越权/数据损坏            | 高   | 低   | §02 安全基线 + 单测 + 审计日志                       |
 
 ### 核心假设
 
 - 允许在发布管道中拉取 Sentry Release Health 指标
-- 允许在 旧桌面壳 主进程注入响应头（自定义 `app://` 协议）
+- 允许在 CI/headless 场景写入 `logs/**` 与 `user://`（用于门禁与取证）
 
 ## 1.8 术语表（Glossary）
 
@@ -317,7 +308,7 @@ node scripts/release-health-gate.js   --window %RH_WINDOW_HOURS%   --adoption %R
 
 | ${PRD_ID} | 业务目标       | 对应 NFR/SLO          | 相关 ADR               | 测试引用（unit/contract/e2e） |
 | --------- | -------------- | --------------------- | ---------------------- | ----------------------------- |
-| ${PRD_ID} | 示例：登录流程 | NFR-3 事件 TP95<=50ms | ADR-0005 Quality Gates | tests/e2e/auth.spec.ts#L10    |
+| ${PRD_ID} | 示例：设置保存 | NFR-3 事件 TP95<=50ms | ADR-0005 Quality Gates | Game.Core.Tests/Example/SettingsTests.cs#L10 |
 
 ### 双向可追踪性验证
 
@@ -328,7 +319,7 @@ node scripts/release-health-gate.js   --window %RH_WINDOW_HOURS%   --adoption %R
 
 | ${PRD_ID} | 业务目标 | 对应 NFR/SLO    | 相关 ADR | 测试引用                   | Owner | 证据（Dashboard/Report）        |
 | --------- | -------- | --------------- | -------- | -------------------------- | ----- | ------------------------------- |
-| ${PRD_ID} | 登录流程 | NFR-3 TP95≤50ms | ADR-0005 | tests/e2e/auth.spec.ts#L10 | QA    | Sentry Release Health / Grafana |
+| ${PRD_ID} | 设置保存 | NFR-3 TP95≤50ms | ADR-0005 | Game.Core.Tests/Example/SettingsTests.cs#L10 | QA    | `logs/ci/<YYYY-MM-DD>/...` + Sentry（如启用） |
 
 ## 1.10 文档验收清单（Document Acceptance Checklist）
 
@@ -336,9 +327,9 @@ node scripts/release-health-gate.js   --window %RH_WINDOW_HOURS%   --adoption %R
 
 - [ ] 小节完整（1.1–1.10）且 **锚点齐全**（`<!-- sec:X.X -->`）
 - [ ] **NFR/SLO 可量化**，并与 §1.4 放量门禁联动
-- [ ] **硬约束清晰**（旧桌面壳 安全基线、策略头、进程间通信 白名单）
+- [ ] **硬约束清晰**（Godot 安全基线：`res://`/`user://`、外链/网络白名单、审计日志）
 - [ ] **追踪矩阵**可双向检索（PRD ↔ NFR/SLO ↔ ADR ↔ 测试）
-- [ ] **契约代码/测试占位**存在并能 `pnpm test` 通过
+- [ ] **契约代码/测试占位**存在并能 `dotnet test` 通过
 
 **补充检查项**
 
@@ -346,79 +337,53 @@ node scripts/release-health-gate.js   --window %RH_WINDOW_HOURS%   --adoption %R
 - [ ] §1.4 含 **错误预算策略** 摘要（并与 §03/§07 对齐）
 - [ ] 追踪矩阵包含 **Owner** 与 **证据链接**
 
-## 附录：TypeScript 契约与测试占位
+## 附录：C# 契约与测试占位
 
 <!-- sec:appendix -->
 
-### src/shared/contracts/quality.ts
+### Game.Core/Contracts/Quality/QualityGoal.cs（示例）
 
-```typescript
-export type QualityId =
-  | 'reliability'
-  | 'perf'
-  | 'event-latency'
-  | 'ux-latency'
-  | 'observability';
+```csharp
+using System.Collections.Generic;
 
-export interface SLO {
-  id: string;
-  metric: 'crash_free_sessions' | 'fps' | 'tp95' | 'coverage';
-  target: number;
-  windowHours?: number;
-}
+namespace Game.Core.Contracts.Quality;
 
-export interface QualityGoal {
-  id: QualityId;
-  title: string;
-  slos: SLO[];
-}
+/// <summary>
+/// 质量目标定义（示例）。
+/// </summary>
+/// <remarks>
+/// References: ADR-0005-quality-gates, CH01。
+/// </remarks>
+public sealed record QualityGoal(
+    string Id,
+    string Title,
+    IReadOnlyList<QualitySlo> Slos);
 
-export const QUALITY_GOALS: QualityGoal[] = [
-  {
-    id: 'reliability',
-    title: '可靠性',
-    slos: [
-      {
-        id: 'CFS',
-        metric: 'crash_free_sessions',
-        target: 0.995,
-        windowHours: 24,
-      },
-    ],
-  },
-  {
-    id: 'perf',
-    title: '帧率',
-    slos: [{ id: 'FPS', metric: 'fps', target: 60 }],
-  },
-  {
-    id: 'event-latency',
-    title: '事件处理时延',
-    slos: [{ id: 'EV_TP95', metric: 'tp95', target: 50 }],
-  },
-  {
-    id: 'ux-latency',
-    title: '关键交互时延',
-    slos: [{ id: 'UX_TP95', metric: 'tp95', target: 100 }],
-  },
-  {
-    id: 'observability',
-    title: '可观测性',
-    slos: [{ id: 'ERR_COV', metric: 'coverage', target: 0.95 }],
-  },
-];
+/// <summary>
+/// SLO 定义（示例）。
+/// </summary>
+public sealed record QualitySlo(
+    string Id,
+    string Metric,
+    double Target,
+    int? WindowHours);
 ```
 
-### tests/unit/quality.spec.ts
+### Game.Core.Tests/Contracts/QualityContractsTests.cs（示例）
 
-```ts
-import { describe, it, expect } from 'vitest';
-import { QUALITY_GOALS } from '../../src/shared/contracts/quality';
+```csharp
+using System.Collections.Generic;
+using Game.Core.Contracts.Quality;
+using Xunit;
 
-describe('quality goals', () => {
-  it('has crash-free sessions SLO >= 0.995', () => {
-    const cfs = QUALITY_GOALS.find(g => g.id === 'reliability')!.slos[0];
-    expect(cfs.target).toBeGreaterThanOrEqual(0.995);
-  });
-});
+public class QualityContractsTests
+{
+    [Fact]
+    public void Quality_goal_can_be_constructed()
+    {
+        var slos = new List<QualitySlo> { new("CFS", "crash_free_sessions", 0.995, 24) };
+        var goal = new QualityGoal("reliability", "可靠性", slos);
+        Assert.Equal("reliability", goal.Id);
+    }
+}
 ```

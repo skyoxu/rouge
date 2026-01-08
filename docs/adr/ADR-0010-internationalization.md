@@ -1,7 +1,7 @@
 ---
 ADR-ID: ADR-0010
 title: 国际化策略 - i18next + 动态语言切换
-status: Accepted
+status: Superseded
 decision-time: '2025-08-17'
 deciders: [架构团队, UX团队, 国际化团队]
 archRefs: [CH01, CH06, CH10]
@@ -23,6 +23,7 @@ tech-tags:
   - internationalization
 depends-on: []
 depended-by: []
+superseded-by: [ADR-0028]
 test-coverage: tests/unit/adr-0010.spec.ts
 monitoring-metrics:
   - implementation_coverage

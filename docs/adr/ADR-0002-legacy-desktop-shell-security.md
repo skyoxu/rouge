@@ -1,7 +1,7 @@
 ---
 ADR-ID: ADR-0002
 title: 旧桌面壳安全基线 - 三层拦截与沙箱策略
-status: Accepted
+status: Superseded
 decision-time: '2025-08-17'
 deciders: [架构团队, 安全团队]
 archRefs: [CH01, CH02, CH03, CH04]
@@ -30,6 +30,7 @@ executable-deliverables:
   - tests/e2e/security/旧桌面壳-security.spec.ts
   - scripts/scan_LEGACY_SHELL_safety.mjs
 supersedes: []
+superseded-by: [ADR-0019]
 ---
 
 # ADR-0002: 旧桌面壳安全基线

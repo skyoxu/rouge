@@ -1,225 +1,53 @@
 ---
 title: 10 i18n ops release v2
 status: base-SSoT
-adr_refs: [ADR-0001, ADR-0002, ADR-0003, ADR-0005, ADR-0008, ADR-0011]
-placeholders: unknown-app, Unknown Product, ${ORG}, ${REPO}, ${RELEASE_CDN}, dev-team, dev-project, production, dev, 0.0.0, ${PRODUCT_DOWNLOAD_URL}
+adr_refs: [ADR-0028, ADR-0011, ADR-0018, ADR-0008, ADR-0003, ADR-0005]
+placeholders: Unknown Product, unknown-product, gamedev, dev-team, dev, 0.0.0, production
 derived_from: 10-i18n-ops-release-v2.md
-last_generated: 2025-08-21
+last_generated: 2026-01-08
 ---
 
-> 目标：在 optimized 基础上补齐 **通道矩阵（Dev/Staging/Prod）**、**签名/公证失败的降级与告警**、**更新回退策略** 与 **i18n 发布前质量门禁**，确保工程闭环。
+> 目标：给出 Godot+C#（Windows-only）的 i18n、运维与发布口径（SSoT），并说明与 CI/Release Health 的对齐方式。
 
-## 0.1 发布上下文视图（C4 Context）
+## 1. i18n（SSoT：ADR-0028）
 
-```mermaid
-C4Context
-    title Release Operations Context for Unknown Product
-    Person(admin, "Release Admin", "管理发布流程和监控")
-    Person(user, "End User", "接收自动更新")
-    System(app, "Unknown Product (旧桌面壳 App)", "桌面应用程序")
-    System_Ext(cdn, "${RELEASE_CDN}", "发布分发网络")
-    System_Ext(sentry, "dev-team", "监控与健康指标")
-    System_Ext(notary, "Apple Notary Service", "macOS公证服务")
-    System_Ext(signing, "Code Signing Authority", "代码签名服务")
+- 文本资源：以 Godot 的翻译资源（`.translation`/`.po` 等）与 `TranslationServer` 为主。
+- 约束：UI 文本必须使用 key 绑定，不允许把中文/英文硬编码散落在场景脚本里。
+- Overlay 08：只描述“某功能纵切需要哪些 key/资源”，不复制 i18n 流程细节。
 
-    Rel(admin, app, "执行发布流程", "CI/CD")
-    Rel(app, cdn, "上传构建产物", "HTTPS")
-    Rel(user, cdn, "下载更新", "HTTPS")
-    Rel(app, sentry, "上报健康指标", "Crash-Free/Adoption")
-    Rel(app, notary, "提交公证", "notarytool")
-    Rel(app, signing, "代码签名", "SignTool/codesign")
+## 2. Ops（Windows-only + 可观测性）
+
+- 平台：Windows-only（ADR-0011）。
+- 日志与取证：遵循 CH03（`logs/**`），CI 产物可回溯。
+- 安全基线：遵循 CH02/ADR-0019（外链/网络/文件/权限均需审计）。
+
+## 3. Release（发布与回滚）
+
+### 3.1 版本与标识
+
+- 版本号与产品名建议在 `project.godot`/`export_presets.cfg` 与 CI Tag 规则中统一维护。
+- GitHub Actions：参考 `.github/workflows/windows-release*.yml`（按仓库实际工作流为准）。
+
+### 3.2 导出与 EXE 冒烟
+
+- 导出脚本：`scripts/ci/export_windows.ps1`
+- EXE 冒烟：`scripts/ci/smoke_exe.ps1`
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ci/export_windows.ps1 -GodotBin $env:GODOT_BIN -Output build/Rouge.exe
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ci/smoke_exe.ps1 -ExePath build/Rouge.exe
 ```
 
-## 0.2 发布容器视图（C4 Container）
+### 3.3 分阶段发布（可选）
 
-```mermaid
-C4Container
-    title Unknown Product Release Containers
-    Container(main, "宿主进程", "旧脚本运行时", "发布更新逻辑")
-    Container(renderer, "渲染进程", "旧前端框架", "用户更新提示")
-    Container(updater, "Auto Updater", "旧桌面壳-updater", "自动更新引擎")
-    Container(notifier, "Health Reporter", "TypeScript", "健康指标上报")
-    ContainerDb(metadata, "Release Metadata", "JSON", "版本信息存储")
-    System_Ext(cdn, "${RELEASE_CDN}", "分发服务")
+- 分阶段/灰度策略属于部署发布口径（ADR-0008）；如果需要历史对照材料，放在 `docs/migration/**`。
 
-    Rel(main, updater, "检查更新", "进程间通信")
-    Rel(updater, cdn, "获取latest.yml", "HTTPS")
-    Rel(main, renderer, "显示更新状态", "旧桥接层")
-    Rel(notifier, cdn, "上报指标", "POST /health")
-    Rel(updater, metadata, "缓存版本信息", "File I/O")
-```
+### 3.4 Release Health（引用 CH01/CH03）
 
-## A) 通道矩阵与放量策略
+- Crash-Free Sessions/Users 的口径与门禁阈值只在 ADR/Base 维护；Overlay 08 不复制阈值。
+- Secrets 预检：`py -3 scripts/python/check_sentry_secrets.py`。
 
-```ts
-export interface RolloutGate {
-  metric: 'crashFreeUsers' | 'crashFreeSessions' | 'adoptionRate';
-  threshold: number;
-  waitMs: number;
-  action: 'block' | 'warn' | 'rollback';
-}
-export const CHANNELS = {
-  dev: {
-    url: '${RELEASE_CDN}/dev',
-    gates: [
-      { metric: 'adoptionRate', threshold: 0.1, waitMs: 0, action: 'warn' },
-    ],
-  },
-  staging: {
-    url: '${RELEASE_CDN}/staging',
-    gates: [
-      {
-        metric: 'crashFreeUsers',
-        threshold: 99.0,
-        waitMs: 3600000,
-        action: 'block',
-      },
-    ],
-  },
-  prod: {
-    url: '${RELEASE_CDN}/prod',
-    gates: [
-      {
-        metric: 'crashFreeUsers',
-        threshold: 99.5,
-        waitMs: 3600000,
-        action: 'rollback',
-      },
-    ],
-  },
-} as const;
-```
+## 4. 工件与留痕
 
-## B) 签名/公证失败的降级与可观测
-
-```ts
-export interface SigNotarizeResult {
-  platform: 'win' | 'mac';
-  step: 'sign' | 'notarize' | 'staple' | 'verify';
-  ok: boolean;
-  msg?: string;
-}
-export function onSigNotarizeFailure(r: SigNotarizeResult) {
-  /* 上报 Sentry & 触发告警（与 03 章一致） */
-}
-```
-
-## C) 更新回退（版本保护）
-
-```ts
-export interface RollbackPlan {
-  maxAutoRollbacks: number;
-  cooldownMs: number;
-  channels: ReadonlyArray<keyof typeof CHANNELS>;
-}
-export class AutoRollback {
-  private count = 0;
-  constructor(private plan: RollbackPlan) {}
-  async maybeRollback(metric: 'crashFreeUsers', value: number) {
-    if (value < 99.5 && this.count < this.plan.maxAutoRollbacks) {
-      this.count++; /* 执行回退 */
-    }
-  }
-}
-```
-
-## D) i18n 发布门禁（Key Debt）
-
-```ts
-export interface I18nDebt {
-  locale: string;
-  missing: number;
-  ratio: number;
-  criticalMissing: string[];
-}
-export function detectMissingTranslations(): Promise<I18nDebt[]> {
-  return Promise.resolve([]);
-} // 占位
-
-// 发布事件契约
-export interface ReleaseEvent {
-  type:
-    | 'gamedev.release.started'
-    | 'gamedev.release.completed'
-    | 'gamedev.release.failed';
-  version: string;
-  channel: keyof typeof CHANNELS;
-  timestamp: number;
-}
-export interface HealthEvent {
-  type: 'gamedev.health.threshold_breached';
-  metric: string;
-  value: number;
-  threshold: number;
-  channel: string;
-}
-export interface I18nEvent {
-  type: 'gamedev.i18n.validation_failed';
-  locale: string;
-  missingKeys: string[];
-  completeness: number;
-}
-```
-
-## E) CI 片段（签名/公证/健康门禁）
-
-```yaml
-# .github/workflows/release.yml（摘要）
-name: Release Pipeline
-on:
-  push: { tags: ['v*'] }
-  workflow_dispatch:
-    {
-      inputs:
-        {
-          channel:
-            { required: true, type: choice, options: [dev, staging, prod] },
-        },
-    }
-
-jobs:
-  build:
-    strategy: { matrix: { os: [windows-latest, macos-latest] } }
-    steps:
-      - name: Build & Package
-        run: npm run build && npm run package:${{ matrix.os }}
-      - name: Sign (Windows)
-        if: matrix.os == 'windows-latest'
-        # 推荐 Node 入口（当前代理到 PowerShell；TODO: 实现原生 Node 签名流程）
-        run: node scripts/release/windows-sign.mjs
-        env:
-          {
-            WINDOWS_CERT_FILE: '${{ secrets.WIN_CERT }}',
-            WINDOWS_CERT_PASSWORD: '${{ secrets.WIN_CERT_PASS }}',
-          }
-      - name: Notarize (macOS)
-        if: matrix.os == 'macos-latest'
-        run: node scripts/release/macos-notarize.mjs
-        env:
-          {
-            APPLE_ID: '${{ secrets.APPLE_ID }}',
-            APPLE_PASSWORD: '${{ secrets.APPLE_PASSWORD }}',
-          }
-      - name: Health Gate
-        run: node scripts/release/health-gate-check.mjs --channel=${{ github.event.inputs.channel || 'prod' }}
-        env: { SENTRY_ORG: 'dev-team', SENTRY_PROJECT: 'dev-project' }
-      - name: Upload to CDN
-        run: node scripts/release/upload-artifacts.mjs --target=${RELEASE_CDN}/${{ github.event.inputs.channel }}
-```
-
-```bash
-# scripts/release/health-gate-check.mjs（关键片段）
-const thresholds = {
-  dev: { crashFreeUsers: 98.0, adoptionRate: 0.1 },
-  staging: { crashFreeUsers: 99.0, crashFreeSessions: 99.5 },
-  prod: { crashFreeUsers: 99.5, crashFreeSessions: 99.8 }
-};
-```
-
-## F) 验收清单（含回滚）
-
-- [ ] HEALTH_GATES 生效且可触发**自动回滚**；
-- [ ] 通道矩阵与阈值可通过 ENV 覆盖；
-- [ ] 签名/公证失败进入降级路径并**产生告警**；
-- [ ] i18n 完整度 ≥95%，**关键 keys 不得缺失**；
-- [ ] 与 02/03/07 章节的策略引用**就近可见**。
+- 发布产物：`build/*.exe` 与 `.pck`（如使用）。
+- 取证工件：`logs/**`（CI/unit/e2e/perf/security/release-health 等）。

@@ -27,7 +27,7 @@ ADR 是“当前有效口径”的决策记录，任何改变阈值/契约/安�
 
 建议优先阅读（与本仓库主干强相关）：
 
-- 技术栈与平台：[`adr/ADR-0001-tech-stack.md`](adr/ADR-0001-tech-stack.md)、[`adr/ADR-0011-windows-only-platform-and-ci.md`](adr/ADR-0011-windows-only-platform-and-ci.md)、[`adr/ADR-0018-godot-runtime-and-distribution.md`](adr/ADR-0018-godot-runtime-and-distribution.md)
+- 技术栈与平台：[`adr/ADR-0018-godot-runtime-and-distribution.md`](adr/ADR-0018-godot-runtime-and-distribution.md)、[`adr/ADR-0011-windows-only-platform-and-ci.md`](adr/ADR-0011-windows-only-platform-and-ci.md)
 - 安全基线：[`adr/ADR-0019-godot-security-baseline.md`](adr/ADR-0019-godot-security-baseline.md)
 - 可观测性与发布健康：[`adr/ADR-0003-observability-release-health.md`](adr/ADR-0003-observability-release-health.md)
 - 事件总线与契约：[`adr/ADR-0004-event-bus-and-contracts.md`](adr/ADR-0004-event-bus-and-contracts.md)、[`adr/ADR-0020-contract-location-standardization.md`](adr/ADR-0020-contract-location-standardization.md)、[`adr/ADR-0022-godot-signal-system-and-contracts.md`](adr/ADR-0022-godot-signal-system-and-contracts.md)
@@ -95,7 +95,8 @@ Overlay 用于落地“具体 PRD 的功能纵切”，08 章只描述纵切（�
 - Base-Clean（硬门禁）：`powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\ci\\verify_base_clean.ps1`
 - 一键门禁（建议）：`py -3 scripts\\python\\quality_gates.py --typecheck --lint --unit --scene --security --perf`
 - 编码与疑似乱码扫描：`py -3 scripts\\python\\check_encoding.py --root docs`、`py -3 scripts\\python\\scan_garbled.py --root docs`
-- 旧技术栈术语扫描：`py -3 scripts\\python\\scan_doc_stack_terms.py --root docs --fail-on-hits`
+- 旧技术栈术语扫描（取证）：`py -3 scripts\\python\\scan_doc_stack_terms.py --root docs --out logs\\ci\\<YYYY-MM-DD>\\doc-stack-scan\\full`
+- 旧技术栈术语扫描（严格，硬门禁范围：Base + 入口 + Overlay 08）：`py -3 scripts\python\scan_doc_stack_terms.py --root docs\architecture\base --fail-on-hits --out logs\ci\<YYYY-MM-DD>\doc-stack-scan\base`（入口/Overlay 见收敛手册；CI 由 `scripts/python/ci_pipeline.py` 执行）
 
 ---
 
@@ -108,4 +109,3 @@ Overlay 用于落地“具体 PRD 的功能纵切”，08 章只描述纵切（�
 - Legacy Overlays：[`migration/legacy-overlays/PRD-Guild-Manager/README.md`](migration/legacy-overlays/PRD-Guild-Manager/README.md)
 - Legacy PRD：[`migration/legacy-prd/README.md`](migration/legacy-prd/README.md)
 - Legacy Workflows：[`migration/legacy-workflows/README.md`](migration/legacy-workflows/README.md)
-

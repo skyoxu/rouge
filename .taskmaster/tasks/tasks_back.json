@@ -48,7 +48,8 @@
       "Run in CI headless and confirm logs are archived under logs/ci/**."
     ],
     "taskmaster_id": 31,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0002",
@@ -96,7 +97,8 @@
       "Validate CI job consumes the summary JSON for pass/fail decisions."
     ],
     "taskmaster_id": 32,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0003",
@@ -138,7 +140,8 @@
       "Run dotnet tests on Windows and verify threshold behavior by temporarily setting env vars."
     ],
     "taskmaster_id": 33,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0004",
@@ -186,7 +189,8 @@
       "Use a small fixture JSONL (valid and invalid) to verify pass/fail behavior."
     ],
     "taskmaster_id": 34,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0005",
@@ -234,7 +238,8 @@
       "xUnit tests cover allow/deny/invalid URL cases and offline mode behavior."
     ],
     "taskmaster_id": 35,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0006",
@@ -279,7 +284,8 @@
       "xUnit tests cover user:// allow, res:// allow-read-only, absolute path deny, and traversal deny."
     ],
     "taskmaster_id": 36,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0007",
@@ -323,7 +329,8 @@
       "Run perf suite locally with a low threshold to force a failure and verify gate behavior."
     ],
     "taskmaster_id": 37,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0008",
@@ -366,7 +373,8 @@
       "Use a small fixture baseline/current JSON pair to validate compare logic."
     ],
     "taskmaster_id": 38,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0009",
@@ -411,7 +419,14 @@
       "Run headless selfcheck and verify structured log output is produced."
     ],
     "taskmaster_id": 39,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.battle.started",
+      "core.effect.resolved",
+      "core.battle.ended",
+      "core.run.ended"
+    ]
   },
   {
     "id": "NG-0010",
@@ -457,7 +472,8 @@
       "Run in dry-run mode with stub data (or missing env vars) and verify failure is explicit and logged."
     ],
     "taskmaster_id": 40,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0011",
@@ -503,7 +519,8 @@
       "Run export in a local Windows environment and confirm build artifacts + logs are generated."
     ],
     "taskmaster_id": 41,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0012",
@@ -547,7 +564,8 @@
       "Run build/export with RELEASE_CHANNEL set and verify release-profile.json contents."
     ],
     "taskmaster_id": 42,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0013",
@@ -585,7 +603,8 @@
       "Doc review: ensure ADR references are correct and no secrets/PII examples are included."
     ],
     "taskmaster_id": 43,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0014",
@@ -630,7 +649,8 @@
       "Run quality_gates.py locally on Windows and confirm reports are generated and parsed."
     ],
     "taskmaster_id": 44,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0015",
@@ -676,7 +696,8 @@
       "Introduce a small intentional violation in a temp branch to verify the test catches it."
     ],
     "taskmaster_id": 45,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0016",
@@ -720,7 +741,8 @@
       "xUnit tests cover deny-by-default and allowlist behavior with SECURITY_TEST_MODE=1."
     ],
     "taskmaster_id": 46,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0017",
@@ -771,7 +793,23 @@
       "Run headless GdUnit4 suite and confirm contract checks report PASS/FAIL deterministically."
     ],
     "taskmaster_id": 47,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.map.generated",
+      "core.map.node.selected",
+      "core.map.node.completed",
+      "core.battle.started",
+      "core.battle.turn.player.started",
+      "core.card.played",
+      "core.effect.resolved",
+      "core.battle.turn.enemy.started",
+      "core.battle.ended",
+      "core.reward.offered",
+      "core.reward.selected",
+      "core.event.choice.resolved",
+      "core.run.ended"
+    ]
   },
   {
     "id": "NG-0018",
@@ -814,7 +852,8 @@
       "Run perf suite locally and inspect the generated report files for completeness."
     ],
     "taskmaster_id": 48,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0019",
@@ -858,7 +897,8 @@
       "Trigger the workflow manually and verify artifact upload and pass/fail behavior."
     ],
     "taskmaster_id": 49,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0020",
@@ -903,7 +943,23 @@
       "Unit tests validate field scrubbing, tag propagation, and sink invocation ordering."
     ],
     "taskmaster_id": 50,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.map.generated",
+      "core.map.node.selected",
+      "core.map.node.completed",
+      "core.battle.started",
+      "core.battle.turn.player.started",
+      "core.card.played",
+      "core.effect.resolved",
+      "core.battle.turn.enemy.started",
+      "core.battle.ended",
+      "core.reward.offered",
+      "core.reward.selected",
+      "core.event.choice.resolved",
+      "core.run.ended"
+    ]
   },
   {
     "id": "NG-0021",
@@ -950,7 +1006,8 @@
       "Dry-run on a non-protected branch using workflow_dispatch and inspect uploaded artifacts."
     ],
     "taskmaster_id": 51,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0022",
@@ -995,7 +1052,8 @@
       "Run in a local environment without secrets to confirm it safely skips."
     ],
     "taskmaster_id": 52,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   },
   {
     "id": "NG-0023",
@@ -1041,6 +1099,7 @@
       "Run export for each preset and verify artifacts are produced and runnable."
     ],
     "taskmaster_id": 53,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": []
   }
 ]

@@ -22,7 +22,9 @@ SKIP_DIR_NAMES = {
     ".godot",
     "build",
     "logs",
+    "backup",
     "tmp",
+    "_tmp",
     "TestResults",
     "demo",
 }
@@ -36,6 +38,11 @@ class Term:
 
 
 def iter_text_files(root: Path) -> Iterable[Path]:
+    if root.is_file():
+        if root.suffix.lower() in TEXT_EXTS:
+            yield root
+        return
+
     for path in root.rglob("*"):
         if path.is_dir():
             if path.name in SKIP_DIR_NAMES:
@@ -173,6 +180,26 @@ def build_terms() -> list[Term]:
             description="Legacy E2E tool (Playwright) mention",
         ),
         Term(
+            key="vitest",
+            pattern=re.compile(r"\bvitest\b", flags),
+            description="Legacy unit test tool (Vitest) mention",
+        ),
+        Term(
+            key="jest",
+            pattern=re.compile(r"\bjest\b", flags),
+            description="Legacy unit test tool (Jest) mention",
+        ),
+        Term(
+            key="pnpm",
+            pattern=re.compile(r"\bpnpm\b", flags),
+            description="Legacy Node package manager (pnpm) mention",
+        ),
+        Term(
+            key="npm",
+            pattern=re.compile(r"\bnpm\b", flags),
+            description="Legacy Node package manager (npm) mention",
+        ),
+        Term(
             key="electron_builder",
             pattern=re.compile(r"\belectron-builder\b", flags),
             description="Legacy packager (electron-builder) mention",
@@ -183,6 +210,11 @@ def build_terms() -> list[Term]:
             description="Legacy frontend framework (React) mention",
         ),
         Term(
+            key="tailwind",
+            pattern=re.compile(r"\btailwind\b", flags),
+            description="Legacy styling framework (Tailwind) mention",
+        ),
+        Term(
             key="vite",
             pattern=re.compile(r"\bvite\b", flags),
             description="Legacy frontend build tool (Vite) mention",
@@ -191,6 +223,26 @@ def build_terms() -> list[Term]:
             key="phaser",
             pattern=re.compile(r"\bphaser\b", flags),
             description="Legacy frontend game engine (Phaser) mention",
+        ),
+        Term(
+            key="i18next",
+            pattern=re.compile(r"\bi18next\b", flags),
+            description="Legacy i18n framework (i18next) mention",
+        ),
+        Term(
+            key="newguild",
+            pattern=re.compile(r"\bnewguild\b", flags),
+            description="Legacy repo/project name (newguild) mention",
+        ),
+        Term(
+            key="godotgame",
+            pattern=re.compile(r"\bgodotgame\b", flags),
+            description="Legacy repo/project name (godotgame) mention",
+        ),
+        Term(
+            key="sanguo",
+            pattern=re.compile(r"\bsanguo\b", flags),
+            description="Legacy repo/project name (sanguo) mention",
         ),
         Term(
             key="vitegame",
@@ -223,6 +275,11 @@ def main() -> int:
         description="Scan docs for legacy stack terminology (Electron/frontend stack) and write evidence to logs/ci/."
     )
     parser.add_argument("--root", default="docs", help="Root folder to scan (default: docs)")
+    parser.add_argument(
+        "--out",
+        default=None,
+        help="Output directory (default: logs/ci/<YYYY-MM-DD>/doc-stack-scan)",
+    )
     parser.add_argument("--fail-on-hits", action="store_true", help="Exit non-zero if any hits are found")
     args = parser.parse_args()
 
@@ -232,7 +289,12 @@ def main() -> int:
 
     terms = build_terms()
 
-    log_dir = REPO_ROOT / "logs" / "ci" / today_dir() / "doc-stack-scan"
+    if args.out:
+        log_dir = Path(args.out)
+        if not log_dir.is_absolute():
+            log_dir = (REPO_ROOT / log_dir).resolve()
+    else:
+        log_dir = REPO_ROOT / "logs" / "ci" / today_dir() / "doc-stack-scan"
     scan_path = log_dir / "scan.json"
     summary_path = log_dir / "summary.json"
 

@@ -1,37 +1,26 @@
 [![Windows Export Slim](https://github.com/skyoxu/rouge/actions/workflows/windows-export-slim.yml/badge.svg)](https://github.com/skyoxu/rouge/actions/workflows/windows-export-slim.yml) [![Windows Release](https://github.com/skyoxu/rouge/actions/workflows/windows-release.yml/badge.svg)](https://github.com/skyoxu/rouge/actions/workflows/windows-release.yml) [![Windows Quality Gate](https://github.com/skyoxu/rouge/actions/workflows/windows-quality-gate.yml/badge.svg)](https://github.com/skyoxu/rouge/actions/workflows/windows-quality-gate.yml)
 
-# Godot Windows-only Template (C#)
+# Rouge（Godot 4.5 + C#/.NET 8，Windows-only）
 
-即开即用，可复制的 Godot 4 + .NET（Windows-only）项目模板。
+这是一个面向 **Windows 桌面单机游戏** 的 Godot 4.5 + C#/.NET 8 项目基底：即开即用、可复制、内置脚本化门禁与可追溯日志产物。
 
-## About This Template
+## 模板定位
 
-Production-ready Godot 4.5 + C# game template with enterprise-grade tooling.
+- **技术栈**：Godot 4.5（.NET/mono）+ C#/.NET 8
+- **质量门禁**：脚本化（Python/PowerShell），产物统一落 `logs/**`
+- **可测试架构**：Scenes（装配/信号）→ Adapters（封装 Godot API）→ Core（纯 C# 可单测）
+- **目标**：减少初始化成本，把“可运行 + 可验证 + 可演进”的骨干一次性固化
 
-### Why This Template
-- **Migrated from**: legacy project → Godot 4.5 + C# .NET 8
-- **Purpose**: Eliminate setup overhead with pre-configured best practices
-- **For**: Windows desktop games (simulation, management, strategy)
+完整口径与入口索引：`docs/PROJECT_DOCUMENTATION_INDEX.md`
 
-### Key Features
-- **AI-Friendly**: Optimized for BMAD, SuperClaude, Claude Code workflows
-- **Quality Gates**: Coverage (≥90%), Performance (P95≤20ms), Security baseline
-- **Testable Architecture**: Ports & Adapters + 80% xUnit + 15% GdUnit4
-- **Complete Stack**: Godot 4.5, C# .NET 8, xUnit, GdUnit4, godot-sqlite, Sentry
+## 3 分钟从 0 到导出
 
-**Full technical details**: See `CLAUDE.md`
-
----
-
-## 3-Minute From Zero to Export（3 分钟从 0 到导出）
-
-1) 安装 Godot .NET（mono）并设置环境：
+1) 安装 Godot .NET（mono）并设置环境变量：
    - `setx GODOT_BIN C:\Godot\Godot_v4.5.1-stable_mono_win64.exe`
-2) 运行最小测试与冒烟（可选示例）：
-   - `./scripts/test.ps1 -GodotBin "$env:GODOT_BIN"`（默认不含示例；`-IncludeDemo` 可启用）
+2) 最小冒烟（可选）：
    - `./scripts/ci/smoke_headless.ps1 -GodotBin "$env:GODOT_BIN"`
 3) 在 Godot Editor 安装 Export Templates（Windows Desktop）。
-4) 导出与运行 EXE：
+4) 导出与运行：
    - `./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Rouge.exe`
    - `./scripts/ci/smoke_exe.ps1 -ExePath build\Rouge.exe`
 
@@ -58,7 +47,7 @@ One-liner（已在 Editor 安装 Export Templates 后）：
 - 测试体系：`docs/migration/Phase-10-Unit-Tests.md`
 - 安全基线：`docs/migration/Phase-14-Godot-Security-Baseline.md`
 - 手动发布指引：`docs/release/WINDOWS_MANUAL_RELEASE.md`
-- Release/Sentry 软门禁与工作流说明：`docs/workflows/GM-NG-T2-playable-guide.md`
+- 验收门禁与审查（Codex CLI）：`docs/workflows/acceptance-check-and-llm-review.md`
 
 ## Task / ADR / PRD 工具
 - `scripts/python/task_links_validate.py` —— 检查 NG/GM 任务与 ADR / 章节 / Overlay 的回链完整性（CI 已在用，作为门禁）。

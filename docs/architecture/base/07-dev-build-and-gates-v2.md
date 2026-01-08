@@ -4,240 +4,99 @@ status: base-SSoT
 generated_variant: deep-optimized
 ssot_scope: chapter-07-only
 reuse_level: base-clean
-adr_refs: [ADR-0002, ADR-0003, ADR-0005, ADR-0012, ADR-0015]
+adr_refs: [ADR-0011, ADR-0018, ADR-0005, ADR-0024, ADR-0015, ADR-0019, ADR-0003]
 placeholders: Unknown Product, unknown-product, gamedev, dev, 0.0.0, production, dev-team, dev-project
 derived_from: 07-dev-build-and-gates-v2.md
-last_generated: 2025-08-21
+last_generated: 2026-01-08
 ---
 
-> 目标：在 optimized 基础上引入**可执行门禁矩阵**、**Windows 兼容脚本**与**可追溯矩阵**，对齐 03 章 Release Health 放量口径。
+> 目标：定义 Windows-only（Godot 4.5 + C#）的“可执行门禁”清单，以及本地/CI 的运行方式。所有门禁必须落盘 `logs/**` 作为取证。
 
-## 0.1 开发构建容器视图（C4 Container）
+## 0.1 开发构建视图（C4 Container）
 
 ```mermaid
 C4Container
-    title Development & Build Toolchain for Unknown Product
-    Person(dev, "Developer", "开发者提交代码")
-    System_Boundary(devenv, "Development Environment") {
-        Container(vscode, "VS Code/IDE", "TypeScript", "代码编辑与调试")
-        Container(旧构建工具, "旧构建工具 Dev Server", "Rollup", "热更新与开发构建")
-        Container(LEGACY_SHELL_main, "旧桌面壳 Main", "旧脚本运行时", "主进程开发调试")
-        Container(LEGACY_SHELL_renderer, "旧桌面壳 Renderer", "旧前端框架 19", "渲染进程开发")
-    }
-    System_Boundary(buildtools, "Build & Quality Tools") {
-        Container(tsc, "TypeScript Compiler", "tsc", "类型检查与编译")
-        Container(eslint, "ESLint", "AST", "代码质量检查")
-        Container(vitest, "Vitest", "Testing", "单元测试与覆盖率")
-        Container(旧 E2E 工具, "旧 E2E 工具", "E2E", "端到端测试")
-        Container(security_scan, "Security Scanner", "旧脚本运行时", "旧桌面壳安全扫描")
-    }
-    System_Boundary(cicd, "CI/CD Pipeline") {
-        Container(github_actions, "GitHub Actions", "YAML", "自动化构建与部署")
-        Container(release_health, "Release Health Check", "Sentry API", "发布健康门禁")
-    }
-    System_Ext(sentry, "dev-team", "监控与发布健康")
+    title Development & Build Toolchain (Godot+C#)
+    Person(dev, "Developer", "Edits code, runs local gates, pushes to CI")
 
-    Rel(dev, vscode, "编写代码", "TypeScript/旧前端框架")
-    Rel(vscode, 旧构建工具, "启动开发服务器", "npm run dev")
-    Rel(旧构建工具, LEGACY_SHELL_main, "构建主进程", "esbuild")
-    Rel(旧构建工具, LEGACY_SHELL_renderer, "构建渲染进程", "HMR")
-    Rel(dev, tsc, "类型检查", "tsc --noEmit")
-    Rel(dev, eslint, "代码检查", "eslint .")
-    Rel(dev, vitest, "运行单元测试", "vitest run")
-    Rel(dev, 旧 E2E 工具, "运行E2E测试", "旧 E2E 工具 test")
-    Rel(dev, security_scan, "安全扫描", "scan_LEGACY_SHELL_safety.mjs")
-    Rel(github_actions, release_health, "检查发布健康", "API调用")
-    Rel(release_health, sentry, "获取crash-free指标", "HTTPS")
+    System_Boundary(devenv, "Development Environment (Windows)") {
+        Container(ide, "IDE", "VS/Rider/VS Code", "Edit / debug")
+        Container(dotnet, ".NET SDK", "dotnet 8", "Build / test / coverage")
+        Container(godot, "Godot Editor", "Godot 4.5 (.NET/mono)", "Run / debug / export")
+        Container(ps, "PowerShell", "pwsh", "Run CI scripts")
+        Container(py, "Python", "py -3", "Run gate drivers and validators")
+    }
+
+    System_Boundary(cicd, "CI/CD (GitHub Actions)") {
+        Container(ci_runner, "Runner", "windows-latest", "Runs quality gates and smoke tests")
+    }
+
+    Rel(dev, ide, "edit")
+    Rel(dev, ps, "run scripts")
+    Rel(ps, py, "invoke")
+    Rel(py, dotnet, "build/test")
+    Rel(ps, godot, "headless smoke/export")
+    Rel(dev, ci_runner, "git push")
 ```
 
-### B.1 Windows 单测稳定脚本与日志归档
-
-- 使用 `npm run test:unit:ps` 调用 `scripts/windows/test-unit.ps1`，在 Windows 环境下稳定运行 Vitest，避免 PowerShell 将下游进程的 stderr 误判为错误。
-- 所有测试与门禁输出统一归档至 `logs/<日期>/<模块>/`，例如：`logs/20251004/unit/test-unit-ps-<time>.log`。
-- 本地与 CI 推荐一致使用该脚本或等效参数，确保可重复与可追溯。
-
-## 0.2 质量门禁执行流程（C4 Dynamic）
+## 0.2 CI 运行序列（示意）
 
 ```mermaid
-C4Dynamic
-    title Quality Gates Execution Flow for Unknown Product
-    Person(dev, "Developer")
-    Container(local_env, "Local Environment", "开发环境")
-    Container(ci_runner, "CI Runner", "GitHub Actions")
-    Container(quality_gates, "Quality Gates Script", "旧脚本运行时")
-    Container(security_scan, "Security Scanner", "scan_LEGACY_SHELL_safety.mjs")
-    Container(release_health, "Release Health", "release_health_check.mjs")
-    System_Ext(sentry, "dev-team")
+sequenceDiagram
+  participant Dev
+  participant CI as GitHub Actions
+  participant PS as scripts/ci/*.ps1
+  participant PY as scripts/python/*.py
+  participant DotNet
+  participant Logs as logs/**
 
-    Rel(dev, local_env, "1. 提交代码", "git push")
-    Rel(local_env, ci_runner, "2. 触发CI", "webhook")
-    Rel(ci_runner, quality_gates, "3. 执行门禁脚本", "pnpm guard:ci")
-    Rel(quality_gates, quality_gates, "4. TypeScript检查", "tsc --noEmit")
-    Rel(quality_gates, quality_gates, "5. ESLint检查", "eslint .")
-    Rel(quality_gates, quality_gates, "6. 单元测试", "vitest --coverage")
-    Rel(quality_gates, security_scan, "7. 安全扫描", "执行脚本")
-    Rel(quality_gates, quality_gates, "8. E2E测试", "旧 E2E 工具 test")
-    Rel(quality_gates, release_health, "9. 健康检查", "执行脚本")
-    Rel(release_health, sentry, "10. 获取指标", "API调用")
-    Rel(sentry, release_health, "11. 返回crash-free数据", "JSON响应")
-    Rel(release_health, quality_gates, "12. 验证阈值", "crashFreeUsers ≥ 99.5%")
-    Rel(quality_gates, ci_runner, "13. 门禁结果", "成功/失败")
+  Dev->>PS: Run quality gates locally
+  PS->>PY: Invoke Python drivers
+  PY->>DotNet: dotnet build/test
+  PY->>Logs: Write unit reports/coverage
+
+  Dev->>CI: git push
+  CI->>PY: Run pipeline drivers
+  PY->>Logs: Write logs/** artifacts
+  CI-->>Dev: PASS/FAIL
 ```
 
-## A) 质量门禁矩阵（最小可执行）
+## A) 最小门禁集（Windows-only，SSoT）
 
-| Gate          | 工具                       | 阈值/策略                     | 失败动作 |
-| ------------- | -------------------------- | ----------------------------- | -------- |
-| TS            | `tsc --noEmit`             | 严格模式                      | fail     |
-| Lint          | `eslint`                   | `maxWarnings:0`               | fail     |
-| Unit          | `vitest --coverage`        | lines≥90%/branches≥85%        | fail     |
-| E2E           | `旧 E2E 工具`               | retries=2（CI）               | fail     |
-| Security      | `scan_LEGACY_SHELL_safety.mjs` | 旧脚本集成开关=false 等      | fail     |
-| Base          | `verify_base_clean.mjs`    | 禁业务耦合/占位符齐全         | fail     |
-| ReleaseHealth | `release_health_check.mjs` | crash‑free 用户/会话 + 采用率 | fail     |
+> Base（01/02/03/07/09/10/11/12）定义跨切面口径；功能纵切在 `overlays/08`。
 
-## B) Windows 兼容（.ps1 变体）
+| Gate | Script/Command | Purpose | Evidence (logs/**) |
+| --- | --- | --- | --- |
+| Base-Clean | `scripts/ci/verify_base_clean.ps1` | 防止 Base 出现 PRD_ID/具体 08 内容；Overlay 08 必须回链 CH01/CH03 | `logs/ci/<run>/base-clean/summary.json` |
+| 旧栈术语（严格） | `py -3 scripts/python/scan_doc_stack_terms.py --root docs/architecture/base --fail-on-hits` | 防止旧技术栈词汇回流到 Base | `logs/ci/<date>/doc-stack-scan/strict/**` |
+| 旧栈术语（取证） | `py -3 scripts/python/scan_doc_stack_terms.py --root docs --out logs/ci/<date>/doc-stack-scan/full` | 全量 docs 趋势取证（不阻断） | `logs/ci/<date>/doc-stack-scan/full/**` |
+| Task links | `py -3 scripts/python/task_links_validate.py` | 校验 ADR/CH/Overlay 回链与 Front-Matter | `logs/ci/<date>/task-links.json` |
+| Task triplet | `py -3 scripts/python/verify_task_mapping.py` | 校验 tasks.json 与 views 的映射与元数据 | `logs/ci/<date>/task-mapping/**` |
+| Typecheck | `dotnet build -warnaserror` | C# 编译与分析器门禁 | `logs/ci/<date>/typecheck.log` |
+| Unit tests | `dotnet test` | xUnit 单元测试（Core 不依赖引擎） | `logs/unit/<date>/**` |
+| Engine smoke | `scripts/ci/run_gdunit_tests.ps1` | Godot headless + GdUnit4 冒烟/安全 | `logs/e2e/<date>/**` |
+| Security scan | `py -3 scripts/python/security_soft_scan.py`（如存在） | 静态扫描不安全 API/HTTP/越权路径 | `logs/ci/<date>/security-*.jsonl` |
+| Perf smoke | `scripts/ci/check_perf_budget.ps1` | PERF marker 解析与门禁 | `logs/perf/<date>/summary.json` |
 
-```bash
-# Node-first 聚合示例（建议在 CI 与本地统一使用）
-npm run typecheck
-npm run lint
-npm run test:unit:node
-npm run guard:旧桌面壳
-npm run test:e2e
-node scripts/release_health_check.mjs
-npm run guard:base
+备注：
+- “旧栈术语（严格）”建议只对 Base/入口/当前 Overlay 08 做硬门禁；全量 docs 扫描只做取证（止损策略）。
+- CI 中 `scripts/python/ci_pipeline.py` 已封装“严格 + 取证”两类扫描并落盘到 `logs/ci/<date>/doc-stack-scan/**`。
+
+## B) 本地运行
+
+### 一键门禁（需要设置 `GODOT_BIN`）
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ci/quality_gate.ps1 -GodotBin $env:GODOT_BIN
 ```
 
-## C) 旧桌面壳 安全基线 & Web 内容安全策略 验证
+### 带导出/EXE 冒烟（可选）
 
-```js
-// scripts/verify_csp.mjs（片段）
-import fs from 'node:fs';
-import { JSDOM } from 'jsdom';
-const html = fs.readFileSync('dist/index.html', 'utf-8');
-const Web 内容安全策略 = new JSDOM(html).window.document.querySelector(
-  'meta[http-equiv="Web 内容安全策略"]'
-);
-if (!Web 内容安全策略) throw new Error('Missing Web 内容安全策略 meta');
-if (!/default-src 'self'/.test(Web 内容安全策略.getAttribute('content')))
-  throw new Error("Web 内容安全策略 must restrict to 'self'");
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ci/quality_gate.ps1 -GodotBin $env:GODOT_BIN -WithExport
 ```
 
-## D) Release Health（含 ENV 覆盖）
+## C) 日志与 SSoT
 
-```json
-// src/config/sentry-gate.json（示例）
-{
-  "crashFreeSessionsThreshold": 0.99,
-  "crashFreeUsersThreshold": 0.995,
-  "minAdoptionRate": 0.2,
-  "releaseFormat": "dev@0.0.0"
-}
-```
-
-## E) 可追溯矩阵（变更→ADR/测试）
-
-| 变更项              | 关联 ADR | 覆盖测试   |
-| ------------------- | -------- | ---------- |
-| 安全基线扫描        | ADR-0002 | T07-SEC-01 |
-| Release Health Gate | ADR-0003 | T07-RH-01  |
-| 质量门禁聚合        | ADR-0005 | T07-QG-01  |
-
-## F) 旧 E2E 工具官方API升级（Windows兼容性）
-
-```typescript
-// tests/e2e/utils/旧桌面壳-launcher.ts（官方API模式）
-import { _legacy_shell as 旧桌面壳, LegacyShellApplication } from '@旧 E2E 工具/test';
-
-export async function launchApp(
-  extraArgs: string[] = []
-): Promise<LegacyShellApplication> {
-  const appEntry = path.resolve(__dirname, '../../../dist-旧桌面壳/main.js');
-
-  return 旧桌面壳.launch({
-    args: [appEntry, ...extraArgs],
-    timeout: 30000, // 30秒启动超时
-
-    // Windows兼容性配置
-    env: {
-      ...process.env,
-      // Windows需要此配置避免Chrome沙箱问题
-      LEGACY_SHELL_DISABLE_SANDBOX: 'true',
-      // 测试模式标识
-      NODE_ENV: 'test',
-      // 禁用GPU加速（CI环境兼容）
-      LEGACY_SHELL_DISABLE_GPU: 'true',
-    },
-
-    // 开发调试选项（仅非CI环境）
-    ...(process.env.CI
-      ? {}
-      : {
-          headless: false,
-          devtools: true,
-        }),
-  });
-}
-```
-
-### F.1) Windows E2E测试优化策略
-
-| 配置项                     | Windows值     | 说明                      |
-| -------------------------- | ------------- | ------------------------- |
-| `LEGACY_SHELL_DISABLE_SANDBOX` | `'true'`      | 避免Chrome沙箱权限问题    |
-| `LEGACY_SHELL_DISABLE_GPU`     | `'true'`      | CI环境GPU加速兼容         |
-| `timeout`                  | `30000ms`     | Windows启动较慢，增加超时 |
-| `workers`                  | `1`（CI环境） | 避免旧桌面壳进程冲突      |
-
-### F.2) 测试启动器种类（按场景优化）
-
-```typescript
-// 安全测试专用启动器
-export async function launchAppForSecurity(
-  extraArgs: string[] = []
-): Promise<LegacyShellApplication> {
-  return launchApp([
-    '--test-mode',
-    '--enable-features=LegacyShellSerialChooser',
-    '--disable-features=VizDisplayCompositor',
-    ...extraArgs,
-  ]);
-}
-
-// 性能测试专用启动器
-export async function launchAppForPerformance(
-  extraArgs: string[] = []
-): Promise<LegacyShellApplication> {
-  return launchApp([
-    '--disable-web-security', // 仅测试环境
-    '--disable-extensions',
-    '--disable-default-apps',
-    '--test-mode',
-    ...extraArgs,
-  ]);
-}
-```
-
-## G) 验收清单（合并前）
-
-- [ ] `pnpm guard:ci` 全绿（本地与 CI）
-- [ ] `.ps1` 变体可在 Windows 运行
-- [ ] `.release-health.json` 的 crash-free 与 adoption 达标
-- [ ] `index.html` 含 Web 内容安全策略 meta 且限制 `default-src 'self'`
-- [ ] 所有E2E测试使用官方 `_legacy_shell as 旧桌面壳` API
-- [ ] `tests/e2e/utils/旧桌面壳-launcher.ts` 提供跨平台启动器
-- [ ] Windows环境下 `LEGACY_SHELL_DISABLE_SANDBOX=true` 生效
-
-## 7.x 性能门禁（Godot Headless）
-
-为 Godot 运行时提供最小可执行的帧时间 P95 门禁：通过 Autoload `PerformanceTracker` 输出 `[PERF] ... p95_ms=...`，CI 侧解析 `headless.log` 并对比预算阈值。
-
-- 前置：`Game.Godot/Scripts/Perf/PerformanceTracker.cs` 已启用（Autoload，默认按窗口采样并周期性输出 `[PERF]` 标记）。
-- 运行与产物（Windows）：
-  - 生成 headless 日志：`pwsh -File scripts/ci/smoke_headless.ps1 -GodotBin "$env:GODOT_BIN" -Scene "res://Game.Godot/Scenes/Main.tscn" -TimeoutSec 5`
-  - 门禁判定（直接脚本）：`pwsh -File scripts/ci/check_perf_budget.ps1 -MaxP95Ms <ms>`
-  - 门禁判定（质量门禁入口）：`pwsh -File scripts/ci/quality_gate.ps1 -GodotBin "$env:GODOT_BIN" -PerfP95Ms <ms>`
-- 说明：
-  - `check_perf_budget.ps1` 自动寻找 `logs/ci/**/smoke/headless.log` 的最新一份，并使用最后一次 `[PERF]` 刷新的 `p95_ms` 做比较。
-  - 阈值口径与环境策略以 `docs/adr/ADR-0015-performance-budgets-and-gates.md` 为准（本节不重复阈值表）。
+- 所有门禁/扫描/测试输出落 `logs/**`，用于排障与归档；不要把 `logs/**` 提交到仓库。
+- 入口索引以 `docs/PROJECT_DOCUMENTATION_INDEX.md` 为准；不要在多个文档复制阈值/策略文本。

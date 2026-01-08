@@ -10,11 +10,10 @@ namespace Game.Core.Contracts.Rouge.Effects;
 public sealed record EffectsResolved(
     string RunId,
     string BattleId,
-    string SourceType, // card | enemy_intent | event_choice | reward
+    string SourceType, // see EffectSourceTypes
     IReadOnlyList<EffectCommand> Commands,
     EffectDeltaSummary DeltaSummary
 )
 {
     public const string EventType = "core.effect.resolved";
 }
-

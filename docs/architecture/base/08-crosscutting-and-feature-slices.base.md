@@ -1,224 +1,121 @@
 ---
 title: 08 crosscutting and feature slices.base
 status: base-SSoT
-adr_refs: [ADR-0001, ADR-0002, ADR-0003, ADR-0004, ADR-0005]
+adr_refs: [ADR-0003, ADR-0004, ADR-0005, ADR-0019, ADR-0020, ADR-0022]
 placeholders: unknown-app, Unknown Product, unknown-product, gamedev, production, dev, dev-team, dev-project
-derived_from: arc42 §8 (crosscutting concepts), C4 (Context/Container) minimal
-last_generated: 2025-08-22
+derived_from: arc42 ch8 (crosscutting concepts), C4 (Context/Container) minimal
+last_generated: 2026-01-08
 ---
 
-> 目的：把“跨切面规则（Crosscutting Concepts）+ 功能纵切（Feature/Vertical Slice）”的**最小可执行 SSoT**固化为模板与门禁，所有具体功能切片落到 overlays/08/ 下，不污染 Base。
+> 本页是 Base 的第 08 章模板：定义“功能纵切（Vertical Slice）”在本仓库如何写、写到哪里、如何回链。
+>
+> 具体功能模块文档必须写在 `docs/architecture/overlays/<PRD_ID>/08/`，Base 只能提供约束与模板。
 
-## 08.1 范围与原则（SSoT）
+## 08.1 范围与 SSoT
 
-- **跨切面规则**：对多个构件生效的原则/约束/模式（命名、风格、安全、可观测、质量门禁等）。
-- **功能纵切（Vertical Slice）**：以“单个特性/用例”为单位，贯穿 UI→服务→端口→存储的一条链，按 **${PRD_ID}** 独立交付。
-- **Base‑Clean** 要求：
-  1. 本章只提供**模板/规则/门禁**；
-  2. 具体特性文档与契约进入 `overlays/08/<${PRD_ID}>-<feature>/`；
-  3. 每个切片必须提供 **C4 Context + Container** 两张图、事件/端口契约与就地验收。
+- Base（01/02/03/07/09/10 等）定义跨切面规则、阈值口径、事件命名与安全基线。
+- Overlay 08 只描述一个功能纵切：实体/事件/接口/验收/测试占位与回链，不复制阈值/策略文本。
+- 契约（Events/DTO/Ports）只有一个 SSoT：`Game.Core/Contracts/**`（ADR-0020）。
 
-## 08.2 CloudEvents 1.0跨切面规则（SSoT）
+## 08.2 契约（Contracts）口径
 
-### 事件合约标准（ADR-0004）
+### 08.2.1 契约落盘位置（ADR-0020）
 
-所有功能纵切必须遵循CloudEvents 1.0规范：
+- 事件/DTO/Ports 必须落盘到 `Game.Core/Contracts/**`。
+- Contracts 不依赖 Godot API（禁止 `using Godot;`），只使用 BCL 类型（string, DateTimeOffset 等）。
+- 这样 Core 层可以在纯 .NET xUnit 环境快速验证。
 
-```typescript
-// 统一事件工厂 - src/shared/contracts/cloudevents-core.ts
-export interface CloudEvent<T = unknown> extends CeBase {
-  // CloudEvents 1.0必需字段
-  id: string; // 事件唯一标识符（自动生成UUID）
-  source: string; // 事件源URI（如app://旧项目/guild-manager）
-  type: string; // 事件类型（reverse DNS格式）
-  specversion: '1.0'; // CloudEvents规范版本
-  time: string; // 事件时间戳（ISO 8601格式）
+### 08.2.2 事件命名与 EventType（ADR-0004）
 
-  // 可选字段
-  data?: T; // 事件负载数据
-  datacontenttype?: string; // 数据内容类型
-  dataschema?: string; // 数据模式URI
-  subject?: string; // 事件主题
-}
+- `EventType` 对齐 CloudEvents 1.0 的 `type` 字段：必须常量化，文档/代码/任务引用一致。
+- 分域约定（示例）：
+  - `core.*.*`：领域/系统级事件
+  - `ui.menu.*`：菜单/UI 交互事件
+  - `screen.*.*`：屏幕/场景事件
+- 注意：C# 的 PascalCase 类名不是 EventType；EventType 必须是小写点分字符串常量。
 
-// 标准工厂函数（强制使用）
-export function mkEvent<T = unknown>(
-  e: Omit<CeBase, 'id' | 'time' | 'specversion'> & {
-    data?: T;
-    datacontenttype?: string;
-    dataschema?: string;
-    subject?: string;
-  }
-): CloudEvent<T>;
-```
+### 08.2.3 模板（C#）
 
-### 合规性门禁（强制执行）
+#### Domain Event
 
-```json
+路径：`Game.Core/Contracts/<Module>/<EventName>.cs`
+
+```csharp
+using System;
+
+namespace Game.Core.Contracts.<Module>;
+
+/// <summary>
+/// Domain event: ${DOMAIN_PREFIX}.<entity>.<action>
+/// 说明：当 <action> 发生时发布，用于跨模块/跨层通信。
+/// </summary>
+/// <remarks>
+/// References: ADR-0004-event-bus-and-contracts, ADR-0020-contract-location-standardization.
+/// </remarks>
+public sealed record <EventName>(
+    string <EntityId>,
+    DateTimeOffset OccurredAt
+)
 {
-  "scripts": {
-    "cloudevents:check": "node scripts/verify_cloudevents_compliance.mjs"
-  }
+    public const string EventType = "core.<entity>.<action>";
 }
 ```
 
-**验收标准**：
+#### DTO（请求/响应/跨层传输结构）
 
--  所有事件使用统一`mkEvent`工厂函数
--  禁止使用废弃的`createCloudEvent`
--  事件类型采用reverse DNS格式（如`guild.member.joined`）
--  运行时验证使用`assertCe`函数
--  `npm run cloudevents:check`全绿通过
+路径：`Game.Core/Contracts/<Module>/<DtoName>.cs`
 
-## 08.3 目录结构（Base vs Overlays）
+```csharp
+namespace Game.Core.Contracts.<Module>;
 
-```
-docs/
-  08-feature-slices/
-    README.md
-    templates/
-      feature-slice.template.md
-      c4-context.template.mmd
-      c4-container.template.mmd
-src/
-  shared/
-    contracts/
-      features/
-        _template/
-          events.ts
-          ports.ts
-tests/
-  unit/features/_template.contract.spec.ts
-  e2e/features/_template.e2e.spec.ts
-scripts/gates/feature-slice-gate.mjs
-overlays/
-  08/
-    <${PRD_ID}>-<feature>/
-      08-<feature>.md
-      c4/context.mmd
-      c4/container.mmd
-      contracts/*.ts
-      tests/unit/*.spec.ts
-      tests/e2e/*.spec.ts
+/// <summary>
+/// DTO: <DtoName>
+/// Purpose: request/response or adapter-core payload.
+/// </summary>
+public sealed record <DtoName>(
+    string <Field1>,
+    int <Field2>
+);
 ```
 
-## 08.3 C4 图表模板（Base 要求：模板 + 叠加层必须提供图）
+#### Ports（接口契约）
 
-> 注：使用 Mermaid **flowchart** 来表达 C4 的 **Context/Container** 视角（不绑定具体业务）。
+路径：`Game.Core/Contracts/<Module>/I<Something>Port.cs`
 
-### 08.3.1 System Context（模板 · 必填）
+```csharp
+using System.Threading;
+using System.Threading.Tasks;
 
-```mermaid
-%% C4: System Context — Feature Slice (template)
-flowchart LR
-  actor([User/Actor])
-  app[[unknown-app]]
-  slice[[{feature} Slice]]
-  telemetry[(Release Health/Telemetry)]
-  external[(External Service · optional)]
-  actor -->|interacts with| app
-  app -->|invokes| slice
-  slice -->|observability| telemetry
-  slice --> external
-```
+namespace Game.Core.Contracts.<Module>;
 
-### 08.3.2 Container（模板 · 必填）
-
-```mermaid
-%% C4: Container — Feature Slice (template)
-flowchart TB
-  subgraph App[unknown-app]
-    renderer[Renderer (旧前端框架 18)]
-    preload[Preload Bridge (controlled 进程间通信)]
-    main[宿主进程]
-    service[Feature Service]
-    port[(Storage/External Port)]
-  end
-  renderer --> preload
-  preload --> main
-  renderer --> service
-  service --> port
-```
-
-## 08.4 事件与端口命名（模板）
-
-- 事件命名：`gamedev.${entity}.${action}`（小写蛇形），示例：`gameplay.system.error_occurred`。
-- 端口命名：`<Entity>Repository` / `<Domain>Service`。
-
-```ts
-// src/shared/contracts/features/_template/events.ts
-export type EventName = `${string}.${string}.${string}`;
-export interface CE<T> {
-  // CloudEvents 1.0 外层（可选但推荐）
-  specversion: '1.0';
-  id: string;
-  source: string;
-  type: string;
-  time: string;
-  datacontenttype?: string;
-  data: T;
-}
-export type FeatureCreated = CE<{ id: string; by: string }>;
-export const isEventName = (s: string) => /^[a-z_]+\.[a-z_]+\.[a-z_]+$/.test(s);
-```
-
-```ts
-// src/shared/contracts/features/_template/ports.ts
-export interface EntityRepository<T> {
-  getById(id: string): Promise<T | null>;
-  upsert(entity: T): Promise<void>;
-}
-export interface DomainService<I, O> {
-  execute(request: I): Promise<O>;
+/// <summary>
+/// Port contract: <what this port does>
+/// </summary>
+public interface I<Something>Port
+{
+    Task<<DtoName>> ExecuteAsync(<DtoName> request, CancellationToken ct);
 }
 ```
 
-## 08.5 质量门禁（最小实现 · CI 可阻断）
+## 08.3 测试与验收（与 CH07 对齐）
 
-> 目标：每个 overlays/08/<${PRD_ID}>-<feature> 必须具备：front‑matter/adr_refs、C4 两图、契约与测试占位。
+- xUnit：覆盖 Core 的算法/状态机/DTO 映射与契约默认值（不依赖引擎）。
+- GdUnit4：覆盖 Scenes/Signals 连通性、关键节点可见性与资源路径（headless 产出到 `logs/e2e/**`）。
+- 安全烟测：如涉及外链/网络/文件/权限，必须包含 allow/deny/invalid + 审计校验（引用 ADR-0019）。
 
-```js
-// scripts/gates/feature-slice-gate.mjs
-import fs from 'node:fs';
-import path from 'node:path';
-const dir = process.argv[2]; // overlays/08/<${PRD_ID}>-<feature>
-function fail(msg) {
-  console.error(' feature-slice gate:', msg);
-  process.exit(1);
-}
-const must = ['08-<feature>.md', 'c4/context.mmd', 'c4/container.mmd'];
-for (const f of must) {
-  if (!fs.existsSync(path.join(dir, f))) fail(`missing ${f}`);
-}
-const md = fs.readFileSync(path.join(dir, '08-<feature>.md'), 'utf8');
-if (!/^adr_refs:\s*\[.*\]/m.test(md)) fail('missing front-matter adr_refs');
-if (!/\$\{DOMAIN_PREFIX\}/.test(md)) fail('missing placeholders');
-console.log(' feature-slice gate passed');
-```
+## 08.4 Overlay 08 目录结构（仅示例）
 
-## 08.6 验收清单（Base）
+路径：`docs/architecture/overlays/<PRD_ID>/08/`
 
-- [ ] 叠加层每个切片均包含 **Context + Container** 两图；
-- [ ] 事件与端口命名符合模板；
-- [ ] `feature-slice-gate.mjs` 可在 CI 中执行并阻断；
-- [ ] 关键事件以 **CloudEvents 1.0 外层**包装或可映射；
-- [ ] 单元/契约/E2E 测试至少有占位用例。
+- `_index.md`：本 PRD 的 08 章目录与总览
+- `ACCEPTANCE_CHECKLIST.md`：最小可玩闭环/验收清单与 Test-Refs
+- `08-Feature-Slice-<Feature>.md`：某个纵切模块（一个文件一条纵切）
 
-## 08.7 就地测试（占位）
+> 注意：08 章只引用 CH01/CH02/CH03 的口径，不复制阈值/策略文本。
 
-```ts
-// tests/unit/features/_template.contract.spec.ts
-import { describe, it, expect } from 'vitest';
-import { isEventName } from '../../../src/shared/contracts/features/_template/events';
-describe('feature slice contracts', () => {
-  it('event naming rule', () => {
-    expect(isEventName('demo.entity.action')).toBe(true);
-    expect(isEventName('bad.format')).toBe(false);
-  });
-});
-```
+## 08.5 任务回链（ADR/CH/Overlay）
 
-## 08.8 写作与评审指引
-
-- Base 只保留模板/门禁/规则；具体内容进 overlays/08/，**一切业务术语不得进入 Base**。
-- PR 审查至少检查：占位符、ADR 链接、C4 两图、契约/测试/门禁是否齐备。
+- `tasks.json`（Task Master 主任务集）与视图任务（如 NG/GM）使用 `adr_refs`/`chapter_refs`/`overlay_refs` 作为回链 SSoT。
+- 校验工具：
+  - `py -3 scripts/python/task_links_validate.py`
+  - `py -3 scripts/python/validate_task_master_triplet.py`

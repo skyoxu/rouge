@@ -36,12 +36,12 @@ public partial class CombatPanel : Control
         }
         // Fallback: publish a simple damage event (HUD may not react)
         var bus = GetNodeOrNull<EventBusAdapter>("/root/EventBus");
-        bus?.PublishSimple("player.damaged", "ui", "{\"amount\":%d}".Replace("%d", amount.ToString()));
+        bus?.PublishSimple("core.player.damaged", "ui", "{\"amount\":%d}".Replace("%d", amount.ToString()));
     }
 
     private void OnDomainEventEmitted(string type, string source, string dataJson, string id, string specVersion, string dataContentType, string timestampIso)
     {
-        if (type == "core.health.updated" || type == "player.health.changed")
+        if (type == "core.health.updated")
         {
             try
             {

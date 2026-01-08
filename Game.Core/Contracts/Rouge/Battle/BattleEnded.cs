@@ -10,10 +10,9 @@ namespace Game.Core.Contracts.Rouge.Battle;
 public sealed record BattleEnded(
     string RunId,
     string BattleId,
-    string Result, // victory | defeat | escaped
+    string Result, // see BattleResults
     DateTimeOffset EndedAt
 )
 {
     public const string EventType = "core.battle.ended";
 }
-

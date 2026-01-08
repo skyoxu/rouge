@@ -36,22 +36,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 1. **This file** (`CLAUDE.md`) - You're already here 
 2. **Project indexes** - Context entry points:
-   - `architecture_base.index` - Architecture docs (CH01-CH12 + ADRs)
-   - `prd_chunks.index` - PRD fragments index
-   - `shards/flattened-adr.xml` - All ADRs in single XML
-   - `shards/flattened-prd.xml` - All PRD in single XML
+   - `docs/PROJECT_DOCUMENTATION_INDEX.md` - 人类入口索引（推荐先读）
+   - `architecture_base.index` - 架构文档路径索引（Base + ADR）
+   - `docs/index/architecture_base.index` - 架构文档 JSONL 索引（便于检索）
+   - `prd_chunks.index` - PRD 索引（本仓库使用整文件 PRD，不再依赖 prd_chunks 目录）
 3. **Test framework** - `docs/testing-framework.md` (critical for TDD)
 
 **File locations quick reference:**
-- PRD input: `.taskmaster/docs/prd.txt` (auto-generated from prd_chunks)
-- ADRs: `docs/adr/ADR-*.md` (21 files)
-- Architecture: `docs/architecture/base/*.md` (CH01-CH12)
-- Tasks: `tasks/tasks.json` (Taskmaster output)
+- PRD: `.taskmaster/docs/prd.txt`（SSoT）与根目录 `prd.txt`（应保持同步）；原始草案见 `prd_yuan.md`
+- ADRs: `docs/adr/ADR-*.md`
+- Architecture: `docs/architecture/base/*.md`（Base-Clean）与 `docs/architecture/overlays/**`（功能纵切）
+- Tasks: `.taskmaster/tasks/tasks.json`（Task Master 视图）+ `.taskmaster/tasks/tasks_back.json`/`tasks_gameplay.json`（任务视图 SSoT）
 - Logs: `logs/**` (Security/E2E/Unit/Perf audit trails)
 
 **Typical workflow:**
 - **Taskmaster**: `npx task-master parse-prd .taskmaster/docs/prd.txt -n 30`
-- **Validate**: `py -3 scripts/python/validate_task_links.py`
+- **Validate**: `py -3 scripts/python/task_links_validate.py`
 - **SuperClaude**: `superclaude commit` (after implementation)
 
 ---
@@ -89,8 +89,10 @@ This is a **production-ready Godot 4.5.1 project template** designed for rapid g
 - `docs/adr/` - ADR文件目录
 - `docs/architecture/base/` - 综合技术文档清洁版本
 - `docs/architecture/overlays/<PRD-ID>/` - 综合技术文档对应<PRD-ID>版本
-- `docs/prd/prd_chunks/ + prd_chunks.index`- prd分片及索引
-- `architecture_base.index` - 综合技术文档清洁版本的索引
+- `docs/PROJECT_DOCUMENTATION_INDEX.md` - 文档入口索引（推荐）
+- `architecture_base.index` - Base+ADR 路径索引（脚本/检索入口）
+- `docs/index/architecture_base.index` - Base+ADR JSONL 索引（可检索）
+- `prd_chunks.index` - PRD 索引（整文件 PRD：`.taskmaster/docs/prd.txt` / `prd.txt` / `prd_yuan.md`）
 
 ### Base / Overlay 目录约定
 
@@ -128,7 +130,7 @@ docs/
 - **ADR-0006-data-storage**：数据存储 (SQLite, 数据模型, 备份策略)
 - **ADR-0007-ports-adapters**：端口适配器 (架构模式, 依赖注入, 接口设计)
 - **ADR-0008-deployment-release**：部署发布 (CI/CD, 分阶段发布, 回滚策略)
-- **ADR-0010-internationalization**：国际化 (多语言支持, 本地化流程, 文本资源管理)
+- **ADR-0028-godot-internationalization**：国际化（Godot 口径；多语言支持、本地化流程、文本资源管理）
 - **ADR-0011-windows-only-platform-and-ci**：确立Windows-only平台策略
 - **ADR-0015-performance-budgets-and-gates**：定义性能预算与门禁统一标准（帧耗时、启动时间等）
 
@@ -148,8 +150,8 @@ docs/
 
 ### PR 模板要求（最少需要在 `.github/PULL_REQUEST_TEMPLATE.md` 勾选）
 
-- [ ] 更新/新增 `src/shared/contracts/**` 的接口/类型/事件
-- [ ] 更新/新增 `tests/unit/**`与 `tests/e2e/**`
+- [ ] 更新/新增 `Game.Core/Contracts/**` 的接口/类型/事件
+- [ ] 更新/新增 `Game.Core.Tests/**`（xUnit）与 `Tests.Godot/**`（GdUnit4）
 - [ ] 涉及 PRD：Front‑Matter 的 `Test-Refs` 指向相应用例。
 - [ ] 变更口径/阈值/契约：已新增或 _Supersede_ 对应 ADR 并在 PR 描述中引用。
 - [ ] 附上 **E2E 可玩度冒烟** 的运行链接/截图
@@ -230,13 +232,13 @@ This template comes pre-configured with the following technology stack:
 1. **凡会落地为代码/测试的改动，必须引用 ≥ 1 条 _Accepted_ ADR。**  
    若改动改变阈值/契约/安全口径：**新增 ADR** 或 **以 `Superseded(ADR-xxxx)` 替代旧 ADR**。
 
-- Local sessions: prefer `claude --add-dir shards` to reference `@shards/*` paths directly.
+
 
 2. **08 章（功能纵切）只放在 overlays**：
    - base 仅保留 `08-功能纵切-template.md` 模板与写作约束；**禁止**在 base 写任何具体模块内容。
    - 08 章**引用** 01/02/03 的口径，**禁止复制阈值/策略**到 08 章正文。事件命名规则：
-     `\${DOMAIN_PREFIX}.<entity>.<action>`；接口/DTO 统一落盘到 `src/shared/contracts/**`。
-3. Use **only**: `@architecture_base.index`, `@prd_chunks.index`, `@shards/flattened-prd.xml`, `@shards/flattened-adr.xml` for overlay‑related work. Do **not** rescan `docs/` or rebuild flattened XML.
+     `\${DOMAIN_PREFIX}.<entity>.<action>`；接口/DTO 统一落盘到 `Game.Core/Contracts/**`。
+3. Overlay 相关工作优先使用：`@architecture_base.index` 与 `@prd_chunks.index`（必要时补充 `@docs/PROJECT_DOCUMENTATION_INDEX.md`），避免全量扫描 `docs/`；若索引缺失或过期，先运行 `py -3 scripts/python/rebuild_repo_indexes.py` 重建索引再继续。
 4. Overlays: write to `docs/architecture/overlays/<PRD-ID>/08/`. 08章只写**功能纵切**（实体/事件/SLI/门禁/验收/测试占位）；跨切面规则仍在 Base/ADR。
 
 ---
@@ -293,6 +295,7 @@ This template comes pre-configured with the following technology stack:
 - TDD‑leaning flow: Understand → Test (red) → Implement (green) → Refactor → Commit (explain **why**, link ADR/CH/Issue/Task).
 - When stuck (max 3 attempts): log failures; list 2–3 alternatives; question abstraction/scope; try the simpler path.
 - 单个脚本文件不得超过400行，如果实在无法进行功能切割，需要说明理由并征得同意后，再继续创建脚本
+- 已批准的超长脚本豁免（无需拆分）：`scripts/sc/llm_review.py`、`scripts/python/build_taskmaster_tasks.py`、`scripts/python/rename_project.py`（批准日期：2026-01-06）
 
 ---
 

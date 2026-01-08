@@ -1,0 +1,46 @@
+{"path": "docs/PROJECT_DOCUMENTATION_INDEX.md", "kind": "index", "title": "PROJECT_DOCUMENTATION_INDEX", "displayTitle": "rouge 项目文档索引（SSoT）"}
+{"path": "docs/architecture/ADR_INDEX_GODOT.md", "kind": "index", "title": "ADR_INDEX_GODOT", "displayTitle": "ADR 索引 — Godot 迁移（Accepted + Addenda）"}
+{"path": "docs/architecture/base/00-README.md", "kind": "base", "title": "00-README", "displayTitle": "Base-Clean 概览与索引（非 SSoT）"}
+{"path": "docs/architecture/base/01-introduction-and-goals-v2.md", "kind": "base", "title": "01 introduction and goals v2", "displayTitle": "01 约束与目标（v2 骨架）- arc42 §1 对齐版本"}
+{"path": "docs/architecture/base/02-security-baseline-godot-v2.md", "kind": "base", "title": "02-security-baseline-godot-v2", "displayTitle": "02 — 安全基线（Godot 4.5 + C# / Windows Only）"}
+{"path": "docs/architecture/base/03-observability-sentry-logging-v2.md", "kind": "base", "title": "03 observability sentry logging v2", "displayTitle": "03 observability sentry logging v2"}
+{"path": "docs/architecture/base/04-system-context-c4-event-flows-v2.md", "kind": "base", "title": "04 system context c4 event flows v2", "displayTitle": "04 system context c4 event flows v2"}
+{"path": "docs/architecture/base/05-data-models-and-storage-ports-v2.md", "kind": "base", "title": "05 data models and storage ports v2 (Godot + C#)", "displayTitle": "05 data models and storage ports v2 (Godot + C#)"}
+{"path": "docs/architecture/base/06-runtime-view-loops-state-machines-error-paths-v2.md", "kind": "base", "title": "06 runtime view loops state machines error paths v2 (Godot + C#)", "displayTitle": "06 runtime view loops state machines error paths v2 (Godot + C#)"}
+{"path": "docs/architecture/base/07-dev-build-and-gates-v2.md", "kind": "base", "title": "07 dev build and gates v2", "displayTitle": "07 dev build and gates v2"}
+{"path": "docs/architecture/base/08-crosscutting-and-feature-slices.base.md", "kind": "base", "title": "08 crosscutting and feature slices.base", "displayTitle": "08 crosscutting and feature slices.base"}
+{"path": "docs/architecture/base/09-performance-and-capacity-v2.md", "kind": "base", "title": "09 performance and capacity v2", "displayTitle": "09 performance and capacity v2"}
+{"path": "docs/architecture/base/10-i18n-ops-release-v2.md", "kind": "base", "title": "10 i18n ops release v2", "displayTitle": "10 i18n ops release v2"}
+{"path": "docs/architecture/base/11-risks-and-technical-debt-v2.md", "kind": "base", "title": "11 risks and technical debt v2", "displayTitle": "11 risks and technical debt v2"}
+{"path": "docs/architecture/base/12-glossary-v2.md", "kind": "base", "title": "12 glossary v2", "displayTitle": "12 glossary v2"}
+{"path": "docs/architecture/base/architecture-completeness-checklist.md", "kind": "base", "title": "architecture-completeness-checklist", "displayTitle": "架构文档完整性检查清单（Base）"}
+{"path": "docs/architecture/base/front-matter-standardization-example.md", "kind": "base", "title": "front-matter-standardization-example", "displayTitle": "Base 文档 Front-Matter 标准化示例"}
+{"path": "docs/adr/ADR-0001-tech-stack.md", "kind": "adr", "title": "技术栈与版本策略 - Modern Stack选型", "displayTitle": "ADR-0001: 技术栈与版本策略"}
+{"path": "docs/adr/ADR-0002-legacy-desktop-shell-security.md", "kind": "adr", "title": "旧桌面壳安全基线 - 三层拦截与沙箱策略", "displayTitle": "ADR-0002: 旧桌面壳安全基线"}
+{"path": "docs/adr/ADR-0003-observability-release-health.md", "kind": "adr", "title": "可观测性与 Release Health（Sentry）- Godot 口径", "displayTitle": "ADR-0003: 可观测性与 Release Health（Sentry）"}
+{"path": "docs/adr/ADR-0004-event-bus-and-contracts.md", "kind": "adr", "title": "事件总线与契约（CloudEvents 风格）- Godot + C# 变体", "displayTitle": "ADR-0004: 事件总线与契约（CloudEvents 风格）"}
+{"path": "docs/adr/ADR-0005-quality-gates.md", "kind": "adr", "title": "质量门禁（Windows-only）- Godot + C# 统一入口", "displayTitle": "ADR-0005: 质量门禁（Godot + C#）"}
+{"path": "docs/adr/ADR-0006-data-storage.md", "kind": "adr", "title": "Godot 数据存储与持久化（SQLite + ConfigFile）", "displayTitle": "ADR-0006: Godot 数据存储与持久化（SQLite + ConfigFile）"}
+{"path": "docs/adr/ADR-0007-ports-adapters.md", "kind": "adr", "title": "端口与适配器（Ports & Adapters）- Godot+C# 三层分离", "displayTitle": "ADR-0007: 端口与适配器（Ports & Adapters）"}
+{"path": "docs/adr/ADR-0008-deployment-release.md", "kind": "adr", "title": "部署与发布策略（Windows-only）- Godot 导出 + GitHub Releases", "displayTitle": "ADR-0008: 部署与发布策略（Windows-only）"}
+{"path": "docs/adr/ADR-0009-cross-platform.md", "kind": "adr", "title": "跨平台兼容策略 - Windows/macOS/Linux统一", "displayTitle": "ADR-0009: 跨平台适配策略（已被 Windows-only 平台策略替代）"}
+{"path": "docs/adr/ADR-0010-internationalization.md", "kind": "adr", "title": "国际化策略 - i18next + 动态语言切换", "displayTitle": "ADR-0010: 国际化与本地化策略"}
+{"path": "docs/adr/ADR-0011-windows-only-platform-and-ci.md", "kind": "adr", "title": "平台与 CI 策略（Windows-only）", "displayTitle": "ADR-0011: 平台与 CI 策略（Windows-only）"}
+{"path": "docs/adr/ADR-0012-pr-template-conditional-rendering.md", "kind": "adr", "title": "ADR-0012-pr-template-conditional-rendering", "displayTitle": "ADR-0012: PR Template Conditional Rendering"}
+{"path": "docs/adr/ADR-0015-performance-budgets-and-gates.md", "kind": "adr", "title": "ADR-0015-performance-budgets-and-gates", "displayTitle": "ADR-0015: 性能预算与门禁（Godot 4.5 + C#）"}
+{"path": "docs/adr/ADR-0016-api-contracts-openapi.md", "kind": "adr", "title": "ADR-0016-api-contracts-openapi", "displayTitle": "ADR-0016：API 契约与 OpenAPI 基线"}
+{"path": "docs/adr/ADR-0017-quality-intelligence-dashboard-and-governance.md", "kind": "adr", "title": "ADR-0017-quality-intelligence-dashboard-and-governance", "displayTitle": "ADR-0017: Quality Intelligence Dashboard and Governance"}
+{"path": "docs/adr/ADR-0018-godot-runtime-and-distribution.md", "kind": "adr", "title": "ADR-0018-godot-runtime-and-distribution", "displayTitle": "ADR-0018: Godot Runtime and Distribution"}
+{"path": "docs/adr/ADR-0019-godot-security-baseline.md", "kind": "adr", "title": "ADR-0019-godot-security-baseline", "displayTitle": "ADR-0019: Godot 4.5 安全基线（Windows Only）"}
+{"path": "docs/adr/ADR-0020-contract-location-standardization.md", "kind": "adr", "title": "ADR-0020-contract-location-standardization", "displayTitle": "ADR-0020: Contract Location Standardization"}
+{"path": "docs/adr/ADR-0021-csharp-domain-layer-architecture.md", "kind": "adr", "title": "ADR-0021-csharp-domain-layer-architecture", "displayTitle": "ADR-0021: C# Domain Layer Architecture"}
+{"path": "docs/adr/ADR-0022-godot-signal-system-and-contracts.md", "kind": "adr", "title": "ADR-0022-godot-signal-system-and-contracts", "displayTitle": "ADR-0022: Godot Signal System and Contracts"}
+{"path": "docs/adr/ADR-0023-settings-ssot-configfile.md", "kind": "adr", "title": "ADR-0023-settings-ssot-configfile", "displayTitle": "ADR-0023: Settings SSoT = ConfigFile (user://)"}
+{"path": "docs/adr/ADR-0024-godot-test-strategy.md", "kind": "adr", "title": "ADR-0024-godot-test-strategy", "displayTitle": "ADR-0024: Godot Test Strategy (xUnit + GdUnit4)"}
+{"path": "docs/adr/ADR-0026-event-publish-failure-strategy.md", "kind": "adr", "title": "ADR-0026-event-publish-failure-strategy", "displayTitle": "ADR-0026: 事件发布失败策略（PublishAsync Failure Semantics）"}
+{"path": "docs/adr/ADR-0027-ownership-write-entry.md", "kind": "adr", "title": "ADR-0027-ownership-write-entry", "displayTitle": "ADR-0027: 所有权唯一写入口（Ownership Write Entry）"}
+{"path": "docs/adr/ADR-0028-godot-internationalization.md", "kind": "adr", "title": "国际化策略（Godot TranslationServer + 资源约定）", "displayTitle": "ADR-0028: 国际化策略（Godot TranslationServer + 资源约定）"}
+{"path": "docs/adr/ADR-0029-event-usage-tiering.md", "kind": "adr", "title": "ADR-0029-event-usage-tiering", "displayTitle": "ADR-0029: 事件用途分级（Gameplay vs UI vs Audit/Observability）"}
+{"path": "docs/adr/ADR-0030-error-handling-policy.md", "kind": "adr", "title": "ADR-0030-error-handling-policy", "displayTitle": "ADR-0030: 错误处理口径（Exceptions vs Try*/Result vs Fail-Fast）"}
+{"path": "docs/adr/ADR-0031-core-threading-model.md", "kind": "adr", "title": "ADR-0031-core-threading-model", "displayTitle": "ADR-0031: Core 线程模型（Single-Thread Core + 明确跨线程边界）"}
+{"path": "docs/adr/guide.md", "kind": "doc", "title": "guide", "displayTitle": "ADR 指南（Windows-only / Godot + C#）"}

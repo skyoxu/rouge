@@ -1,7 +1,7 @@
 ---
 ADR-ID: ADR-0001
 title: 技术栈与版本策略 - Modern Stack选型
-status: Accepted
+status: Superseded
 decision-time: '2025-08-17'
 deciders: [架构团队, 开发团队]
 archRefs: [CH01, CH07, CH09, CH11]
@@ -24,6 +24,7 @@ executable-deliverables:
   - tsconfig.json
   - scripts/tech-stack-validator.mjs
 supersedes: []
+superseded-by: [ADR-0018]
 ---
 
 # ADR-0001: 技术栈与版本策略

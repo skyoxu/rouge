@@ -122,4 +122,3 @@ def resolve_triplet(
         tasks_gameplay_path=str(tasks_gameplay_p),
         taskdoc_path=taskdoc_path,
     )
-

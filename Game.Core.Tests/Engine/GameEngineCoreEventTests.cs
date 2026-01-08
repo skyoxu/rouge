@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Game.Core.Contracts;
@@ -13,6 +14,19 @@ namespace Game.Core.Tests.Engine;
 
 public class GameEngineCoreEventTests
 {
+    // ADR-0004: Event naming conventions and CloudEvents 1.0 baseline (id/source/type/specversion).
+    private static void AssertCloudEventsBaseline(DomainEvent evt)
+    {
+        evt.Id.Should().NotBeNullOrWhiteSpace();
+        evt.Source.Should().NotBeNullOrWhiteSpace();
+        evt.Type.Should().NotBeNullOrWhiteSpace();
+        evt.SpecVersion.Should().Be("1.0");
+        evt.DataContentType.Should().Be("application/json");
+        evt.Timestamp.Offset.Should().Be(TimeSpan.Zero);
+        evt.Type.Should().MatchRegex("^(core\\.|ui\\.menu\\.|screen\\.)");
+        JsonDocument.Parse(evt.DataJson);
+    }
+
     private sealed class CapturingEventBus : IEventBus
     {
         public List<DomainEvent> Published { get; } = new();
@@ -59,9 +73,10 @@ public class GameEngineCoreEventTests
         // Assert
         bus.Published.Should().ContainSingle();
         var evt = bus.Published[0];
-        evt.Type.Should().Be("game.started");
+        evt.Type.Should().Be("core.game.started");
         evt.Source.Should().Be(nameof(GameEngineCore));
-        evt.Data.Should().NotBeNull();
+        evt.DataJson.Should().NotBeNullOrWhiteSpace();
+        AssertCloudEventsBaseline(evt);
     }
 
     [Fact]
@@ -78,9 +93,10 @@ public class GameEngineCoreEventTests
         // Assert
         bus.Published.Should().ContainSingle();
         var evt = bus.Published[0];
-        evt.Type.Should().Be("score.changed");
+        evt.Type.Should().Be("core.score.updated");
         evt.Source.Should().Be(nameof(GameEngineCore));
-        evt.Data.Should().NotBeNull();
+        evt.DataJson.Should().NotBeNullOrWhiteSpace();
+        AssertCloudEventsBaseline(evt);
     }
 
     [Fact]
@@ -97,8 +113,30 @@ public class GameEngineCoreEventTests
         // Assert
         bus.Published.Should().ContainSingle();
         var evt = bus.Published[0];
-        evt.Type.Should().Be("player.health.changed");
+        evt.Type.Should().Be("core.health.updated");
         evt.Source.Should().Be(nameof(GameEngineCore));
-        evt.Data.Should().NotBeNull();
+        evt.DataJson.Should().NotBeNullOrWhiteSpace();
+        AssertCloudEventsBaseline(evt);
+    }
+
+    [Fact]
+    public void All_published_events_follow_naming_and_required_fields()
+    {
+        // Arrange
+        var engine = CreateEngineAndBus(out var bus);
+
+        // Act
+        engine.Start();
+        engine.Move(1, 0);
+        engine.AddScore(5);
+        engine.ApplyDamage(new Damage(Amount: 1, Type: DamageType.Physical, IsCritical: false));
+        engine.End();
+
+        // Assert
+        bus.Published.Should().HaveCount(5);
+        foreach (var evt in bus.Published)
+        {
+            AssertCloudEventsBaseline(evt);
+        }
     }
 }

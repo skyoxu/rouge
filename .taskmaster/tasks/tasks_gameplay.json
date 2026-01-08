@@ -22,7 +22,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -51,7 +51,11 @@
       "覆盖率目标: lines ≥90%, branches ≥85%"
     ],
     "taskmaster_id": 1,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.card.played",
+      "core.effect.resolved"
+    ]
   },
   {
     "id": "GM-0102",
@@ -82,7 +86,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -110,7 +114,11 @@
       "使用 Fake RngService Mock 保证可预测随机"
     ],
     "taskmaster_id": 2,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.battle.turn.player.started",
+      "core.card.played"
+    ]
   },
   {
     "id": "GM-0103",
@@ -137,7 +145,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -165,7 +173,11 @@
       "- Mock BattleContext 与 StatusManager 保证隔离"
     ],
     "taskmaster_id": 3,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.card.played",
+      "core.effect.resolved"
+    ]
   },
   {
     "id": "GM-0104",
@@ -192,7 +204,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -221,7 +233,10 @@
       "- 护盾测试: 回合结束清零逻辑"
     ],
     "taskmaster_id": 4,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.effect.resolved"
+    ]
   },
   {
     "id": "GM-0105",
@@ -249,7 +264,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -277,7 +292,11 @@
       "- ClearCombatState: 验证战斗结束状态清空但 HP 保留"
     ],
     "taskmaster_id": 5,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.battle.started",
+      "core.battle.turn.player.started"
+    ]
   },
   {
     "id": "GM-0106",
@@ -304,7 +323,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -333,7 +352,11 @@
       "- Intent 结构测试: 验证 EffectCommands 可序列化与执行"
     ],
     "taskmaster_id": 6,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.battle.started",
+      "core.battle.turn.enemy.started"
+    ]
   },
   {
     "id": "GM-0107",
@@ -362,7 +385,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -392,7 +415,15 @@
       "使用 Mock StatusManager 和 EffectResolver 隔离依赖"
     ],
     "taskmaster_id": 7,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.battle.started",
+      "core.battle.turn.player.started",
+      "core.card.played",
+      "core.effect.resolved",
+      "core.battle.turn.enemy.started",
+      "core.battle.ended"
+    ]
   },
   {
     "id": "GM-0108",
@@ -417,7 +448,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -446,7 +477,13 @@
       "- IsPathComplete 测试: Boss 完成返回 true"
     ],
     "taskmaster_id": 8,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.map.generated",
+      "core.map.node.selected",
+      "core.map.node.completed"
+    ]
   },
   {
     "id": "GM-0109",
@@ -473,7 +510,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -500,7 +537,11 @@
       "- 边界测试: 金币不足 SpendGold 抛异常或返回失败"
     ],
     "taskmaster_id": 9,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.run.ended"
+    ]
   },
   {
     "id": "GM-0110",
@@ -525,7 +566,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -552,7 +593,11 @@
       "- 边界测试: min >= max 抛异常、空列表 PickRandom 抛异常"
     ],
     "taskmaster_id": 10,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.map.generated"
+    ]
   },
   {
     "id": "GM-0111",
@@ -580,7 +625,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -607,7 +652,16 @@
       "- Validate 测试: 非法数据(如负 HP)抛异常"
     ],
     "taskmaster_id": 11,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.map.generated",
+      "core.map.node.selected",
+      "core.map.node.completed",
+      "core.battle.started",
+      "core.battle.ended",
+      "core.run.ended"
+    ]
   },
   {
     "id": "GM-0112",
@@ -635,7 +689,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -664,7 +718,11 @@
       "- Mock RngService 保证测试可预测"
     ],
     "taskmaster_id": 12,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.reward.offered",
+      "core.reward.selected"
+    ]
   },
   {
     "id": "GM-0113",
@@ -692,7 +750,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -721,7 +779,11 @@
       "使用 Mock EffectResolver 隔离依赖"
     ],
     "taskmaster_id": 13,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.effect.resolved",
+      "core.event.choice.resolved"
+    ]
   },
   {
     "id": "GM-0114",
@@ -748,7 +810,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -776,7 +838,11 @@
       "- 边界测试: 升级不存在卡牌抛异常"
     ],
     "taskmaster_id": 14,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.map.node.completed",
+      "core.effect.resolved"
+    ]
   },
   {
     "id": "GM-0115",
@@ -803,12 +869,13 @@
       "CH10"
     ],
     "overlay_refs": [
-      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Shop-DTOs.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md"
     ],
     "labels": [
       "gameplay",
@@ -818,7 +885,7 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Domain/ShopServiceTests.cs"
+      "Game.Core.Tests/Contracts/RougeShopDtoContractsTests.cs"
     ],
     "acceptance": [
       "Implement the domain model/service in Game.Core without Godot dependencies.",
@@ -833,7 +900,11 @@
       "使用 Mock RngService 保证测试可预测"
     ],
     "taskmaster_id": 15,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.map.node.completed",
+      "core.effect.resolved"
+    ]
   },
   {
     "id": "GM-0116",
@@ -866,7 +937,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -896,7 +967,23 @@
       "使用 Mock BattleManager/EventManager 等依赖"
     ],
     "taskmaster_id": 16,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.map.generated",
+      "core.map.node.selected",
+      "core.map.node.completed",
+      "core.battle.started",
+      "core.battle.turn.player.started",
+      "core.card.played",
+      "core.effect.resolved",
+      "core.battle.turn.enemy.started",
+      "core.battle.ended",
+      "core.reward.offered",
+      "core.reward.selected",
+      "core.event.choice.resolved",
+      "core.run.ended"
+    ]
   },
   {
     "id": "GM-0117",
@@ -924,7 +1011,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -950,7 +1037,11 @@
       "手动验证: UI 中展示卡牌文本与效果一致"
     ],
     "taskmaster_id": 17,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.card.played",
+      "core.reward.offered"
+    ]
   },
   {
     "id": "GM-0118",
@@ -977,7 +1068,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1002,7 +1093,11 @@
       "手动验证: 战斗中敌人意图展示正确"
     ],
     "taskmaster_id": 18,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.battle.started",
+      "core.battle.turn.enemy.started"
+    ]
   },
   {
     "id": "GM-0119",
@@ -1029,7 +1124,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1055,7 +1150,10 @@
       "手动验证: UI 展示事件文本与选项一致"
     ],
     "taskmaster_id": 19,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.event.choice.resolved"
+    ]
   },
   {
     "id": "GM-0120",
@@ -1082,7 +1180,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1110,7 +1208,15 @@
       "手动冒烟: 出牌 → 目标选择 → 伤害数字 → 敌人死亡 → 胜利"
     ],
     "taskmaster_id": 20,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.battle.started",
+      "core.battle.turn.player.started",
+      "core.card.played",
+      "core.effect.resolved",
+      "core.battle.turn.enemy.started",
+      "core.battle.ended"
+    ]
   },
   {
     "id": "GM-0121",
@@ -1137,7 +1243,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1164,7 +1270,14 @@
       "手动冒烟: 地图显示 → 点击节点 → 进入战斗/事件 → 完成后回地图 → 下一层节点解锁"
     ],
     "taskmaster_id": 21,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.map.generated",
+      "core.map.node.selected",
+      "core.map.node.completed",
+      "core.run.ended"
+    ]
   },
   {
     "id": "GM-0122",
@@ -1191,7 +1304,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1218,7 +1331,11 @@
       "手动冒烟: 战斗胜利 → 奖励面板弹出 → 选卡 → 牌组中新增卡牌"
     ],
     "taskmaster_id": 22,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.reward.offered",
+      "core.reward.selected"
+    ]
   },
   {
     "id": "GM-0123",
@@ -1245,7 +1362,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1272,7 +1389,11 @@
       "手动冒烟: 进入事件节点 → 对话框弹出 → 点击选项 → Effects 生效 → 回地图"
     ],
     "taskmaster_id": 23,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.effect.resolved",
+      "core.event.choice.resolved"
+    ]
   },
   {
     "id": "GM-0124",
@@ -1299,7 +1420,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1326,7 +1447,11 @@
       "手动冒烟: 进入休息节点 → 选择回血/升级 → 效果生效 → 回地图"
     ],
     "taskmaster_id": 24,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.map.node.completed",
+      "core.effect.resolved"
+    ]
   },
   {
     "id": "GM-0125",
@@ -1352,12 +1477,13 @@
       "CH10"
     ],
     "overlay_refs": [
-      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Shop-DTOs.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/_index.md"
     ],
     "labels": [
       "gameplay",
@@ -1367,7 +1493,9 @@
       "ui"
     ],
     "owner": "gameplay",
-    "test_refs": [],
+    "test_refs": [
+      "Game.Core.Tests/Contracts/RougeShopDtoContractsTests.cs"
+    ],
     "acceptance": [
       "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
       "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
@@ -1381,7 +1509,11 @@
       "手动冒烟: 进入商店 → 购买卡/移除卡 → 金币变化 → 牌组变化 → 离开回地图"
     ],
     "taskmaster_id": 25,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.map.node.completed",
+      "core.effect.resolved"
+    ]
   },
   {
     "id": "GM-0126",
@@ -1408,7 +1540,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1434,7 +1566,11 @@
       "手动冒烟: 主菜单 → 开始新局 → 地图界面加载成功"
     ],
     "taskmaster_id": 26,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.map.generated"
+    ]
   },
   {
     "id": "GM-0127",
@@ -1461,7 +1597,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1488,7 +1624,10 @@
       "手动冒烟: Boss 胜利/全灭 → 结算界面弹出 → 重开下一局 → 地图重新生成"
     ],
     "taskmaster_id": 27,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.ended"
+    ]
   },
   {
     "id": "GM-0128",
@@ -1517,7 +1656,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1547,7 +1686,12 @@
       "- 存档缺失/版本不匹配时 UI 有明确提示且不会崩溃"
     ],
     "taskmaster_id": 28,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.map.node.completed",
+      "core.run.ended"
+    ]
   },
   {
     "id": "GM-0129",
@@ -1579,7 +1723,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1606,7 +1750,23 @@
       "通过标准: 无崩溃、无卡死、所有节点类型可正常完成、Boss 胜利后可重开"
     ],
     "taskmaster_id": 29,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.map.generated",
+      "core.map.node.selected",
+      "core.map.node.completed",
+      "core.battle.started",
+      "core.battle.turn.player.started",
+      "core.card.played",
+      "core.effect.resolved",
+      "core.battle.turn.enemy.started",
+      "core.battle.ended",
+      "core.reward.offered",
+      "core.reward.selected",
+      "core.event.choice.resolved",
+      "core.run.ended"
+    ]
   },
   {
     "id": "GM-0130",
@@ -1638,7 +1798,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1673,7 +1833,23 @@
       "本地验证: 运行 ./scripts/ci/quality_gate.ps1 -GodotBin <path> 或 py -3 scripts/python/quality_gates.py all --godot-bin <path> --gdunit-hard --smoke"
     ],
     "taskmaster_id": 30,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.run.started",
+      "core.map.generated",
+      "core.map.node.selected",
+      "core.map.node.completed",
+      "core.battle.started",
+      "core.battle.turn.player.started",
+      "core.card.played",
+      "core.effect.resolved",
+      "core.battle.turn.enemy.started",
+      "core.battle.ended",
+      "core.reward.offered",
+      "core.reward.selected",
+      "core.event.choice.resolved",
+      "core.run.ended"
+    ]
   },
   {
     "id": "GM-0131",
@@ -1701,7 +1877,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1729,7 +1905,12 @@
       "- 进入 BattleScreen/RewardPanel 能正确渲染手牌/候选卡并可预览"
     ],
     "taskmaster_id": 54,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.battle.turn.player.started",
+      "core.card.played",
+      "core.effect.resolved"
+    ]
   },
   {
     "id": "GM-0132",
@@ -1758,7 +1939,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1788,7 +1969,11 @@
       "- 能量不足时尝试出牌 → 失败且状态不变"
     ],
     "taskmaster_id": 55,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.card.played",
+      "core.effect.resolved"
+    ]
   },
   {
     "id": "GM-0133",
@@ -1816,7 +2001,7 @@
     ],
     "overlay_refs": [
       "docs/architecture/overlays/PRD-rouge-manager/08/_index.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
@@ -1844,6 +2029,11 @@
       "- 结束回合触发敌人行动后 intent 刷新为下一回合预告"
     ],
     "taskmaster_id": 56,
-    "taskmaster_exported": true
+    "taskmaster_exported": true,
+    "contractRefs": [
+      "core.battle.started",
+      "core.battle.turn.player.started",
+      "core.battle.turn.enemy.started"
+    ]
   }
 ]

@@ -7,15 +7,15 @@ This script:
 - Reads .taskmaster/tasks/tasks_back.json and tasks_gameplay.json (SSoT for NG/GM)
   by default, or任意指定的任务文件（见参数）。
 - 根据给定的任务 ID 集合（或默认的 T2 根任务）计算依赖闭包，并将这些任务映射到
-  Task Master schema 下指定的 Tag（默认 master），采用数字 ID 与数字依赖。
+  Task Master schema 下指定的 Tag（默认 master），采用数字字符串 ID 与数字字符串依赖。
 - 追加写入 .taskmaster/tasks/tasks.json（不会覆盖其他 Tag），并在源任务文件上标记：
   - taskmaster_id: 数字 ID（Task Master 使用）
   - taskmaster_exported: 是否已映射到 Task Master
 
 Constraints come from docs/task-master-constraints.md:
 - Root object must be { "<tag>": { "tasks": [...] }, ... }
-- id: number
-- dependencies: number[]
+- id: string (recommended: numeric string, e.g. "12")
+- dependencies: string[] (recommended: numeric strings)
 - status: one of "pending" | "in-progress" | "done" | "deferred" | "cancelled" | "blocked"
 - priority: "high" | "medium" | "low"
 - testStrategy: string
@@ -138,6 +138,15 @@ def map_priority(priority: str | None) -> str:
     return "medium"
 
 
+def parse_int_like_id(v: object) -> int | None:
+    if isinstance(v, int):
+        return v
+    s = str(v or "").strip()
+    if not s:
+        return None
+    return int(s) if s.isdigit() else None
+
+
 def build_taskmaster_tasks(args: argparse.Namespace) -> None:
     # 1) 解析任务文件列表（源 SSoT）
     if not args.tasks_files:
@@ -235,9 +244,11 @@ def build_taskmaster_tasks(args: argparse.Namespace) -> None:
         if not isinstance(tasks_list, list):
             continue
         for t in tasks_list:
-            tid_val = t.get("id")
-            if isinstance(tid_val, int):
-                used_ids.add(tid_val)
+            if not isinstance(t, dict):
+                continue
+            tid_int = parse_int_like_id(t.get("id"))
+            if tid_int is not None:
+                used_ids.add(tid_int)
 
     # 5) 为字符串 ID 分配稳定的数字 ID（优先复用 taskmaster_id）
     id_map: Dict[str, int] = {}
@@ -268,11 +279,14 @@ def build_taskmaster_tasks(args: argparse.Namespace) -> None:
         print(f"  {tid} -> {num}")
 
     # 6) 构建/更新目标 Tag 下的 Task Master 任务列表
-    existing_by_id: Dict[int, int] = {
-        t["id"]: idx
-        for idx, t in enumerate(tag_tasks)
-        if isinstance(t, dict) and isinstance(t.get("id"), int)
-    }
+    existing_by_id: Dict[int, int] = {}
+    for idx, t in enumerate(tag_tasks):
+        if not isinstance(t, dict):
+            continue
+        tid_int = parse_int_like_id(t.get("id"))
+        if tid_int is None:
+            continue
+        existing_by_id[tid_int] = idx
 
     for tid in sorted_ids:
         src = all_tasks.get(tid)
@@ -318,19 +332,27 @@ def build_taskmaster_tasks(args: argparse.Namespace) -> None:
             test_strategy_str = ""
 
         # Map dependencies to numeric ids (only within closure subset).
-        dep_ids: List[int] = []
+        dep_ids: List[str] = []
         for dep in get_dependencies(src):
             num_dep = id_map.get(dep)
             if num_dep is not None:
-                dep_ids.append(num_dep)
+                dep_ids.append(str(num_dep))
 
         tm_task: Dict = {
-            "id": num_id,
+            "id": str(num_id),
             "title": title,
             "description": description,
             "status": map_status(src.get("status")),
             "priority": map_priority(src.get("priority")),
             "dependencies": dep_ids,
+            "subtasks": [],
+            "adrRefs": list(src.get("adr_refs") or []) if isinstance(src.get("adr_refs"), list) else [],
+            "archRefs": list(src.get("chapter_refs") or []) if isinstance(src.get("chapter_refs"), list) else [],
+            "overlay": "",
+            "complexity": None,
+            "recommendedSubtasks": None,
+            "expansionPrompt": "",
+            "updatedAt": None,
         }
         if details:
             tm_task["details"] = details
@@ -339,7 +361,20 @@ def build_taskmaster_tasks(args: argparse.Namespace) -> None:
 
         existing_idx = existing_by_id.get(num_id)
         if existing_idx is not None:
-            tag_tasks[existing_idx] = tm_task
+            existing = tag_tasks[existing_idx] if isinstance(tag_tasks[existing_idx], dict) else {}
+            merged = dict(existing)
+            # Always override core fields.
+            for k in ("id", "title", "description", "status", "priority", "dependencies"):
+                merged[k] = tm_task[k]
+            # For optional fields: only overwrite when tm_task provides a non-empty value.
+            for k, v in tm_task.items():
+                if k in {"id", "title", "description", "status", "priority", "dependencies"}:
+                    continue
+                if v in (None, "", [], {}):
+                    merged.setdefault(k, v)
+                else:
+                    merged[k] = v
+            tag_tasks[existing_idx] = merged
         else:
             existing_by_id[num_id] = len(tag_tasks)
             tag_tasks.append(tm_task)

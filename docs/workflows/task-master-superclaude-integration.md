@@ -237,7 +237,7 @@ SuperClaude v4 推荐的"黄金三角" MCP 工具组合:
 # - 自动匹配 `.taskmaster/tasks/*.json` 中的任务与对应的 ACCEPTANCE_CHECKLIST.md
 # - 填充 overlay 字段为对应路径
 
-# 当前仓库尚未提供自动填充 overlay 字段的脚本，可通过 task_links_validate.py 校验任务与文档回链：
+# 本仓库提供 backfill_taskmaster_context_fields.py 回填 tasks.json 的 overlay/adrRefs/archRefs，然后再运行 task_links_validate.py 校验回链：
 py -3 scripts/python/task_links_validate.py
 ```
 
@@ -269,7 +269,7 @@ description: 执行架构级验收检查（Subagents）
 /acceptance-check <task-id>
 
 ## Workflow
-1. 读取 `.taskmaster/tasks/*.json` 中对应 task 的 overlay 字段
+1. 读取 `.taskmaster/tasks/tasks.json` 中对应 task 的 overlay 字段
 2. 加载对应的 ACCEPTANCE_CHECKLIST.md（50+ 条检查）
 3. 执行架构级验收（ADR-0004 合规性、安全基线、性能 SLO、ADR 关联）
 4. 生成验收报告，标注通过/失败项及具体文件行号
@@ -441,7 +441,7 @@ superclaude commit
 /acceptance-check 1.1
 
 # Subagents 执行流程：
-# 1. 读取 `.taskmaster/tasks/*.json` 找到任务 1.1
+# 1. 读取 `.taskmaster/tasks/tasks.json` 找到任务 1.1
 # 2. 提取 overlay 字段：docs/architecture/overlays/PRD-window/08/ACCEPTANCE_CHECKLIST.md
 # 3. 加载验收清单（50+ 条检查项）
 # 4. 执行架构级检查
@@ -523,7 +523,7 @@ npx task-master set-status 1.1 done
 
 **问题 1：overlay 字段缺失**
 - 症状：/acceptance-check 报错"找不到 overlay 路径"
-- 解决：当前仓库未提供自动批量填充 overlay 的脚本，可手动在 `.taskmaster/tasks/*.json` 中补充 overlay/overlay_refs 字段，并运行 `py -3 scripts/python/task_links_validate.py` 校验回链
+- 解决：先在 NG/GM 视图任务文件中维护 `adr_refs/chapter_refs/overlay_refs`（SSoT），再运行 `py -3 scripts/python/backfill_taskmaster_context_fields.py --write` 回填到 `.taskmaster/tasks/tasks.json` 的 `adrRefs/archRefs/overlay`，最后运行 `py -3 scripts/python/task_links_validate.py` 校验回链
 
 **问题 2：架构验收报错"ACCEPTANCE_CHECKLIST.md 不存在"**
 - 症状：overlay 字段指向的文件不存在
@@ -607,14 +607,12 @@ SuperClaude + Subagents + Task Master = 完整的开发→评审→验收闭环
 
 ### Phase 1: 需求准备 (Task Master)
 
-**3.1 合并 PRD 分片到单文件**
+**3.1 准备 PRD（单文件 SSoT）**
+
+本仓库使用整文件 PRD：`.taskmaster/docs/prd.txt`（UTF-8）。如需与根目录 `prd.txt` 同步，可用 Python：
 
 ```bash
-# Windows (PowerShell)
-Get-Content docs\prd\prd_chunks\*.md | Out-File -Encoding utf8 .taskmaster\docs\prd.txt
-
-# 或使用 Python
-py -3 -c "import pathlib; pathlib.Path('.taskmaster/docs/prd.txt').write_text(''.join(p.read_text(encoding='utf-8') for p in sorted(pathlib.Path('docs/prd/prd_chunks').glob('*.md'))), encoding='utf-8')"
+py -3 -c "from pathlib import Path; Path('.taskmaster/docs/prd.txt').write_text(Path('prd.txt').read_text(encoding='utf-8'), encoding='utf-8')"
 ```
 
 **3.2 生成任务 (调整 `-n` 参数控制任务数量)**
@@ -629,22 +627,16 @@ npx task-master parse-prd .taskmaster/docs/prd.txt -n 30
 py -3 scripts/python/task_links_validate.py
 ```
 
-如果校验失败，手动编辑 `.taskmaster/tasks/tasks_back.json` 补充 `adrRefs` 和 `archRefs`。
+如果校验失败，优先手动编辑任务视图（SSoT）：`.taskmaster/tasks/tasks_back.json` 与 `.taskmaster/tasks/tasks_gameplay.json`，补充 `adr_refs` / `chapter_refs` / `overlay_refs` 后再复跑校验。
 
-**3.3.1 批量更新 overlay 字段（推荐）**
+**3.3.1 回填 Overlay 引用到 tasks.json（推荐）**
 
-`overlay` 字段用于关联任务与架构验收清单（ACCEPTANCE_CHECKLIST.md），支持 Subagents 自动化架构验收。
+本仓库将 `overlay_refs` 维护在任务视图（SSoT）中；为让 Task Master 视图也能追溯“任务 → Overlay”，使用脚本把 `Overlays: ...` 行注入到 `.taskmaster/tasks/tasks.json` 的 `details` 字段（不新增字段）。
 
 **自动化脚本：**
 
 ```bash
-# 批量更新 .taskmaster/tasks/*.json 中各任务的 overlay 字段
-py -3 scripts/python/link_tasks_to_overlays.py
-
-# 脚本功能：
-# 1. 扫描 docs/architecture/overlays/<PRD-ID>/08/ 目录
-# 2. 匹配任务与对应的 ACCEPTANCE_CHECKLIST.md
-# 3. 自动填充 overlay 字段
+py -3 scripts/python/backfill_task_overlays.py
 ```
 
 **overlay 字段格式：**
@@ -833,8 +825,9 @@ public class GuildContractsTests
 - **外圈（结构层质量门禁）**：
   - 使用专用 Python 脚本检查契约与文档的一致性和命名规范，例如：
     - `scripts/python/validate_contracts.py`：验证 Overlay 08 中声明的契约路径是否存在并指向正确的 C# 文件。
-    - `scripts/python/check_guild_contracts.py`：检查 Guild 契约命名空间是否为 `Game.Core.Contracts.Guild`，`EventType` 是否为 `core.guild.*` 前缀。
-    - （规划中）`check_gameloop_contracts.py`：检查 GameLoop 契约命名空间是否为 `Game.Contracts.GameLoop`，`EventType` 是否为 `core.game_turn.*` 前缀，并与 ADR/Overlay 约定一致。
+    - `scripts/python/check_domain_contracts.py`：检查 `Game.Core/Contracts/**/*.cs` 的基础不变量（无 Godot 依赖泄漏；`EventType` 格式与注释一致；`EventType` 全局唯一）。
+    - `scripts/python/check_gameloop_contracts.py`：检查 Rouge 最小可玩闭环（Run/Map/Battle/Reward/Event）的领域事件契约是否落盘、命名空间与 `EventType` 常量是否与约定一致（`core.run.*` / `core.map.*` / `core.battle.*` / `core.reward.*` / `core.event.choice.resolved`）。
+    - `scripts/python/validate_task_contract_refs.py`：检查任务视图（`tasks_back.json`/`tasks_gameplay.json`）中的 `contractRefs` 是否只包含允许前缀（`core.`/`ui.menu.`/`screen.`）且在 `Game.Core/Contracts/**` 中存在对应的 `EventType` 常量。
   - 这些脚本不直接验证“逻辑是否正确”，而是保证：命名、位置、EventType 前缀和文档回链不漂移。
 
 **建议的落地时机与门禁级别：**
@@ -842,8 +835,8 @@ public class GuildContractsTests
 - 在首批契约与核心逻辑稳定前：
   - 优先让 xUnit/GdUnit4 测试覆盖关键行为（内圈 TDD）。
   - 结构校验脚本可以先在本地手动运行，作为开发者自检工具，而不是 CI 硬门禁。
-- 当某个领域模块（如 Guild、GameLoop）进入“稳定阶段”后：
-  - 为该模块补充/完善对应的结构校验脚本（如 `check_guild_contracts.py`、`check_gameloop_contracts.py`）。
+- 当某个领域模块（如 Rouge RunLoop）进入“稳定阶段”后：
+  - 为该模块补充/完善对应的结构校验脚本（例如 `check_gameloop_contracts.py`）。
   - 在 `windows-quality-gate.yml` 中以**软门禁**方式接入：失败会生成报告与工件，但不会立即阻断合并。
 - 当 ADR-0005/相关 Base 章节明确要求该模块的契约视为“架构 SSoT”时：
   - 再考虑把相关脚本升级为硬门禁（CI 失败即阻止合并），但应当在任务描述和 PR 说明中明确这一变更，以免影响日常开发节奏。
@@ -853,21 +846,23 @@ public class GuildContractsTests
 - 在实现阶段聚焦业务行为与可玩性（由单元/场景测试驱动）。
 - 在架构与长期维护阶段，靠结构校验脚本防止契约和文档慢慢偏离 ADR/Overlay 约定。
 
-#### 当前示例实现状态（Guild 示例）
+#### 当前示例实现状态（Rouge RunLoop 示例）
 
-- Guild 领域事件套装已落地，并符合 ADR-0004 的 `core.<entity>.<action>` 约定：
-  - `core.guild.created` → `Game.Core/Contracts/Guild/GuildCreated.cs`
-  - `core.guild.member.joined` → `Game.Core/Contracts/Guild/GuildMemberJoined.cs`
-  - `core.guild.member.left` → `Game.Core/Contracts/Guild/GuildMemberLeft.cs`
-  - `core.guild.disbanded` → `Game.Core/Contracts/Guild/GuildDisbanded.cs`
-  - `core.guild.member.role_changed` → `Game.Core/Contracts/Guild/GuildMemberRoleChanged.cs`
+- Rouge 最小可玩闭环领域事件套装已落地（Run/Map/Battle/Reward/Event），并符合 ADR-0004 的 `core.<entity>.<action>` 约定：
+  - `core.run.started` → `Game.Core/Contracts/Rouge/Run/RunStarted.cs`
+  - `core.map.generated` → `Game.Core/Contracts/Rouge/Map/MapGenerated.cs`
+  - `core.battle.started` → `Game.Core/Contracts/Rouge/Battle/BattleStarted.cs`
+  - `core.card.played` → `Game.Core/Contracts/Rouge/Cards/CardPlayed.cs`
+  - `core.effect.resolved` → `Game.Core/Contracts/Rouge/Effects/EffectsResolved.cs`
+  - `core.run.ended` → `Game.Core/Contracts/Rouge/Run/RunEnded.cs`
 - 契约测试：
-  - `Game.Core.Tests/Domain/GuildContractsTests.cs` 已创建，使用 xUnit + FluentAssertions 校验上述事件的 `EventType` 常量和关键字段。
+  - `Game.Core.Tests/Contracts/RougeRunEventContractsTests.cs` 使用 xUnit + FluentAssertions 校验事件 `EventType` 常量全局唯一、前缀一致，并验证 payload 可 JSON 序列化。
 - 自动化校验：
-  - `scripts/python/validate_contracts.py` 检查 Overlay 08 中的契约路径是否指向存在的 C# 契约，并已在 `windows-quality-gate.yml` 中以软门禁方式运行。
-  - `scripts/python/check_guild_contracts.py` 检查 Guild 契约文件是否存在、命名空间是否为 `Game.Core.Contracts.Guild`，以及 `EventType` 是否为预期的 `core.guild.*` 值。
+  - `scripts/python/validate_contracts.py`：Overlay 08 ↔ Contracts 路径存在性校验。
+  - `scripts/python/check_domain_contracts.py`：Contracts 树的基础不变量校验（命名/注释/去 Godot 依赖泄漏/唯一性）。
+  - `scripts/python/check_gameloop_contracts.py`：Rouge RunLoop 最小事件集落盘与命名空间/常量校验（建议作为结构层软门禁）。
 - 同步更新约定：
-  - `08-Contracts-Guild-Manager-Events.md` 中记录了 Guild 主要事件契约，并明确要求：新增或调整 `Game.Core/Contracts/Guild/**` 下的 C# 契约时，必须同步更新 `GuildContractsTests.cs` 与 `check_guild_contracts.py`，并通过 `validate_contracts.py` 重新校验 Overlay ↔ Contracts 回链。
+  - `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md` 维护“最小事件集合”的来源与验收要点；新增/调整事件时需同步更新该文档与相关测试/校验脚本。
 
 ---
 
@@ -1520,7 +1515,7 @@ description: 执行架构级验收检查（Subagents）
 
 ## Workflow
 
-1. 读取 `.taskmaster/tasks/*.json` 中对应 task 的 overlay 字段
+1. 读取 `.taskmaster/tasks/tasks.json` 中对应 task 的 overlay 字段
 2. 加载对应的 ACCEPTANCE_CHECKLIST.md
 3. 执行架构级检查清单（50+ 条）：
    - ADR-0004 事件契约合规性（命名规范、CloudEvents 字段）
@@ -1572,7 +1567,7 @@ description: 执行架构级验收检查（Subagents）
 /acceptance-check 1.1
 
 # Subagents 自动执行以下流程：
-# 1. 读取 `.taskmaster/tasks/*.json` 找到任务 1.1
+# 1. 读取 `.taskmaster/tasks/tasks.json` 找到任务 1.1
 # 2. 提取 overlay 字段：docs/architecture/overlays/PRD-guild/08/ACCEPTANCE_CHECKLIST.md
 # 3. 加载验收清单（50+ 条检查项）
 # 4. 执行架构级检查
@@ -2088,8 +2083,8 @@ def analyze_velocity():
 
 ```bash
 # ========== Phase 1: 任务准备 ==========
-# 1. 合并 PRD
-Get-Content docs\prd\prd_chunks\*.md | Out-File -Encoding utf8 .taskmaster\docs\prd.txt
+# 1. 准备 PRD（单文件 SSoT，UTF-8）
+py -3 -c "from pathlib import Path; Path('.taskmaster/docs/prd.txt').write_text(Path('prd.txt').read_text(encoding='utf-8'), encoding='utf-8')"
 
 # 2. 生成任务
 npx task-master parse-prd .taskmaster\docs\prd.txt -n 30

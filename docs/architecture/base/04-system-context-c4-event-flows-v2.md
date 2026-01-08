@@ -1,259 +1,140 @@
 ---
 title: 04 system context c4 event flows v2
 status: base-SSoT
-adr_refs: [ADR-0001, ADR-0002, ADR-0004, ADR-0005]
+adr_refs: [ADR-0018, ADR-0019, ADR-0004, ADR-0005, ADR-0020, ADR-0022]
 placeholders: unknown-app, Unknown Product, gamedev
 ---
 
-> 目标：用 **最小可复用** 的 C4 + 事件骨架表达“系统边界/容器/关键流”，与 Ch02 安全、Ch03 可观测 **引用对齐**；业务细节放 **overlays/08**。
+> 目标：给出 Base 级别的 System Context + Container（C4），并说明“契约/事件/Signals 的运行时骨干”。具体业务纵切只写在 `docs/architecture/overlays/<PRD_ID>/08/`。
 
-## 0. 章节定位（与 arc42 §4 对齐）
+## 0. arc42 第 4 章口径（Base）
 
-- 本章给出**解决方案策略的精炼视图**：技术选型、顶层分解、达成质量目标的关键措施（详见 ADR）。
-- 只保留可复用骨架：**System Context、Container** 与一条**关键事件流**；更多组件/部署图放 05/07。
+- Base 只描述跨切面与系统骨干：边界、职责、数据与事件流。
+- 功能纵切（实体/事件/验收/测试）在 Overlay 08 表达，并回链 CH01/CH03/ADR。
 
-## 1. System Context（最小）
+## 1. System Context（参与者与外部系统）
 
-- Actors：Player、Updater、Telemetry（Sentry）、Content CDN、Crash Reporter。
-- 系统边界：旧桌面壳 App（Main/Renderer）、Local Store、Extension Sandbox。
+- 参与者：Player（玩家）、CI（构建/测试）、Distribution（分发平台，可选）、Sentry（可选）。
+- 运行环境：Windows-only；资源与文件访问遵循 `res://`/`user://`（ADR-0019）。
+- 外链与网络：仅 HTTPS + 主机白名单；`GD_OFFLINE_MODE=1` 下拒绝出网并审计（ADR-0019，审计落 `logs/**`）。
 
 ```mermaid
 C4Context
     title System Context (Base)
     Person(player, "Player")
-    System(app, "Unknown Product (旧桌面壳 App)")
-    System_Ext(cdn, "Content CDN")
+    System(app, "Unknown Product", "Godot Game Client (Windows-only)")
+    System_Ext(distribution, "Distribution Platform")
     System_Ext(sentry, "Sentry/Obs")
-    System_Ext(updater, "Update Server")
-    Rel(player, app, "Use")
-    Rel(app, cdn, "Fetch Assets/Config")
-    Rel(app, sentry, "Errors/Traces/Release Health")
-    Rel(app, updater, "Check/Download")
+    System_Ext(os_services, "Windows OS")
+
+    Rel(player, app, "Play")
+    Rel(app, os_services, "Read/Write user://, window/input", "OS API")
+    Rel(app, distribution, "Download/Update", "Installer")
+    Rel(app, sentry, "Errors/Traces/Release Health", "HTTPS (optional)")
 ```
 
-> 安全边界仅**引用** Ch02：`旧脚本集成开关=false`、`旧隔离开关=true`、`sandbox=true`、预加载白名单导出。
+> 说明：`res://`/`user://` 的读写策略、外链白名单与审计规则属于安全基线（CH02/ADR-0019），不要在 Overlay 08 复制具体策略文本。
 
-## 2. Container（最小）
+## 2. Container View（分层边界）
 
-- Main（进程）/ Renderer（Web 框架）/ Preload（桥接）/ Worker（资产处理）/ Event Bus（进程内）。
-- 跨容器通信：进程间通信（主↔渲染/预加载）、HTTP(s)（远端）、文件系统（本地）。
+- Scenes/UI：装配、信号路由、最薄 UI glue（尽量不写业务规则）。
+- Adapters：唯一允许直接调用 `Godot.*` 的层；对 Core 暴露接口（Ports）。
+- Core Domain：纯 C#（无 Godot 依赖），承载状态机/规则/服务，便于 xUnit 快速测试。
+- Contracts：事件/DTO/端口契约的 SSoT，落盘 `Game.Core/Contracts/**`（ADR-0020）。
+- Store：SQLite 等持久化，路径仅 `user://`（ADR-0019）。
 
 ```mermaid
 C4Container
     title Container View (Base)
-    Container_Boundary(app, "Unknown Product") {
-      Container(main, "宿主进程", "Node/旧桌面壳")
-      Container(preload, "Preload Bridge", "旧桥接层 API")
-      Container(renderer, "Renderer UI", "旧前端框架 + 旧前端游戏引擎")
-      Container(worker, "Worker", "Asset/Physics")
-      Container(bus, "Event Bus", "RxJS | Node EventEmitter")
+    Container_Boundary(app, "Unknown Product (Godot)") {
+      Container(scenes, "Scenes/UI", "Godot Scenes + Control", "Assembly + Signals (minimal glue)")
+      Container(adapters, "Adapters", "C# (Godot API)", "Wrap Godot APIs behind interfaces")
+      Container(core, "Core Domain", "C#/.NET 8 (no Godot)", "Domain model + state machines + services")
+      Container(contracts, "Contracts", "C# records (SSoT)", "Events/DTO/Ports")
+      Container(store, "Data Store", "SQLite (user://)", "Persistence")
     }
-    Rel(main, preload, "exposeInMainWorld", "进程间通信")
-    Rel(preload, renderer, "safe API", "旧桥接层")
-    Rel(renderer, bus, "publish/subscribe")
-    Rel(main, bus, "publish/subscribe")
+    System_Ext(sentry, "Sentry/Obs", "optional")
+
+    Rel(scenes, adapters, "calls", "ports/adapters")
+    Rel(adapters, core, "invokes", "interfaces")
+    Rel(core, store, "load/save", "ports")
+    Rel(adapters, sentry, "capture", "SDK (optional)")
 ```
 
-## 3. 事件骨架（CloudEvents 1.0 兼容）
+## 3. Domain Event 与 CloudEvents type（ADR-0004）
 
-> 事件以 **CloudEvents 1.0 JSON** 为最小约定；字段：`id, source, type, time, specversion, datacontenttype, data`。
+- 事件类型采用 CloudEvents 1.0 的 `type` 字段口径：字符串常量化（`EventType`），禁止随意拼写漂移。
+- 事件命名分域（示例）：
+  - `core.*.*`：领域/系统级事件
+  - `ui.menu.*`：菜单/UI 交互事件
+  - `screen.*.*`：屏幕/场景事件
+- 事件/DTO/端口契约只在 `Game.Core/Contracts/**` 定义；Scenes/Adapters 只能引用。
 
-### 跨平台互操作价值
+```csharp
+using System;
 
-**CloudEvents 1.0 标准**确保事件在不同云平台间的互操作性：
+namespace Game.Core.Contracts;
 
-- **AWS**: EventBridge原生支持CloudEvents，通过`aws-events`直接路由
-- **Azure**: Event Grid完全兼容CloudEvents schema，支持HTTP/AMQP投递
-- **GCP**: Cloud Pub/Sub和Cloud Functions支持CloudEvents触发器
-- **本地部署**: 标准JSON格式便于与Kafka、RabbitMQ等消息中间件集成
-
-```ts
-// src/shared/contracts/cloudevents-core.ts
-export interface CloudEventV1<T = unknown> {
-  id: string;
-  source: string;
-  type: string;
-  time: string;
-  specversion: '1.0';
-  datacontenttype?: 'application/json';
-  data?: T;
-  // CloudEvents扩展属性（跨平台兼容）
-  subject?: string; // 事件主题标识，便于路由过滤
-  traceparent?: string; // W3C分布式追踪，与Sentry等APM集成
-}
-
-// 域事件类型定义（符合CloudEvents命名规范）
-export type DomainEvent =
-  | `${DOMAIN_PREFIX}.app.started`
-  | `gamedev.asset.loaded`
-  | `gamedev.user.action`
-  | `gamedev.performance.degraded`
-  | `gamedev.runtime.frame_overrun`;
-
-// 跨平台事件源标识（便于云原生集成）
-export const EVENT_SOURCES = {
-  LEGACY_SHELL_MAIN: '旧桌面壳://main-process',
-  LEGACY_SHELL_RENDERER: '旧桌面壳://renderer-process',
-  PHASER_ENGINE: '旧前端游戏引擎://game-engine',
-  REACT_UI: '旧前端框架://ui-components',
-} as const;
-
-// CloudEvents 1.0构建器和验证函数
-export function createCloudEvent<T>(params: {
-  type: DomainEvent;
-  source: keyof typeof EVENT_SOURCES;
-  data?: T;
-  subject?: string;
-}): CloudEventV1<T> {
-  const event: CloudEventV1<T> = {
-    id: crypto.randomUUID(),
-    source: EVENT_SOURCES[params.source],
-    type: params.type,
-    time: new Date().toISOString(),
-    specversion: '1.0',
-    datacontenttype: 'application/json',
-    data: params.data,
-    subject: params.subject,
-  };
-
-  // 强制验证CloudEvents 1.0规范
-  validateCloudEvent(event);
-  return event;
-}
-
-export function validateCloudEvent(event: CloudEventV1<any>): void {
-  const requiredFields = ['id', 'source', 'type', 'specversion'] as const;
-  const missingFields = requiredFields.filter(field => !event[field]);
-
-  if (missingFields.length > 0) {
-    throw new Error(
-      `CloudEvent validation failed: missing required fields [${missingFields.join(', ')}]`
-    );
-  }
-
-  if (event.specversion !== '1.0') {
-    throw new Error(
-      `CloudEvent validation failed: unsupported specversion '${event.specversion}', expected '1.0'`
-    );
-  }
-
-  // 验证事件源格式
-  const validSources = Object.values(EVENT_SOURCES);
-  if (!validSources.includes(event.source as any)) {
-    console.warn(
-      `CloudEvent warning: source '${event.source}' not in predefined EVENT_SOURCES`
-    );
-  }
-}
-
-// 类型安全的事件发布辅助函数
-export function publishDomainEvent<T>(
-  eventType: DomainEvent,
-  source: keyof typeof EVENT_SOURCES,
-  data?: T,
-  subject?: string
-): CloudEventV1<T> {
-  return createCloudEvent({
-    type: eventType,
-    source,
-    data,
-    subject,
-  });
+/// <summary>
+/// Domain event base (minimal).
+/// </summary>
+/// <remarks>
+/// References: ADR-0004-event-bus-and-contracts, ADR-0020-contract-location-standardization.
+/// </remarks>
+public abstract record DomainEvent
+{
+    public abstract string Type { get; }
+    public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
 }
 ```
 
-### 示例（渲染 → 总线）
+```csharp
+using System;
 
-```ts
-// src/runtime/events/publish.ts
-import { Subject } from 'rxjs';
-export const eventBus = new Subject<CloudEventV1<any>>();
-export function publish<T>(e: CloudEventV1<T>) {
-  eventBus.next(e);
+namespace Game.Core.Contracts;
+
+/// <summary>
+/// Domain event: ${DOMAIN_PREFIX}.app.started
+/// </summary>
+public sealed record AppStarted(DateTimeOffset StartedAt) : DomainEvent
+{
+    public const string EventType = "core.app.started";
+
+    public override string Type => EventType;
 }
 ```
 
-## 4. 关键事件流（启动冷/热）
+## 4. 典型事件流（启动示例）
 
 ```mermaid
 sequenceDiagram
   participant Player
-  participant UI as Renderer
-  participant Main
-  participant Bus as EventBus
-  Player->>UI: start app
-  UI->>Bus: cloudevent {type: "${DOMAIN_PREFIX}.app.started"}
-  Bus->>Main: dispatch -> init services
-  Main-->>UI: app-ready (进程间通信)
+  participant Scenes
+  participant Adapters
+  participant Core
+  participant Store
+
+  Player->>Scenes: Start Game
+  Scenes->>Adapters: Resolve ports (time/input/store/eventbus)
+  Adapters->>Core: Initialize Core services
+  Core->>Store: Load save (user://)
+  Store-->>Core: Save data
+  Core-->>Adapters: Emit DomainEvent (core.app.started)
+  Adapters-->>Scenes: Forward as Signal (optional)
 ```
 
-## 5. 背压/批处理（最小策略，Base）
+## 5. 并发与 IO（Base 约束）
 
-- 统一在总线侧提供**批处理开关**：`BATCH_MAX=100`、`BATCH_MS=50`；默认关闭。
-- 渲染侧避免同步阻塞；Main 侧对磁盘/网络 IO 采用**队列 + 节流**（每 tick N 条）。
+- 任何 IO（文件/网络/数据库）通过端口抽象进入 Core；Adapters 负责具体实现与审计/错误转换。
+- 性能敏感逻辑可用 WorkerThreadPool/后台线程，但 Core 内部必须可测试、可重放（避免直接依赖单例 Time/Input）。
+- 错误路径必须“带上下文失败”（CH03 可观测性 + CH02 安全审计），禁止静默吞错。
 
-```ts
-// src/runtime/events/batching.ts
-import { bufferTime, filter } from 'rxjs/operators';
-import { eventBus } from './publish';
-import type { CloudEventV1 } from '@/shared/contracts/events/CloudEvent';
+## 6. 测试策略（与 CH07 对齐）
 
-export function enableBatching(ms = 50, max = 100) {
-  return eventBus.pipe(
-    bufferTime(ms, undefined, max),
-    filter(batch => batch.length > 0)
-  );
-}
+- xUnit：覆盖 Core 的事件/DTO 映射、状态机与关键规则（不依赖 Godot 引擎）。
+- GdUnit4：覆盖 Scenes/Signals 连通性、关键节点可见性与资源路径（headless 产出到 `logs/e2e/**`）。
 
-// 云平台兼容的批处理格式（AWS EventBridge/Azure Event Grid）
-export function formatCloudEventsBatch(events: CloudEventV1[]): {
-  events: CloudEventV1[];
-  batchId: string;
-  timestamp: string;
-  platform: 'aws' | 'azure' | 'gcp' | 'local';
-} {
-  return {
-    events,
-    batchId: crypto.randomUUID(),
-    timestamp: new Date().toISOString(),
-    platform: (process.env.CLOUD_PLATFORM as any) || 'local',
-  };
-}
-```
+## 7. 回链与门禁
 
-## 6. 就地验收（占位）
-
-```ts
-// tests/unit/events.schema.test.ts - CloudEvents 1.0合规验证
-import { expect, test } from 'vitest';
-import type { CloudEvent } from '@/shared/contracts/cloudevents-core';
-import { mkEvent, assertCe } from '@/shared/contracts/cloudevents-core';
-
-test('CloudEvents 1.0 minimal fields compliance', () => {
-  const event = mkEvent({
-    type: 'app.test.demo',
-    source: 'app://旧项目/test',
-  });
-
-  expect(event.specversion).toBe('1.0');
-  expect(event.id).toBeDefined();
-  expect(event.time).toBeDefined();
-  expect(event.type).toBe('app.test.demo');
-  expect(event.source).toBe('app://旧项目/test');
-
-  // 验证CloudEvents 1.0规范合规性
-  assertCe(event);
-});
-```
-
-```ts
-// tests/unit/events.batch.test.ts
-import { expect, test } from 'vitest';
-test('batching switches exist', () =>
-  expect(process.env.BATCH_MAX ?? '100').toBeDefined());
-```
-
-## 7. 运维/门禁（对齐 Ch03）
-
-- Release Health 作为可观测入口（Crash-Free Sessions/Users）；事件量与成本在 Ch03 控制。
-- CI 入口：`node scripts/policy/health-gate.mjs --input .release-health.json --min-sessions 0.990 --min-users 0.995`
+- 文档/任务回链：`py -3 scripts/python/task_links_validate.py`（产出 `logs/ci/<date>/task-links.json`）。
+- 一键门禁入口：`py -3 scripts/python/quality_gates.py --typecheck --lint --unit --scene --security --perf`。

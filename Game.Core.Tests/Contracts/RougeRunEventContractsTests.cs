@@ -67,15 +67,15 @@ public class RougeRunEventContractsTests
             new MapNodeSelected(
                 RunId: "run_1",
                 NodeId: "n_2_1",
-                NodeType: "battle",
+                NodeType: MapNodeTypes.Battle,
                 Depth: 2,
                 SelectedAt: now
             ),
             new MapNodeCompleted(
                 RunId: "run_1",
                 NodeId: "n_2_1",
-                NodeType: "battle",
-                Result: "ok",
+                NodeType: MapNodeTypes.Battle,
+                Result: MapNodeResults.Ok,
                 CompletedAt: now
             ),
             new BattleStarted(
@@ -104,13 +104,13 @@ public class RougeRunEventContractsTests
                 CardId: "card_strike",
                 Targets: new[]
                 {
-                    new TargetRef(TargetType: "enemy", TargetId: "enemy_1"),
+                    new TargetRef(TargetType: TargetTypes.Enemy, TargetId: "enemy_1"),
                 }
             ),
             new EffectsResolved(
                 RunId: "run_1",
                 BattleId: "battle_1",
-                SourceType: "card",
+                SourceType: EffectSourceTypes.Card,
                 Commands: new[]
                 {
                     new EffectCommand(
@@ -144,7 +144,7 @@ public class RougeRunEventContractsTests
             new BattleEnded(
                 RunId: "run_1",
                 BattleId: "battle_1",
-                Result: "victory",
+                Result: BattleResults.Victory,
                 EndedAt: now
             ),
             new RewardOffered(
@@ -152,14 +152,14 @@ public class RougeRunEventContractsTests
                 NodeId: "n_2_1",
                 Rewards: new[]
                 {
-                    new RewardOption(RewardType: "card_pick", ItemIds: new[] { "card_a", "card_b", "card_c" }, Amount: null),
-                    new RewardOption(RewardType: "gold", ItemIds: Array.Empty<string>(), Amount: 25),
+                    new RewardOption(RewardType: RewardTypes.CardPick, ItemIds: new[] { "card_a", "card_b", "card_c" }, Amount: null),
+                    new RewardOption(RewardType: RewardTypes.Gold, ItemIds: Array.Empty<string>(), Amount: 25),
                 }
             ),
             new RewardSelected(
                 RunId: "run_1",
                 NodeId: "n_2_1",
-                Selection: new RewardSelection(RewardType: "card_pick", SelectedItemId: "card_b", Amount: null),
+                Selection: new RewardSelection(RewardType: RewardTypes.CardPick, SelectedItemId: "card_b", Amount: null),
                 AppliedAt: now
             ),
             new EventChoiceResolved(
@@ -196,8 +196,8 @@ public class RougeRunEventContractsTests
             var evt = new DomainEvent(
                 Type: "test.contract",
                 Source: nameof(RougeRunEventContractsTests),
-                Data: payload,
-                Timestamp: new DateTime(2025, 01, 01, 0, 0, 0, DateTimeKind.Utc),
+                DataJson: JsonSerializer.Serialize(payload),
+                Timestamp: new DateTimeOffset(2025, 01, 01, 0, 0, 0, TimeSpan.Zero),
                 Id: "evt_1"
             );
 
@@ -211,4 +211,3 @@ public class RougeRunEventContractsTests
         }
     }
 }
-

@@ -149,9 +149,18 @@ def run_checks(out_dir: Path, focus: str) -> list[dict[str, Any]]:
             requires_relpaths=["scripts/python/validate_contracts.py"],
         )
         run_check(
-            "check_sanguo_gameloop_contracts",
-            ["py", "-3", "scripts/python/check_sanguo_gameloop_contracts.py"],
-            requires_relpaths=["scripts/python/check_sanguo_gameloop_contracts.py"],
+            "check_gameloop_contracts",
+            ["py", "-3", "scripts/python/check_gameloop_contracts.py"],
+            requires_relpaths=["scripts/python/check_gameloop_contracts.py"],
+        )
+        run_check(
+            "validate_task_contract_refs",
+            ["py", "-3", "scripts/python/validate_task_contract_refs.py"],
+            requires_relpaths=[
+                "scripts/python/validate_task_contract_refs.py",
+                ".taskmaster/tasks/tasks_back.json",
+                ".taskmaster/tasks/tasks_gameplay.json",
+            ],
         )
 
     # Quality checks.

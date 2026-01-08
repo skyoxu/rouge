@@ -75,6 +75,8 @@ Status: Proposed
   - 字段建议：RunId, BattleId, Result, EndedAt
 
 ### Reward / Shop / Rest / Event
+> Shop 交互通常需要 DTO（库存/报价/移除费用等）：见 `08-Contracts-Rouge-Shop-DTOs.md`；购买/移除等选择导致的状态变化应以 `EffectsResolved`（`core.effect.resolved`）回传并驱动 UI 刷新。
+
 
 - **RewardOffered** (`core.reward.offered`)
   - 触发时机：战斗胜利后生成奖励候选（如 3 选 1 卡牌）

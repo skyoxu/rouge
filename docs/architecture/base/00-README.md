@@ -12,9 +12,9 @@
 - 快速入口：FeatureFlags Quickstart → `docs/migration/Phase-18-Staged-Release-and-Canary-Strategy.md`
 
 - 变更章节内容后：
-  1. 重建索引：`npm run docs:index:rebuild`
-  2. 基线门禁：`npm run guard:base`（含编码扫描、索引一致性、ADR 引用扫描）
-- ADR 引用同步（PRD 分片）：`npm run prd:adr:sync`（补 ADR‑0011、移 ADR‑0009、并扫描校验）
+  1. 重建索引：`py -3 scripts/python/rebuild_repo_indexes.py`
+  2. Base 结构门禁：`powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ci/verify_base_clean.ps1`
+  3. 旧技术栈术语扫描（建议只扫 Base）：`py -3 scripts/python/scan_doc_stack_terms.py --root docs/architecture/base --fail-on-hits`
 - 指南文档：`docs/adr/guide.md`
 
 ## 目标与边界（arc42 Base 骨干）
@@ -25,18 +25,18 @@
 
 ## 章节导航（自动生成）
 
-- 01 约束与目标（v2 骨架）- arc42 §1 对齐版本：`docs/architecture/base/01-introduction-and-goals-v2.md`
-- 02 安全基线（Godot）v2 - 深度防御体系：`docs/architecture/base/02-security-baseline-godot-v2.md`
-- .github/workflows/release-health-gate.yml：`docs/architecture/base/03-observability-sentry-logging-v2.md`
-- 04 system context c4 event flows v2：`docs/architecture/base/04-system-context-c4-event-flows-v2.md`
-- scripts/migration/run_migrations.mjs：`docs/architecture/base/05-data-models-and-storage-ports-v2.md`
-- 06 runtime view loops state machines error paths v2：`docs/architecture/base/06-runtime-view-loops-state-machines-error-paths-v2.md`
-- Node-first 聚合示例（建议在 CI 与本地统一使用）：`docs/architecture/base/07-dev-build-and-gates-v2.md`
-- 08 crosscutting and feature slices.base：`docs/architecture/base/08-crosscutting-and-feature-slices.base.md`
-- .github/workflows/performance-gate.yml：`docs/architecture/base/09-performance-and-capacity-v2.md`
-- .github/workflows/release.yml（摘要）：`docs/architecture/base/10-i18n-ops-release-v2.md`
-- .env.risk-assessment：`docs/architecture/base/11-risks-and-technical-debt-v2.md`
-- 12 glossary v2：`docs/architecture/base/12-glossary-v2.md`
+- 01 约束与目标：`docs/architecture/base/01-introduction-and-goals-v2.md`
+- 02 安全基线（Godot）：`docs/architecture/base/02-security-baseline-godot-v2.md`
+- 03 可观测性与日志：`docs/architecture/base/03-observability-sentry-logging-v2.md`
+- 04 系统上下文与事件流：`docs/architecture/base/04-system-context-c4-event-flows-v2.md`
+- 05 数据模型与存储端口：`docs/architecture/base/05-data-models-and-storage-ports-v2.md`
+- 06 运行时/循环/状态机：`docs/architecture/base/06-runtime-view-loops-state-machines-error-paths-v2.md`
+- 07 Dev/Build/Gates：`docs/architecture/base/07-dev-build-and-gates-v2.md`
+- 08 跨切面与功能纵切模板（Base 仅模板）：`docs/architecture/base/08-crosscutting-and-feature-slices.base.md`
+- 09 性能与容量：`docs/architecture/base/09-performance-and-capacity-v2.md`
+- 10 i18n/Ops/Release：`docs/architecture/base/10-i18n-ops-release-v2.md`
+- 11 风险与技术债：`docs/architecture/base/11-risks-and-technical-debt-v2.md`
+- 12 术语表：`docs/architecture/base/12-glossary-v2.md`
 
 参考文件（Base 目录内）
 
@@ -48,15 +48,15 @@
 - 技术栈与三层结构
   - 技术栈：Godot 4.5 + C#/.NET 8（见 ADR-0018）。
   - 结构：Scenes（装配/信号）→ Adapters（仅封装 Godot API）→ Core（纯 C# 领域，可单测）。
-  - 当前仓库路径映射：Core → `Game.Core`；Adapters → `Game.Godot`；Scenes → 工程根下 `.tscn` 资源；场景测试 → `Tests.Godot`；领域测试将于 Phase 4 恢复为 xUnit。
+  - 当前仓库路径映射：Core → `Game.Core`；Adapters → `Game.Godot`；Scenes → 工程根下 `.tscn` 资源；领域测试 → `Game.Core.Tests`（xUnit）；场景测试 → `Tests.Godot`（GdUnit4）。
 - 安全基线
-  - 本目录新增 `02-security-baseline-godot-v2.md` 作为运行时基线（引用 ADR-0019），替代 旧桌面壳 版本的 02 章作为执行口径。
+  - 本目录新增 `02-security-baseline-godot-v2.md` 作为运行时基线（引用 ADR-0019），替代 legacy-base 归档版本的 02 章作为执行口径。
 - 契约 SSoT
   - 契约与事件仅落盘 `Game.Core/Contracts/**`（不依赖 Godot，不直接参与编译），各章节/用例引用路径，避免口径漂移。
 
 ## ADR 对齐（当前口径快照，自动生成）
 
-- Accepted：ADR-0003 / ADR-0004 / ADR-0005 / ADR-0006 / ADR-0007 / ADR-0008 / ADR-0010 / ADR-0011 / ADR-0015 / ADR-0018 / ADR-0019 / ADR-0020 / ADR-0021 / ADR-0022 / ADR-0023 / ADR-0024
+- Accepted：ADR-0003 / ADR-0004 / ADR-0005 / ADR-0006 / ADR-0007 / ADR-0008 / ADR-0011 / ADR-0015 / ADR-0018 / ADR-0019 / ADR-0020 / ADR-0021 / ADR-0022 / ADR-0023 / ADR-0024 / ADR-0028
 - Superseded：ADR-0001 / ADR-0002 / ADR-0009
 - Proposed：（无）
 

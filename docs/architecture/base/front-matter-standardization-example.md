@@ -80,12 +80,12 @@ placeholders: unknown-app, Unknown Product, unknown-product, gamedev, dev-team, 
 
 | 占位符            | 配置层     | 实际值                        | 来源                     |
 | ----------------- | ---------- | ----------------------------- | ------------------------ |
-| `unknown-app`     | Package    | `gamedev-旧项目`            | package.json name        |
-| `Unknown Product` | Package    | `旧项目 - 深度生态模拟游戏` | package.json productName |
-| `0.0.0`           | Package    | `0.1.0`                       | package.json version     |
+| `unknown-app`     | Project    | `unknown-app`                 | project.godot `config/name` |
+| `Unknown Product` | Project    | `Unknown Product`             | 文档占位（Base 固定占位） |
+| `0.0.0`           | Release    | `0.1.0`                       | Git tag / Release 版本 |
 | `gamedev`         | Domain     | `gamedev`                     | 硬编码域配置             |
 | `dev-team`        | CI Secrets | `my-company`                  | 环境变量/CI密钥          |
-| `${NODE_ENV}`     | Runtime    | `production`                  | 运行时环境变量           |
+| `${GD_SECURE_MODE}` | Runtime  | `1`                           | 运行时环境变量           |
 
 ## 实施步骤
 
@@ -108,20 +108,20 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\ci\\verify_base_cle
 
 # 编码/术语取证（按收敛指南）
 py -3 scripts\\python\\check_encoding.py --root docs
-py -3 scripts\\python\\scan_doc_stack_terms.py --root docs --fail-on-hits
+py -3 scripts\\python\\scan_doc_stack_terms.py --root docs\\architecture\\base --fail-on-hits
+py -3 scripts\\python\\scan_doc_stack_terms.py --root docs --out logs\\ci\\<YYYY-MM-DD>\\doc-stack-scan\\full
 ```
 
-### 步骤3: 测试配置替换
+### 步骤3: 占位符与旧栈语境扫描（不做替换）
 
-```bash
-# 开发环境测试（仅验证，不替换）
-NODE_ENV=development npm run config:substitute:validate
+> Base 文档应保持占位符（避免出现真实 PRD_ID/真实域）；本仓库不再使用 Node 工具链做“文档占位符替换”。
 
-# 生产环境测试（实际替换）
-NODE_ENV=production SENTRY_ORG=test-org npm run config:substitute:docs
+```powershell
+# 扫描 Base 中是否仍存在未声明/不应出现的占位符（手动 spot-check）
+rg -n \"\\$\\{\" docs/architecture/base
 
-# 检查替换结果
-grep -n "\${" docs/architecture/base/01-*.md docs/architecture/base/02-*.md
+# 扫描旧技术栈语境（阻断门禁）
+py -3 scripts\\python\\scan_doc_stack_terms.py --root docs\\architecture\\base --fail-on-hits
 ```
 
 ## 配置验证清单
@@ -143,7 +143,7 @@ grep -n "\${" docs/architecture/base/01-*.md docs/architecture/base/02-*.md
 
 - [x] Package Layer: `APP_NAME`, `PRODUCT_NAME`, `VERSION`
 - [x] CI Secrets Layer: `SENTRY_ORG`, `SENTRY_PROJECT`
-- [x] Runtime Layer: `NODE_ENV`, `RELEASE_PREFIX`
+- [x] Runtime Layer: `GD_SECURE_MODE`, `GD_OFFLINE_MODE`, `ALLOWED_EXTERNAL_HOSTS`
 - [x] Domain Layer: `DOMAIN_PREFIX`, `CRASH_FREE_SESSIONS`
 
 ## 预期效果

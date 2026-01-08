@@ -46,6 +46,15 @@ def is_non_empty_list(v: object) -> bool:
     return isinstance(v, list) and len(v) > 0
 
 
+def parse_task_id_int(v: object) -> int | None:
+    if isinstance(v, int):
+        return v
+    s = str(v or "").strip()
+    if not s:
+        return None
+    return int(s) if s.isdigit() else None
+
+
 def main() -> int:
     root = Path(__file__).resolve().parents[2]
 
@@ -116,9 +125,10 @@ def main() -> int:
     overlay_marker = 0
 
     for mt in master_tasks:
-        tm_id = mt.get("id")
-        if not isinstance(tm_id, int):
-            master_field_missing.append(f"master task has non-int id: {tm_id!r}")
+        tm_id_raw = mt.get("id")
+        tm_id = parse_task_id_int(tm_id_raw)
+        if tm_id is None:
+            master_field_missing.append(f"master task has invalid id (expected int-like): {tm_id_raw!r}")
             continue
         master_ids.append(tm_id)
 

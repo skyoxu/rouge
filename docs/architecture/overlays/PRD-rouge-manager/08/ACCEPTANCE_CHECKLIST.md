@@ -44,7 +44,7 @@ Test-Refs:
 ## 一、文档完整性验收
 
 - [ ] 功能纵切文档存在且 Front-Matter 完整：
-  - `docs/architecture/overlays/PRD-rouge-manager/08/08-功能纵切-最小可玩闭环.md`
+  - `docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`
   - `_index.md` 中已收录 PRD-rouge-manager 相关条目
 - [ ] 08 章仅作“引用”，不复制 01/02/03 章中的阈值/策略/门禁具体数值：
   - 安全：引用 CH02 + ADR-0019

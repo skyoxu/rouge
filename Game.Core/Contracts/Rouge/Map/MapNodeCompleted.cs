@@ -10,11 +10,10 @@ namespace Game.Core.Contracts.Rouge.Map;
 public sealed record MapNodeCompleted(
     string RunId,
     string NodeId,
-    string NodeType, // battle | elite | boss | shop | rest | event | treasure
-    string Result, // ok | fail | aborted
+    string NodeType, // see MapNodeTypes
+    string Result, // see MapNodeResults
     DateTimeOffset CompletedAt
 )
 {
     public const string EventType = "core.map.node.completed";
 }
-

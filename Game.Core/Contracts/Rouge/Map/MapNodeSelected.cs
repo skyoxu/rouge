@@ -10,11 +10,10 @@ namespace Game.Core.Contracts.Rouge.Map;
 public sealed record MapNodeSelected(
     string RunId,
     string NodeId,
-    string NodeType, // battle | elite | boss | shop | rest | event | treasure
+    string NodeType, // see MapNodeTypes
     int Depth,
     DateTimeOffset SelectedAt
 )
 {
     public const string EventType = "core.map.node.selected";
 }
-

@@ -63,8 +63,11 @@ def main():
 
     summary = {
         'dotnet': {},
+        'eventbus_audit': {},
         'selfcheck': {},
         'encoding': {},
+        'doc_stack': {},
+        'task_semantics': {},
         'status': 'ok'
     }
     hard_fail = False
@@ -81,6 +84,23 @@ def main():
         'status': dotnet_sum.get('status')
     }
     if rc not in (0, 2) or summary['dotnet']['status'] == 'tests_failed':
+        hard_fail = True
+
+    # 1b) EventBus handler exception audit (hard gate)
+    eb_dir = os.path.join('logs', 'ci', date, 'eventbus-audit-gate')
+    os.makedirs(eb_dir, exist_ok=True)
+    eb_out = os.path.join(eb_dir, 'summary.json')
+    rc_eb, out_eb = run_cmd(['py', '-3', 'scripts/python/eventbus_audit_gate.py', '--out', eb_out], cwd=root)
+    with io.open(os.path.join(eb_dir, 'stdout.txt'), 'w', encoding='utf-8') as f:
+        f.write(out_eb)
+    eb_sum = read_json(eb_out) or {}
+    summary['eventbus_audit'] = {
+        'rc': rc_eb,
+        'ok': eb_sum.get('ok'),
+        'selected': ((eb_sum.get('runtime') or {}).get('selected') or {}).get('path'),
+        'out': eb_out,
+    }
+    if rc_eb != 0 or not summary['eventbus_audit']['ok']:
         hard_fail = True
 
     # 2) Godot self-check (hard gate)
@@ -133,11 +153,88 @@ def main():
     enc_sum = read_json(os.path.join('logs', 'ci', date, 'encoding', 'session-summary.json')) or {}
     summary['encoding'] = enc_sum
 
+    # 3b) Doc stack terminology scan
+    # Hard gate: Base + entry docs + current Overlay/08 must not contain legacy stack terms.
+    # Soft evidence: full docs scan records hits but does not fail (except bad UTF-8).
+    doc_stack = {"strict": [], "full": {}}
+
+    def run_doc_stack_scan(root_arg: str, out_dir: str, fail_on_hits: bool) -> tuple[int, dict]:
+        cmd = ['py', '-3', 'scripts/python/scan_doc_stack_terms.py', '--root', root_arg, '--out', out_dir]
+        if fail_on_hits:
+            cmd.append('--fail-on-hits')
+        rc, _out = run_cmd(cmd, cwd=root)
+        s = read_json(os.path.join(out_dir, 'summary.json')) or {}
+        return rc, s
+
+    strict_roots = [
+        'docs/architecture/base',
+        'docs/architecture/overlays/PRD-rouge-manager/08',
+        'README.md',
+        'AGENTS.md',
+        'CLAUDE.md',
+        'docs/PROJECT_DOCUMENTATION_INDEX.md',
+    ]
+
+    for root_arg in strict_roots:
+        if not os.path.exists(root_arg):
+            continue
+        slug = root_arg.replace('\\', '_').replace('/', '_').replace(':', '').replace('.', '_')
+        out_dir = os.path.join('logs', 'ci', date, 'doc-stack-scan', 'strict', slug)
+        rc_ds, ds_sum = run_doc_stack_scan(root_arg, out_dir, fail_on_hits=True)
+        doc_stack['strict'].append(
+            {
+                'root': root_arg,
+                'out': out_dir,
+                'rc': rc_ds,
+                'hits': ds_sum.get('hits'),
+                'bad_utf8_files': len(ds_sum.get('bad_utf8_files') or []),
+                'summary_json': os.path.join(out_dir, 'summary.json'),
+            }
+        )
+        if rc_ds != 0:
+            hard_fail = True
+
+    # Soft evidence scan for full docs (do not fail on hits).
+    if os.path.exists('docs'):
+        out_dir = os.path.join('logs', 'ci', date, 'doc-stack-scan', 'full')
+        rc_ds, ds_sum = run_doc_stack_scan('docs', out_dir, fail_on_hits=False)
+        doc_stack['full'] = {
+            'root': 'docs',
+            'out': out_dir,
+            'rc': rc_ds,
+            'hits': ds_sum.get('hits'),
+            'bad_utf8_files': len(ds_sum.get('bad_utf8_files') or []),
+            'summary_json': os.path.join(out_dir, 'summary.json'),
+        }
+        if rc_ds == 2:
+            hard_fail = True
+
+    summary['doc_stack'] = doc_stack
+
+    # 4) Task semantics (hard gate): prevent drifted event-like names in tasks
+    task_sem_dir = os.path.join('logs', 'ci', date, 'task-semantic')
+    os.makedirs(task_sem_dir, exist_ok=True)
+    task_sem_out = os.path.join(task_sem_dir, 'task-event-drift.json')
+    rc4, out4 = run_cmd(['py', '-3', 'scripts/python/check_task_event_drift.py', '--out', task_sem_out], cwd=root)
+    sem_sum = read_json(task_sem_out) or {}
+    summary['task_semantics'] = {
+        'rc': rc4,
+        'status': sem_sum.get('status'),
+        'master_hits': len(((sem_sum.get('master') or {}).get('hits') or [])),
+        'gameplay_hits': len(((sem_sum.get('tasks_gameplay') or {}).get('hits') or [])),
+    }
+    if rc4 != 0:
+        hard_fail = True
+
     summary['status'] = 'ok' if not hard_fail else 'fail'
     with io.open(os.path.join(ci_dir, 'ci-pipeline-summary.json'), 'w', encoding='utf-8') as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
 
-    print(f"CI_PIPELINE status={summary['status']} dotnet={summary['dotnet'].get('status')} selfcheck={summary['selfcheck'].get('status')} encoding_bad={summary['encoding'].get('bad', 'n/a')}")
+    print(
+        f"CI_PIPELINE status={summary['status']} dotnet={summary['dotnet'].get('status')} "
+        f"selfcheck={summary['selfcheck'].get('status')} encoding_bad={summary['encoding'].get('bad', 'n/a')} "
+        f"task_semantics={summary['task_semantics'].get('status')}"
+    )
     return 0 if not hard_fail else 1
 
 
