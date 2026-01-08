@@ -111,7 +111,11 @@
       "xUnit 单元测试:",
       "- CardPileTests: 验证抽牌逻辑、洗牌可复现性(固定 Seed)、弃牌堆循环、手牌上限",
       "- 边界测试: 空牌堆抽牌、重复移除、升级不存在卡牌",
-      "使用 Fake RngService Mock 保证可预测随机"
+      "使用 Fake RngService Mock 保证可预测随机",
+      "Optional: - demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/SimpleCardPile.cs",
+      "Optional: - demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/SimpleCardPileManager.cs",
+      "Optional: - demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/CardManager.cs",
+      "Optional: 参考实现（demo/）："
     ],
     "taskmaster_id": 2,
     "taskmaster_exported": true,
@@ -412,7 +416,10 @@
       "- PlayCard 测试: 能量不足拒绝、目标非法拒绝、成功出牌后能量扣除",
       "- 胜负判定: 敌方全灭触发 BattleWon、我方全灭触发 BattleLost",
       "- 状态结算: OnTurnStart 中毒结算、OnTurnEnd 护盾清零",
-      "使用 Mock StatusManager 和 EffectResolver 隔离依赖"
+      "使用 Mock StatusManager 和 EffectResolver 隔离依赖",
+      "Optional: - demo/godot-demo-projects/2d/finite_state_machine/state_machine/state_machine.gd",
+      "Optional: - demo/godot-demo-projects/2d/finite_state_machine/player/player_state_machine.gd",
+      "Optional: 参考实现（demo/）："
     ],
     "taskmaster_id": 7,
     "taskmaster_exported": true,
@@ -1034,7 +1041,10 @@
       "- 加载配置文件验证反序列化成功",
       "- 每张卡 EffectCommands 可被 EffectResolver 执行",
       "- 升级 ID 映射正确",
-      "手动验证: UI 中展示卡牌文本与效果一致"
+      "手动验证: UI 中展示卡牌文本与效果一致",
+      "Optional: - demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/CardData.cs",
+      "Optional: - demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/JsonUtils.cs",
+      "Optional: 参考实现（demo/）："
     ],
     "taskmaster_id": 17,
     "taskmaster_exported": true,
@@ -1205,7 +1215,15 @@
       "- 验证场景可正常加载",
       "- 模拟 CardPlayed 事件触发 UI 刷新",
       "- 验证结束回合按钮可点击并调用 BattleManager.EndPlayerTurn",
-      "手动冒烟: 出牌 → 目标选择 → 伤害数字 → 敌人死亡 → 胜利"
+      "手动冒烟: 出牌 → 目标选择 → 伤害数字 → 敌人死亡 → 胜利",
+      "Optional: - demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/Card.cs",
+      "Optional: - demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/SimpleCardHand.cs",
+      "Optional: - demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/CardDropzone.cs",
+      "Optional: - demo/godot-card-game-framework/src/core/MousePointer.gd（Godot3 思路参考）",
+      "Optional: - demo/godot-card-game-framework/src/core/Card/TargetingArrow.gd（Godot3 思路参考）",
+      "Optional: - demo/godot-card-game-framework/src/core/CardViewer/CVPreviewPopup.gd（Godot3 思路参考）",
+      "Optional: - demo/godot-demo-projects/2d/tween/main.gd",
+      "Optional: 参考实现（demo/）："
     ],
     "taskmaster_id": 20,
     "taskmaster_exported": true,
@@ -1267,7 +1285,11 @@
       "GdUnit4 场景测试:",
       "- 验证场景加载",
       "- 模拟点击节点触发 EnterNode 事件",
-      "手动冒烟: 地图显示 → 点击节点 → 进入战斗/事件 → 完成后回地图 → 下一层节点解锁"
+      "手动冒烟: 地图显示 → 点击节点 → 进入战斗/事件 → 完成后回地图 → 下一层节点解锁",
+      "Optional: - demo/godot-demo-projects/2d/custom_drawing/lines.gd",
+      "Optional: - demo/godot-demo-projects/gui/accessibility/custom_control.gd",
+      "Optional: - demo/godot-demo-projects/2d/tween/main.gd",
+      "Optional: 参考实现（demo/）："
     ],
     "taskmaster_id": 21,
     "taskmaster_exported": true,
@@ -1902,7 +1924,12 @@
       "GdUnit4 UI 测试（headless）:",
       "- CardView 可实例化、文本可更新、hover/聚焦时能触发预览状态",
       "手动冒烟:",
-      "- 进入 BattleScreen/RewardPanel 能正确渲染手牌/候选卡并可预览"
+      "- 进入 BattleScreen/RewardPanel 能正确渲染手牌/候选卡并可预览",
+      "Optional: - demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/Card.cs",
+      "Optional: - demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/SimpleCardHand.cs",
+      "Optional: - demo/godot-card-game-framework/src/core/CardViewer/CVPreviewPopup.gd (Godot3, concept-only)",
+      "Optional: - demo/godot-demo-projects/2d/tween/main.gd",
+      "Optional: Demo references (demo/):"
     ],
     "taskmaster_id": 54,
     "taskmaster_exported": true,
@@ -1966,7 +1993,11 @@
       "GdUnit4 集成测试（headless）:",
       "- 进入 BattleScreen → 选择攻击卡 → 点击敌人 → 敌人 HP 下降且手牌进入弃牌堆",
       "- 选择卡后按 Esc 取消 → 状态回到可操作且不出牌",
-      "- 能量不足时尝试出牌 → 失败且状态不变"
+      "- 能量不足时尝试出牌 → 失败且状态不变",
+      "Optional: - demo/godot-card-game-framework/src/core/Card/TargetingArrow.gd (Godot3, concept-only)",
+      "Optional: - demo/godot-card-game-framework/src/core/MousePointer.gd (Godot3, concept-only)",
+      "Optional: - demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/CardDropzone.cs",
+      "Optional: Demo references (demo/):"
     ],
     "taskmaster_id": 55,
     "taskmaster_exported": true,
@@ -2026,7 +2057,11 @@
     "test_strategy": [
       "GdUnit4 集成测试（headless）:",
       "- 战斗开始后敌人 intent 可见",
-      "- 结束回合触发敌人行动后 intent 刷新为下一回合预告"
+      "- 结束回合触发敌人行动后 intent 刷新为下一回合预告",
+      "Optional: - demo/godot-demo-projects/gui/accessibility/custom_control.gd",
+      "Optional: - demo/godot-demo-projects/2d/tween/main.gd",
+      "Optional: - demo/awesome-godot/README.upstream.md (resource index; do not add new deps by default)",
+      "Optional: Demo references (demo/):"
     ],
     "taskmaster_id": 56,
     "taskmaster_exported": true,

@@ -68,7 +68,10 @@ def write_text(path: Path, text: str) -> None:
 
 
 ABS_PATH_RE = re.compile(r"\b[A-Za-z]:\\")
-DEMO_REF_RE = re.compile(r"(?i)\b(?:demo/|demo\\|godot-demo-projects|awesome-godot)\b")
+# Detect local demo references conservatively:
+# - "demo/" or "demo\" even when followed by punctuation like ")" or ":"
+# - well-known demo repos/collections
+DEMO_REF_RE = re.compile(r"(?i)\bdemo[\\/]|godot-demo-projects|awesome-godot")
 
 _CN_OPT = r"\u53ef\u9009"  # 可选
 _CN_SUG = r"\u5efa\u8bae"  # 建议
@@ -274,4 +277,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
