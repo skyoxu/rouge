@@ -239,7 +239,12 @@ def build_prompt(task_context: str) -> str:
     blocks.append("- Output must be STRICT JSON (no markdown).")
     blocks.append("- Preserve existing Refs: suffix tokens verbatim for existing acceptance items.")
     blocks.append("- Do NOT add new Refs: tokens in this step (acceptance-only phase).")
-    blocks.append("- If the task contains subtasks, acceptance must cover those obligations; if mode prevents it, explain in notes.")
+    blocks.append("- If the task contains subtasks, acceptance must cover those obligations (>= 1 acceptance item per subtask); if mode prevents it, explain in notes.")
+    blocks.append(
+        "- Do NOT treat subtask requirements as \"implementation internals\" to be omitted. If a subtask explicitly requires something,"
+        " acceptance MUST state it in falsifiable terms (e.g., cleanup semantics, NSubstitute usage, EffectCommands execution-chain test,"
+        " state-machine design artifact in overlay docs)."
+    )
     blocks.append("- Prefer falsifiable statements: avoid wording that can be satisfied by doing nothing.")
     blocks.append("- If Task context contains ExtractedMeta, acceptance MUST explicitly include those IDs/paths as verifiable requirements.")
     blocks.append("")

@@ -37,12 +37,14 @@
     "owner": "gameplay",
     "test_refs": [
       "Game.Core.Tests/Domain/CardDefinitionTests.cs",
-      "Game.Core.Tests/Domain/CardInstanceTests.cs"
+      "Game.Core.Tests/Domain/CardInstanceTests.cs",
+      "Game.Core.Tests/Domain/CardTests.cs",
+      "Game.Core.Tests/Docs/OverlayTestRefsTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Domain/Card.cs` 中实现纯 C#（不依赖 Godot）的领域模型：包含 `CardDefinition`（卡牌静态配置：ID、名称、消耗、目标规则、效果指令列表、textKey、稀有度、职业标签、upgradedId）与 `CardInstance`（运行时实例：引用 `CardDefinition`、临时费用变化、回合内标记、升级状态）；并定义 `TargetRule` 枚举（`SingleEnemy/AllEnemies/SingleAlly/AllAllies/Random`）与 `CardType` 枚举（`Attack/Defense/Skill`）。 Refs: Game.Core.Tests/Domain/CardTests.cs",
+      "补齐并通过 xUnit 单元测试验证 `CardDefinition/CardInstance` 的字段映射与 record 不可变性（修改需通过创建新实例而非就地变更）；在 Windows 上 `dotnet test` 通过。 Refs: Game.Core.Tests/Domain/CardTests.cs",
+      "若引入或变更契约/事件/DTO：必须落盘到 `Game.Core/Contracts/Rouge/**`，并保持相关 Overlay 文档的 Test-Refs 与实现/测试一致（可通过文本检索与路径核对验证）。 Refs: Game.Core.Tests/Docs/OverlayTestRefsTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -100,12 +102,17 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Domain/CardPileTests.cs"
+      "Game.Core.Tests/Domain/CardPileTests.cs",
+      "Game.Core.Tests/Domain/CardPile/CardPileModelingTests.cs",
+      "Game.Core.Tests/Domain/CardPile/CardPileBattleFlowTests.cs",
+      "Game.Core.Tests/Domain/CardPile/CardPilePerfRegressionTests.cs",
+      "Game.Core.Tests/Domain/CardPile/CardPileTests.cs",
+      "Game.Core.Tests/Contracts/Rouge/RougeRunEventsContractsTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Domain/CardPile.cs` 中实现纯 C# 的牌堆建模（不得依赖任何 Godot 命名空间/类型），包含 `PileType`（DrawPile/Hand/DiscardPile/ExhaustPile）与牌堆状态；构筑期操作 `AddCard(cardDef)`、`RemoveCard(cardId)`、`UpgradeCard(cardId)` 可用单元测试验证为“操作前后返回新实例/状态正确”，并包含手牌容量上限逻辑（默认 10）；对空堆操作、重复移除、升级不存在卡牌等边界行为在单元测试中有可验证的断言覆盖。 Refs: Game.Core.Tests/Domain/CardPile/CardPileModelingTests.cs",
+      "实现战斗期牌堆迁移逻辑且语义可被测试直接观测：`Shuffle()` 调用注入的 `RngService` 对 DrawPile 洗牌并在固定 Seed 下可复现；`Draw(n)` 将牌从 DrawPile 抽到 Hand，DrawPile 不足或为空时自动将 DiscardPile 洗回至 DrawPile 后继续抽取直到达到 n 或无牌可抽；`Discard(cardId)` 将 Hand→DiscardPile；`Exhaust(cardId)` 将 Hand→ExhaustPile（战斗结束语义以 ExhaustPile 可清空为前提）；并通过现有 `Services/EventBus` 发布 `CardDrawn(cardId, drawOrder)` 与 `CardDiscarded(cardId)` 事件，事件数量与顺序可由测试断言；包含 100+ 张抽牌场景的回归用例以覆盖性能不发生明显退化。 Refs: Game.Core.Tests/Domain/CardPile/CardPileBattleFlowTests.cs Game.Core.Tests/Domain/CardPile/CardPilePerfRegressionTests.cs",
+      "提供 xUnit `CardPileTests`（使用 Fake `RngService`/Mock `IEventBus` 保证可预测随机与可断言事件发布）覆盖 Draw/Shuffle/Discard/Exhaust/Add/Remove/Upgrade 及其边界条件，并确保在 Windows 上运行 `dotnet test` 通过；如新增或变更契约/事件类型，统一落盘到 `Game.Core/Contracts/Rouge/**`；并确保以下文档路径存在，且其内容中可通过文本搜索定位到本任务的验收/契约说明与测试关联（包括保持 overlay 的 Test-Refs 与实际测试文件路径一致）：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`、`docs/architecture/overlays/PRD-rouge-manager/08/_index.md`。 Refs: Game.Core.Tests/Domain/CardPile/CardPileTests.cs Game.Core.Tests/Contracts/Rouge/RougeRunEventsContractsTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -163,12 +170,15 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Domain/EffectResolverTests.cs"
+      "Game.Core.Tests/Domain/EffectResolverTests.cs",
+      "Game.Core.Tests/Tasks/Task3AcceptanceTests.cs",
+      "Game.Core.Tests/Services/EffectResolverExecuteEffectsTests.cs",
+      "Game.Core.Tests/Services/EffectResolverEventBusTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Services/EffectResolver.cs` 中实现纯 C#（不依赖 Godot）的效果系统：定义 `EffectCommand` 抽象类或接口，并提供任务清单中的命令类型（如 `DamageCommand/GainBlockCommand/HealCommand/ApplyStatusCommand/DrawCommand/ChangeEnergyCommand/GainGoldCommand/AddCardToDeckCommand/RemoveCardFromDeckCommand/UpgradeCardCommand/TriggerBattleCommand/SetFlagCommand`）。使用 `BattleContext` 传递所需的战斗/队伍状态引用。 Refs: Game.Core.Tests/Tasks/Task3AcceptanceTests.cs",
+      "实现 `ExecuteEffect(cmd, context)` 与 `ExecuteEffects(list, context)`：单条与批量执行入口可被单元测试验证；`ExecuteEffects` 完成后必须“触发事件”（可通过 IEventBus/事件总线接口或等价机制实现，但不在本任务强制具体事件名），并且该事件触发可被 xUnit 观测（例如通过替身总线捕获调用）。 Refs: Game.Core.Tests/Services/EffectResolverExecuteEffectsTests.cs Game.Core.Tests/Services/EffectResolverEventBusTests.cs",
+      "补齐并通过 xUnit 单元测试覆盖：至少 3 类命令的执行效果与参数校验，以及批量执行（全成功/部分失败/空列表）的可观察结果；在 Windows 上 `dotnet test` 通过。若引入或变更契约/事件，则必须落盘到 `Game.Core/Contracts/Rouge/**` 并同步更新相关 Overlay 文档的 Test-Refs。 Refs: Game.Core.Tests/Tasks/Task3AcceptanceTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -222,12 +232,15 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Services/StatusManagerTests.cs"
+      "Game.Core.Tests/Services/StatusManagerTests.cs",
+      "Game.Core.Tests/Tasks/Task4AcceptanceTests.cs",
+      "Game.Core.Tests/Services/StatusManagerStackingDecayTests.cs",
+      "Game.Core.Tests/Services/StatusManagerValidationTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Domain/Status.cs` 与 `Game.Core/Services/StatusManager.cs` 中实现纯 C#（不依赖 Godot）的状态模型与管理：定义 `StatusDefinition`（包含 ID/名称/结算时机 `TurnStart/TurnEnd/OnDealDamage/OnTakeDamage`/叠加规则/UI 图标 key）与 `StatusInstance`（statusId/stacks/duration/ownerUnitId）；内置最小状态集合 Strength/Weak/Vulnerable/Poison/Block，并可按状态 ID 验证存在。 Refs: Game.Core.Tests/Tasks/Task4AcceptanceTests.cs",
+      "实现并可验证叠加/衰减语义：相同状态 stacks 累加且 duration 取最大值，不同状态可共存；duration 衰减并在到期时移除；对无效 statusId、负 duration、非法 stacks 等输入明确拒绝且目标状态集合保持不变（可通过公开查询/返回值/可观察结果验证）。 Refs: Game.Core.Tests/Services/StatusManagerStackingDecayTests.cs Game.Core.Tests/Services/StatusManagerValidationTests.cs",
+      "实现并用 xUnit 在 Windows 上可复现验证结算与数值计算：TurnStart 结算 Poison（伤害与衰减）、TurnEnd 清零 Block 并衰减持续状态；伤害修正包含 Strength/Weak（source）与 Vulnerable（target）且修正顺序为先 source 后 target；`dotnet test` 通过。若引入/变更契约或事件，则落盘到 `Game.Core/Contracts/Rouge/**` 并保持 Overlay 的 Test-Refs 对齐。 Refs: Game.Core.Tests/Tasks/Task4AcceptanceTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -282,12 +295,15 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Domain/HeroTests.cs"
+      "Game.Core.Tests/Domain/HeroTests.cs",
+      "Game.Core.Tests/Domain/Hero/HeroValidationTests.cs",
+      "Game.Core.Tests/Domain/Hero/HeroCardPilesAndCombatStateTests.cs",
+      "Game.Core.Tests/Domain/Hero/HeroCombatBehaviorTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Domain/Hero.cs` 中实现纯 C#（不依赖 Godot）的英雄领域模型，并按任务要求“继承或使用现有 `Player` 类”进行扩展（不得复制一份功能重复的 Player）：包含 `HeroId`、`Name`、`ClassId`、`MaxHealth`、`CurrentHealth`、`BaseEnergyMax` 与 `CurrentEnergy`；对无效值（如 `MaxHealth<=0`、`BaseEnergyMax<0`）必须拒绝并提供 xUnit 用例覆盖。 Refs: Game.Core.Tests/Domain/Hero/HeroValidationTests.cs",
+      "在 `Hero` 中加入牌堆与战斗临时状态：`Deck/Hand/Discard/Exhaust` 四个字段均为 `CardPile` 且初始化后不为 null；包含 `Shield` 与 `Statuses: List<StatusInstance>`；实现 `ClearCombatState()` 使战斗结束后 `Shield` 归零且 `Statuses` 清空，同时 `CurrentHealth` 保持不变；提供 xUnit 用例覆盖上述行为。 Refs: Game.Core.Tests/Domain/Hero/HeroCardPilesAndCombatStateTests.cs",
+      "实现并用 xUnit 验证核心战斗行为：`TakeDamage(amount)`（amount<0 拒绝；amount>=0 先扣 Shield、剩余再扣 CurrentHealth 且生命不低于 0）、`Heal(amount)`（amount<0 拒绝；amount>=0 不超过 MaxHealth）、`GainShield(amount)`（amount<0 拒绝；amount>=0 累加）、`RefreshEnergy()`（回合开始将 `CurrentEnergy` 重置为 `BaseEnergyMax`）；在 Windows 上 `dotnet test` 通过。 Refs: Game.Core.Tests/Domain/Hero/HeroCombatBehaviorTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -342,12 +358,18 @@
     "owner": "gameplay",
     "test_refs": [
       "Game.Core.Tests/Domain/EnemyTests.cs",
-      "Game.Core.Tests/Domain/EnemyAITests.cs"
+      "Game.Core.Tests/Domain/EnemyAITests.cs",
+      "Game.Core.Tests/Services/EnemyAITests.cs",
+      "Game.Core.Tests/Services/SimpleEnemyAIStrategyTests.cs",
+      "Game.Core.Tests/Services/PriorityEnemyAIStrategyTests.cs",
+      "Game.Core.Tests/Documentation/OverlayEnemyAiDocsAlignmentTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Domain/Enemy.cs` 实现可编译的 `Enemy` 领域模型（按子任务要求使用 `record` 体现值语义/不可变更新）：包含 `EnemyId/Name/EncounterId/MaxHealth/CurrentHealth/Shield/Statuses(List<StatusInstance>)`，并提供可被测试直接观察的 `TakeDamage/Heal/GainShield` 行为，满足“护盾优先抵扣、溢出伤害进入血量、治疗不超过 `MaxHealth`、护盾独立累加”；对 `Statuses` 的变更（新增/移除/更新或等价能力）必须通过公开 API 可被测试验证；`Game.Core` 全程不得引用任何 Godot API/类型。 Refs: Game.Core.Tests/Domain/EnemyTests.cs",
+      "按任务+子任务口径实现意图系统（契约 + 可用实现且可测试）：必须落地 `Game.Core/Contracts/IAIStrategy.cs`，其 `GenerateIntent(Enemy enemy, BattleContext context)`（或语义等价签名）以纯 C# 战斗上下文为输入并返回 `Intent`；定义 `Intent`（包含且仅以强类型可验证方式暴露 `IntentType/TargetId/EffectCommands`，并包含可用于排序/选择的 `Priority` 或等价字段）与 `IntentType` 枚举且枚举值必须包含 `Attack/Defend/Buff/Debuff/Special`；`Enemy` 必须能通过调用策略（如 `Enemy.GenerateIntent(strategy, context)` 或等价入口）生成意图；在 `Game.Core/Services/EnemyAI.cs` 提供 `IntentTable` 与 `GenerateIntent(enemy, battleContext)`，其最小可验收行为是“在固定技能表下按表顺序循环产生下一条 `Intent`（多次调用序列可预测且可回环）”。 Refs: Game.Core.Tests/Services/EnemyAITests.cs",
+      "补齐并通过 xUnit 单元测试/集成测试以覆盖本任务所有可观察语义：`Enemy` 的伤害/治疗/护盾/状态变更结果可断言且不依赖隐藏副作用；`Intent` 与 `EffectCommands` 支持 JSON 序列化/反序列化往返且字段不丢失，并包含“EffectCommands 执行链”可验证用例（例如用测试专用 `IEffectCommand` 实现验证按序执行与输出可断言）；需要替身/桩的上下文依赖（如 `BattleContext`、状态相关协作者）使用 `NSubstitute`，断言使用 `FluentAssertions`，并包含 `Fact` 与至少 1 个 `Theory` 的参数化覆盖；在 Windows 上运行 `dotnet test` 全绿，且覆盖率门禁 lines≥90%、branches≥85%（以仓库现有门禁/报告判定为准）。 Refs: Game.Core.Tests/Domain/EnemyTests.cs Game.Core.Tests/Services/EnemyAITests.cs",
+      "实现并可通过 xUnit 用例验证两种 AI 策略且输出确定：`SimpleAI`（或等价命名）在固定 `IntentTable` 下严格按顺序循环生成 `Intent`（跨多轮调用序列一致）；`PriorityAI`（或等价命名）在给定 `Enemy` 与 battleContext 时仅基于可观察输入（例如当前血量比例、护盾值、`Statuses`、目标信息等）计算优先级并选择最高优先级 `Intent`，且至少包含 1 条可验证的条件触发规则（例如血量 < 50% 时优先 `Defend`/`Buff` 之一，规则与期望输出由测试固定）；两种策略在相同输入下输出必须可重复且由测试覆盖（可使用 `Theory` 覆盖不同上下文/阈值场景）。 Refs: Game.Core.Tests/Services/SimpleEnemyAIStrategyTests.cs Game.Core.Tests/Services/PriorityEnemyAIStrategyTests.cs",
+      "以下 ExtractedMeta.OverlayDocs 路径必须作为本任务验收的可检索对齐点并保持内容对齐（允许用文本检索审计）：docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md, docs/architecture/overlays/PRD-rouge-manager/08/_index.md；上述文档必须明确引用本任务落地的 `Enemy/EnemyAI/IAIStrategy/Intent` 相关契约与源码路径（至少包含 `Game.Core/Domain/Enemy.cs`、`Game.Core/Services/EnemyAI.cs`、`Game.Core/Contracts/IAIStrategy.cs` 的可检索文本），并在 Test-Refs（或等价测试索引位置）对齐到本任务新增/更新的 xUnit 测试文件；不得以“未更新但视为通过/不影响验收”等表述空转。 Refs: Game.Core.Tests/Documentation/OverlayEnemyAiDocsAlignmentTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -403,12 +425,18 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Services/BattleManagerTests.cs"
+      "Game.Core.Tests/Services/BattleManagerTests.cs",
+      "Game.Core.Tests/Services/BattleManagerPhaseTests.cs",
+      "Game.Core.Tests/Services/BattleManagerPlayCardTests.cs",
+      "Game.Core.Tests/Services/BattleManagerSettlementAndVictoryTests.cs",
+      "Game.Core.Tests/Tasks/Task7AcceptanceTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Services/BattleManager.cs` 实现纯 C#（不得依赖 Godot 程序集/命名空间）的 `BattleManager` 与战斗阶段枚举（至少包含：`core.rouge.battle.started`、`core.rouge.turn.player.started`、`PlayerMain`、`core.rouge.turn.player.ended`、`EnemyTurn`、`core.rouge.battle.won`、`core.rouge.battle.lost`），并且阶段推进语义可验证且无“空转”路径：`StartBattle(heroes,enemies)` 必须清空上一次战斗的临时状态并生成敌人初始意图，进入 `core.rouge.battle.started` 且发布 `BattleStarted`；`StartPlayerTurn()` 必须进入 `core.rouge.turn.player.started` 且发布 `PlayerTurnStarted`，并在完成本回合开始结算后进入 `PlayerMain`；仅在 `PlayerMain` 允许玩家出牌；`EndPlayerTurn()` 必须进入 `core.rouge.turn.player.ended` 并在完成本回合结束结算与敌人意图刷新后转入 `EnemyTurn`；`ExecuteEnemyTurn()` 完成后必须要么回到 `core.rouge.turn.player.started`（开始下一玩家回合）要么进入 `core.rouge.battle.won`/`core.rouge.battle.lost`；一旦进入胜负阶段，后续任何推进/回合方法调用必须以可测试方式拒绝并保持阶段不变。 Refs: Game.Core.Tests/Services/BattleManagerPhaseTests.cs",
+      "提供并通过 xUnit 单元测试（Windows 上 `dotnet test` 通过），用 Mock 的 `StatusManager` 与 `EffectResolver` 隔离依赖，覆盖以下可证伪行为：1) `StartBattle` 与 `StartPlayerTurn` 对“能量刷新、抽牌数量”在给定测试输入下产生确定且可断言的结果（例如固定牌堆/规则输入使抽牌可预测）；2) `PlayCard(heroId,cardId,targetId)` 在非 `PlayerMain`、能量不足、目标非法、或英雄不持有该卡牌时必须以可测试方式拒绝并保持能量/手牌/弃牌堆/阶段均不变；3) 成功出牌时必须调用 `EffectResolver` 执行该卡牌的 EffectCommands（可通过调用链/次数/参数断言）、扣除能量、将卡牌从手牌移出并进入弃牌堆或等价区域，并发布 `CardPlayed`。 Refs: Game.Core.Tests/Services/BattleManagerPlayCardTests.cs",
+      "提供并通过 xUnit 单元测试验证结算/敌方回合/伤害与死亡/胜负与结束善后均可观察且可证伪：`StartPlayerTurn()` 必须触发并完成 `turn_start_settlement`（至少包含“中毒在回合开始结算”的可断言效果）；`EndPlayerTurn()` 必须弃掉剩余手牌并触发 `turn_end_settlement`（至少“护盾清零”可验证）且刷新敌人意图；`ExecuteEnemyTurn()` 必须遍历所有存活敌人并复用 `EffectResolver` 执行其意图；当伤害被应用时必须发布 `core.rouge.combat.damage.applied`；当任意单位 HP ≤ 0 时必须在本次操作结束前完成死亡处理并发布 `UnitDied` 且立即进行胜负检查：敌方全灭进入/发布 `core.rouge.battle.won`，我方全灭进入/发布 `core.rouge.battle.lost`；胜负阶段不会再继续推进到回合阶段；进入胜负后必须完成战斗清理：清空临时状态（例如意图、临时能量修正等）且不得清空永久状态（例如等级、金币等）。 Refs: Game.Core.Tests/Services/BattleManagerSettlementAndVictoryTests.cs",
+      "敌人意图生成与执行满足任务语义且可通过测试或可观察输出验证：`StartBattle(heroes,enemies)` 结束时每个存活敌人都已有“初始意图”（包含目标与效果指令集合）；`EndPlayerTurn()` 之后敌人意图被刷新为下一回合可执行的意图；`ExecuteEnemyTurn()` 中必须遍历所有存活敌人并使每个敌人的意图在该敌方回合内最多执行一次，且执行过程复用同一 `EffectResolver` 抽象（可通过调用次数/参数/事件序列验证）；敌方行动期间必须发布“敌人行动相关事件”（例如 `UnitActed` 或等价事件，需可区分行动者与回合边界）；执行完成后必须进入下一阶段（下一玩家回合或胜负阶段）。 Refs: Game.Core.Tests/Tasks/Task7AcceptanceTests.cs",
+      "与 `ExtractedMeta` 一致：以下文档路径必须逐字出现且其内容与本任务实现保持一致（可用全文检索审计），并明确描述 BattleManager 的阶段推进、事件集合（`BattleStarted`、`PlayerTurnStarted`、`CardPlayed`、`core.rouge.combat.damage.applied`、`UnitDied`、`core.rouge.battle.won`、`core.rouge.battle.lost`）以及最小可玩回路与质量/安全约束在本功能纵切中的落点：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`、`docs/architecture/overlays/PRD-rouge-manager/08/_index.md`。 Refs: Game.Core.Tests/Tasks/Task7AcceptanceTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -469,12 +497,13 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Domain/AdventureMapTests.cs"
+      "Game.Core.Tests/Domain/AdventureMapTests.cs",
+      "Game.Core.Tests/Domain/AdventureMapTemplateTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Domain/AdventureMap.cs` 实现纯 C#（不依赖 Godot）的领域模型：定义 `NodeType` 枚举（Combat/Event/Rest/Shop/Elite/Boss）与 `MapNode`（包含 `NodeId`、`NodeType`、`Layer`、`Connections`、`Completed`、`Parameters`），以及 `AdventureMap`（包含 `Nodes`、`CurrentNodeId`、`CompletedNodes`、`StartNodeId`、`BossNodeId`）。 Refs: Game.Core.Tests/Domain/AdventureMapTests.cs",
+      "在 `AdventureMap` 中实现并可验证以下行为：`GetAvailableNodes()` 返回当前可达节点（下一层连线节点）；`MoveToNode(nodeId)` 仅在 `nodeId` 可达时更新 `CurrentNodeId`，否则拒绝移动且 `CurrentNodeId` 保持不变；`CompleteNode(nodeId)` 标记完成并更新 `CompletedNodes`；`IsPathComplete()` 在 Boss 节点完成前为 false，完成后为 true。 Refs: Game.Core.Tests/Domain/AdventureMapTests.cs",
+      "地图生成逻辑采用硬编码模板（8–12 普通节点 + Boss，总 9–13），并满足连线“分层递进（仅从当前层指向下一层）”；同时预留随机生成接口但默认实现必须使用模板。新增/调整 xUnit 测试覆盖：可达节点计算、移动/完成/章节完成判定，以及基本边界用例；在 Windows 上 `dotnet test` 通过。 Refs: Game.Core.Tests/Domain/AdventureMapTests.cs Game.Core.Tests/Domain/AdventureMapTemplateTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -496,7 +525,7 @@
     "id": "GM-0109",
     "story_id": "PRD-ROUGE-T2-VS-0001",
     "title": "实现队伍管理 (Party)",
-    "description": "创建队伍容器,维护英雄列表与共享资源(金币/标记)\n\n创建 Game.Core/Domain/Party.cs:\n- Heroes: List<Hero>(T2 建议 2 名英雄)\n- Gold: int(共享金币)\n- Flags: Dictionary<string, object>(事件标记,用于事件链)\n- 方法:\n  - AddHero(hero): 添加英雄\n  - GetHero(heroId): 获取英雄\n  - GainGold(amount)/SpendGold(amount): 金币操作\n  - SetFlag(key, value)/GetFlag(key): 事件标记操作\n  - IsPartyAlive(): 检查是否全灭(所有英雄 HP ≤ 0)\n- 预留装备栏、天赋树字段(T2 不实现但保留 EquipmentSlots/TalentTree 占位)。",
+    "description": "创建队伍容器,维护英雄列表与共享资源(金币/标记)",
     "status": "pending",
     "priority": "P2",
     "layer": "core",
@@ -533,9 +562,9 @@
       "Game.Core.Tests/Domain/PartyTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Domain/Party.cs` 实现纯 C# 的 `Party`：包含 `Heroes: List<Hero>`、`Gold:int`、`Flags: Dictionary<string, object>`，并实现 `AddHero/GetHero/GainGold/SpendGold/SetFlag/GetFlag/IsPartyAlive` 等方法。 Refs: Game.Core.Tests/Domain/PartyTests.cs",
+      "`Heroes` 的数量不做强制限制（任务仅为 T2 建议 2 名英雄）；`IsPartyAlive()` 的语义与任务一致：当且仅当所有英雄 `HP <= 0` 时判定为全灭。 Refs: Game.Core.Tests/Domain/PartyTests.cs",
+      "预留 `EquipmentSlots`/`TalentTree` 占位字段（T2 不实现但保留结构），并补齐 xUnit 测试覆盖金币操作与 `IsPartyAlive` 判定；在 Windows 上 `dotnet test` 通过。 Refs: Game.Core.Tests/Domain/PartyTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -586,12 +615,15 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Domain/RngServiceTests.cs"
+      "Game.Core.Tests/Domain/RngServiceTests.cs",
+      "Game.Core.Tests/Tasks/Task10AcceptanceTests.cs",
+      "Game.Core.Tests/Services/RngServiceTests.cs",
+      "Game.Core.Tests/State/GameStateRunSeedTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在不引入任何 Godot 依赖的前提下，于 Game.Core 提供可注入/可 Mock 的 IRngService，并提供其实现 RngService（要求包含 SetSeed(int seed)、NextInt(int min,int max)、NextFloat()、Shuffle<T>(List<T>)、PickRandom<T>(List<T>)；语义可验证：NextInt 返回范围为 [min, max) 且当 min >= max 时抛 ArgumentException；NextFloat 返回范围为 [0, 1)；Shuffle<T> 采用 Fisher-Yates 且对入参列表原地洗牌（空/单元素列表不抛异常）；PickRandom<T> 从非空列表中返回一个现有元素且空列表时抛 ArgumentException）。 Refs: Game.Core.Tests/Tasks/Task10AcceptanceTests.cs",
+      "新增并通过 xUnit 单元测试（至少包含 Game.Core.Tests/Services/RngServiceTests.cs）：固定 Seed 的可复现性（对 NextInt/NextFloat/PickRandom 多次调用得到的序列在再次 SetSeed(相同值) 后一致）、Shuffle 在固定 Seed 下结果一致且不改变元素集合与数量、边界条件（min >= max 抛异常、空列表 PickRandom 抛异常、空/单元素 Shuffle 不抛异常）；在 Windows 上执行 dotnet test 通过，并满足覆盖率目标 lines ≥ 90%、branches ≥ 85%。 Refs: Game.Core.Tests/Services/RngServiceTests.cs Game.Core.Tests/State/GameStateRunSeedTests.cs",
+      "GameState 必须记录 RunSeed，并在启动初始化时调用 rng.SetSeed(RunSeed) 使一次运行的随机序列可复现；同时，以下路径必须作为可审计的验收关联对象被逐字包含并可通过文本检索验证其存在与引用一致性：docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md；docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md；docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md；docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md；docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md；docs/architecture/overlays/PRD-rouge-manager/08/_index.md。 Refs: Game.Core.Tests/Tasks/Task10AcceptanceTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -648,9 +680,9 @@
       "Game.Core.Tests/State/RunGameStateTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/State/RunGameState.cs` 中实现可序列化的跑局存档快照类型（位于 Game.Core 且不依赖 Godot API），并包含可通过编译与反射/序列化验证的最小字段集合：`Version:int`、`RunSeed:int`、`CurrentAct:int`、`Map:AdventureMap`、`Party:Party`、`CompletedNodes:HashSet<NodeId>`、`Statistics:RunStatistics`（可选字段也必须可序列化且有明确默认/缺省语义）；字段/类型引用需与现有 `State/SaveData.cs` 的扩展或并存关系一致且不会引入循环依赖。 Refs: Game.Core.Tests/State/RunGameStateTests.cs",
+      "在 `Game.Core/State/RunGameState.cs` 中提供 `ToJson()` 与 `FromJson(string json)`，满足可观察的行为：`ToJson()` 产出的 JSON 经 `FromJson()` 还原后字段值保持一致；`FromJson()` 必须执行版本校验并体现“版本迁移”语义（能加载旧版本数据并补齐新增字段的默认值），对不兼容版本（例如高于当前或无法迁移的版本）必须抛出 `InvalidOperationException` 且消息包含版本不兼容信息。 Refs: Game.Core.Tests/State/RunGameStateTests.cs",
+      "在 `Game.Core/State/RunGameState.cs` 中实现 `Validate()` 并确保 `FromJson()` 反序列化后会自动调用一次：至少校验 `Version > 0`、`RunSeed >= 0`、`CurrentAct` 在有效范围、`Party != null` 且英雄 HP 必须 `> 0`、`Map != null` 且数据合法、`CompletedNodes != null`（可为空集合）；任一校验失败需抛出 `ArgumentException` 且原因可被测试断言；并通过 Windows 上可运行的 xUnit 测试 `Tests/Unit/State/RunGameStateTests.cs` 覆盖序列化往返、版本校验/迁移、无效 HP、null Party、无效章节号、空 CompletedNodes 等用例且 `dotnet test` 通过；同时文档侧可通过文本检索确认已涉及并保持一致的 Overlay 路径：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`、`docs/architecture/overlays/PRD-rouge-manager/08/_index.md`（若本任务引入或变更契约/事件，则必须落盘到 `Game.Core/Contracts/Rouge/**` 并保持 Overlay 的 Test-Refs 对齐）。 Refs: Game.Core.Tests/State/RunGameStateTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -710,12 +742,15 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Services/RewardManagerTests.cs"
+      "Game.Core.Tests/Services/RewardManagerTests.cs",
+      "Game.Core.Tests/Services/RewardManagerCardRewardsTests.cs",
+      "Game.Core.Tests/Services/RewardManagerGoldRewardTests.cs",
+      "Game.Core.Tests/Services/RewardManagerDeterminismTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Services/RewardManager.cs` 实现 `GenerateCardRewards(heroClassId, count=3)` 与 `GenerateGoldReward(nodeType)`；支持按 `heroClassId`/`ClassTags` 过滤卡池，并按稀有度权重随机抽取（Common 70%、Uncommon 25%、Rare 5%）。 Refs: Game.Core.Tests/Services/RewardManagerCardRewardsTests.cs Game.Core.Tests/Services/RewardManagerGoldRewardTests.cs",
+      "随机必须可复现：使用 `RngService.PickRandom`/`Shuffle`（或等价接口）保证同一 Seed 下生成一致结果；奖励配置允许先硬编码，后续再抽取到配置文件（JSON/Resource）。 Refs: Game.Core.Tests/Services/RewardManagerDeterminismTests.cs",
+      "补齐 xUnit 测试覆盖：职业过滤、权重路径（可用可控 RNG stub 验证分支）、金币奖励按节点类型返回范围/值；在 Windows 上 `dotnet test` 通过。若引入/变更契约/事件/DTO，必须落盘到 `Game.Core/Contracts/Rouge/**` 并同步更新相关 Overlay 文档的 Test-Refs。 Refs: Game.Core.Tests/Services/RewardManagerCardRewardsTests.cs Game.Core.Tests/Services/RewardManagerGoldRewardTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -735,7 +770,7 @@
     "id": "GM-0113",
     "story_id": "PRD-ROUGE-T2-VS-0001",
     "title": "实现事件系统 (EventManager)",
-    "description": "事件节点展示与选项处理,复用 EffectResolver\n\n创建 Game.Core/Domain/Event.cs 和 Game.Core/Services/EventManager.cs:\n- EventDefinition:\n  - EventId、TextKey(本地化文本)\n  - Options: List<EventOption>\n- EventOption:\n  - OptionTextKey、Requirements(可选:金币/标记条件)\n  - Effects: List<EffectCommand>(复用 EffectResolver)\n- EventManager 方法:\n  - GetEvent(eventId): 根据 ID 获取事件定义\n  - SelectOption(eventId, optionIndex, context): 执行选项 Effects,应用到 Party/BattleManager\n  - CheckRequirement(option, context): 校验选项可选性(金币不足置灰)\n- 事件抽取逻辑: 从事件池随机选择(RngService),T2 可先硬编码少量事件。",
+    "description": "事件节点展示与选项处理,复用 EffectResolver",
     "status": "pending",
     "priority": "P2",
     "layer": "core",
@@ -771,12 +806,15 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Services/EventManagerTests.cs"
+      "Game.Core.Tests/Services/EventManagerTests.cs",
+      "Game.Core.Tests/Domain/EventDefinitionTests.cs",
+      "Game.Core.Tests/Domain/EventOptionRequirementTests.cs",
+      "Game.Core.Tests/Services/EventManagerEventPoolSelectionTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Domain/Event.cs` 与 `Game.Core/Services/EventManager.cs` 落地事件系统：实现 `EventDefinition`（含 `EventId/TextKey/Options`）与 `EventOption`（含 `OptionTextKey/Requirements/Effects`，Effects 复用 `EffectCommand`）。 Refs: Game.Core.Tests/Domain/EventDefinitionTests.cs",
+      "实现 `EventManager.GetEvent/SelectOption/CheckRequirement`：金币不足等条件必须导致选项不可选（置灰语义在 UI 层呈现，但 Core 必须能判定可选性）；选择选项后执行其 `Effects` 并应用到 `Party`（必要时通过适配层触发战斗/跳转等）。 Refs: Game.Core.Tests/Services/EventManagerTests.cs Game.Core.Tests/Domain/EventOptionRequirementTests.cs",
+      "事件抽取逻辑从事件池随机选择（使用 `RngService`），T2 允许先硬编码少量事件。补齐 xUnit 测试覆盖：Requirement 判定、选项执行 Effects 对 Party 的可验证变更；在 Windows 上 `dotnet test` 通过。 Refs: Game.Core.Tests/Services/EventManagerEventPoolSelectionTests.cs Game.Core.Tests/Services/EventManagerTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -831,12 +869,14 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Domain/RestServiceTests.cs"
+      "Game.Core.Tests/Domain/RestServiceTests.cs",
+      "Game.Core.Tests/Services/RestServiceTests.cs",
+      "Game.Core.Tests/Contracts/Rouge/RougeRunEventsContractsTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Services/RestService.cs` 实现纯 C# 的 `RestService`（不得依赖 Godot）：提供且仅提供两个独立用例 `HealParty(party, amount)` 与 `UpgradeCard(hero, cardId)`（二选一逻辑在 UI 层处理，Core 层不得实现选择流程）。 Refs: Game.Core.Tests/Services/RestServiceTests.cs",
+      "`HealParty` 为所有英雄回血（固定值或百分比均可，允许先硬编码如 30% MaxHP），且不超过 MaxHealth；`UpgradeCard` 通过 `CardDefinition.UpgradedId` 将卡牌 ID 替换为升级版 ID。提供 xUnit 测试覆盖回血上限与升级映射语义；在 Windows 上 `dotnet test` 通过。 Refs: Game.Core.Tests/Services/RestServiceTests.cs",
+      "若引入或变更契约/事件/DTO：必须落盘到 `Game.Core/Contracts/Rouge/**`，并保持相关 Overlay 文档的 Test-Refs 与实现/测试一致（可通过文本检索与路径核对验证）。 Refs: Game.Core.Tests/Contracts/Rouge/RougeRunEventsContractsTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -892,12 +932,14 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Contracts/RougeShopDtoContractsTests.cs"
+      "Game.Core.Tests/Contracts/RougeShopDtoContractsTests.cs",
+      "Game.Core.Tests/Services/ShopServiceTests.cs",
+      "Game.Core.Tests/Services/ShopServiceDeterminismTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Services/ShopService.cs` 实现纯 C# 的 `ShopService`：实现 `GenerateShopInventory(heroClassId, count=5)`（职业过滤 + 稀有度随机）、`PurchaseCard(party, hero, cardId, price)`、`RemoveCard(party, hero, cardId, price)`；金币不足时必须失败且不得改变 `party.Gold` 与牌组状态；成功时扣金币并修改牌组。 Refs: Game.Core.Tests/Services/ShopServiceTests.cs",
+      "价格策略允许先硬编码（例如 Common 50、Uncommon 75、移除 75；可后续配置化），稀有度权重若需要具体数值则与 `RewardManager` 同口径（Common 70%、Uncommon 25%、Rare 5%）。 Refs: Game.Core.Tests/Services/ShopServiceTests.cs",
+      "补齐 xUnit 测试覆盖库存生成可复现（可控 RNG）、职业过滤、购买/移除成功与失败路径（金币不足、卡不存在等）；在 Windows 上 `dotnet test` 通过。若引入/变更契约/事件/DTO，必须落盘到 `Game.Core/Contracts/Rouge/**` 并同步更新相关 Overlay 文档的 Test-Refs。 Refs: Game.Core.Tests/Services/ShopServiceTests.cs Game.Core.Tests/Services/ShopServiceDeterminismTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -958,12 +1000,19 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Services/RunManagerTests.cs"
+      "Game.Core.Tests/Services/RunManagerTests.cs",
+      "Game.Core.Tests/Tasks/Task16AcceptanceTests.cs",
+      "Game.Core.Tests/Services/RunManagerIntegrationTests.cs"
     ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "1. 在 `Game.Core/Services/RunManager.cs` 提供可编译的纯 C# `RunManager`（不得依赖 Godot API），对外提供 `StartNewRun(seed)`/`EnterNode(nodeId)`/`CompleteNode(nodeId)`/`EndRun(result)`；并以可证伪方式实现并暴露（通过公开状态/返回值/异常三者之一可断言）生命周期状态机 `RunState`（`Initializing/OnMap/EnteringNode/InNode/NodeCompleted/RunEnded`）：必须存在对“非法转移”的明确拒绝语义（拒绝时不得推进状态、不得产生外部副作用），且在 `RunEnded` 后允许通过再次调用 `StartNewRun` 开启“重开”的新一局。 Refs: Game.Core.Tests/Tasks/Task16AcceptanceTests.cs",
+      "2. 补齐/调整测试策略中列出的 xUnit（含 `RunManagerTests` 与 `RunManagerIntegrationTests`），并通过可替换/可 Mock 的依赖注入来验证可观察行为：`StartNewRun` 必须生成并可被断言的 RunSeed/seed 表达、初始化 Party（2 英雄 + 初始牌组）、生成地图并定位起点且发布 `RunStarted`；`EnterNode` 必须按节点类型调度到正确服务（Combat→`BattleManager.StartBattle`，Event→`EventManager.SelectOption`，Rest/Shop→对应服务，Boss→战斗路径）且发布 `core.rouge.run.node.entered`；节点内容“完成后回地图”的语义必须可通过测试验证为：流程回到地图态并发生等价于 `CompleteNode` 的完成流转；`CompleteNode` 必须标记节点完成并回到地图且能得到下一层可选节点；`EndRun` 必须在 Boss 胜利触发章节结算语义并发布 `RunEnded(Victory)`，全灭发布 `RunEnded(Defeat)`；上述测试在 Windows 上运行 `dotnet test` 全绿。 Refs: Game.Core.Tests/Services/RunManagerTests.cs Game.Core.Tests/Services/RunManagerIntegrationTests.cs",
+      "3. 事件与契约的验收口径必须可被文本检索审计并保持单一来源：`Game.Core/Contracts/Rouge/**` 中必须存在（现有或新增/调整）对以下事件集合的唯一权威定义（例如强类型事件/常量化 EventType，便于测试与代码共同引用，避免散落魔法字符串）：`RunStarted`、`core.rouge.run.node.entered`、`NodeCompleted`、`RunEnded`；并且下列 Overlay 文档必须存在且其内容与实现/测试对齐（可通过路径存在与内容检查验证，且必须包含或引用本任务的状态机与事件口径，不得仅保留空模板）：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`、`docs/architecture/overlays/PRD-rouge-manager/08/_index.md`。 Refs: Game.Core.Tests/Tasks/Task16AcceptanceTests.cs",
+      "4. 子任务1（状态机架构）：必须提供 `RunState` 枚举与“状态转移图/转移表”级别的设计产物，并将其落在本任务 Overlay 文档范围内（至少在 `docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md` 或 `docs/architecture/overlays/PRD-rouge-manager/08/_index.md` 中可被检索到）；其内容必须明确 Boss 胜利的特殊流转（进入 Boss 节点并胜利可直达章节结算语义并进入 `RunEnded`）；同时必须存在单元测试以可观察结果验证：至少一条“非法转移不生效”（例如 `RunEnded` 状态下调用 `EnterNode/CompleteNode` 被拒绝，且不得触发任何外部依赖调用与事件发布）。 Refs: Game.Core.Tests/Tasks/Task16AcceptanceTests.cs",
+      "5. 子任务2（初始化与进度管理）：`StartNewRun(seed)` 必须以可验证方式把 seed 纳入 RunSeed/随机种子表达，并完成初始化（2 英雄 + 初始牌组、地图生成、起点定位），且发布 `RunStarted` 的事实与关键载荷可被单元测试断言；`CompleteNode(nodeId)` 必须以可验证方式持久化该节点“已完成”状态并回到地图语义，且能得到“下一层可选节点集合”的输出（允许为空/非空但必须与地图数据一致并可被测试断言）。 Refs: Game.Core.Tests/Tasks/Task16AcceptanceTests.cs",
+      "6. 子任务3（节点内容调度）：`EnterNode(nodeId)` 必须基于节点类型进行分发：Combat 调用 `BattleManager.StartBattle`；Event 调用 `EventManager.SelectOption`；Rest/Shop 调用对应服务；Boss 走战斗路径；并且发布 `core.rouge.run.node.entered` 的时机可被测试验证（不是仅靠日志/人工观察）；对无效 `nodeId` 必须被拒绝（不得调用任何 Service，不得发布 `core.rouge.run.node.entered`，不得将状态推进到 `InNode`），且拒绝行为可被测试断言。 Refs: Game.Core.Tests/Tasks/Task16AcceptanceTests.cs",
+      "7. 子任务4（胜负判定与流程集成）：`EndRun(result)` 必须在 `Victory/Defeat` 两种结果下均发布 `RunEnded`（包含可断言的结果信息），且 Boss 胜利路径必须体现“章节结算语义”（可通过对结算/奖励相关依赖的 Mock 调用或等价可观察结果断言）；同时必须存在集成测试覆盖完整链路：`StartNewRun → 多次 EnterNode(Combat)/CompleteNode → 进入 Shop（或跳过分支）→ Boss 胜利 → EndRun(Victory)`，并断言关键事件 `RunStarted/core.rouge.run.node.entered/NodeCompleted/RunEnded` 的发布顺序与次数；另需覆盖至少一条 `Defeat` 路径断言 `RunEnded(Defeat)`。 Refs: Game.Core.Tests/Tasks/Task16AcceptanceTests.cs",
+      "8. 事件与契约的可证伪要求：无论实现细节如何，RunManager 发布 `RunStarted`、`core.rouge.run.node.entered`、`NodeCompleted`、`RunEnded` 时必须可在纯 .NET 单元测试中被捕获与断言（例如通过注入的 EventBus 记录/回放或等价机制），不得将“只写日志/只更新内部变量但外部不可验证”视为满足；同时这些事件标识必须来自单一可检索来源（例如集中常量/强类型事件对象），以保证文本搜索与测试断言能稳定对齐。 Refs: Game.Core.Tests/Tasks/Task16AcceptanceTests.cs"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -1030,11 +1079,16 @@
       "t2"
     ],
     "owner": "gameplay",
-    "test_refs": [],
+    "test_refs": [
+      "Tests.Godot/tests/Data/test_card_resources_load.gd",
+      "Game.Core.Tests/Data/CardUpgradeRulesTests.cs",
+      "Game.Core.Tests/Data/CardCatalogJsonTests.cs",
+      "Game.Core.Tests/Tasks/Task17AcceptanceTests.cs"
+    ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Data` 或 Godot Resources 中创建卡牌静态配置（JSON 数组或 `.tres`）：总数至少 20（战士 5、法师 5、通用 10），并包含任务清单中的最低集合；每张卡包含字段：id、name、cost、cardType、targetRule、effects（EffectCommand 序列化）、textKey、rarity、classTags、upgradedId。 Refs: Tests.Godot/tests/Data/test_card_resources_load.gd Game.Core.Tests/Tasks/Task17AcceptanceTests.cs",
+      "升级版映射满足任务口径：`upgradedId` 指向升级版卡牌，升级版体现“消耗 -1 或伤害 +3 或效果增强”之一（允许先用最小可用实现）。 Refs: Game.Core.Tests/Data/CardUpgradeRulesTests.cs",
+      "补齐 xUnit 测试验证静态配置的可读取性（测试可直接读取 JSON/资源文件）、id 唯一性、字段完整性、升级映射存在性；在 Windows 上 `dotnet test` 通过。若引入/变更契约/事件/DTO，必须落盘到 `Game.Core/Contracts/Rouge/**` 并同步更新相关 Overlay 文档的 Test-Refs。 Refs: Game.Core.Tests/Data/CardCatalogJsonTests.cs Game.Core.Tests/Data/CardUpgradeRulesTests.cs"
     ],
     "test_strategy": [
       "集成测试:",
@@ -1090,11 +1144,14 @@
       "t2"
     ],
     "owner": "gameplay",
-    "test_refs": [],
+    "test_refs": [
+      "Game.Core.Tests/Domain/EnemyDefinitionsTests.cs",
+      "Game.Core.Tests/Domain/EncounterDefinitionsTests.cs"
+    ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Data` 或 Godot Resources 中创建敌人静态配置：`EnemyDefinition`（包含 id/name/maxHealth/intentTable）至少 10 个敌人定义，并包含任务最低集合（史莱姆/哥布林/强盗/巫师/骑士/精英-狂战士/精英-黑暗法师/Boss-龙王）。 Refs: Game.Core.Tests/Domain/EnemyDefinitionsTests.cs",
+      "创建遭遇静态配置：`EncounterDefinition`（包含 id/enemyIds/difficulty）至少 5 个遭遇配置；普通遭遇满足 2–3 小怪，精英遭遇为 1 精英 + 1 小怪，Boss 遭遇为 Boss 单体或 Boss+护卫；并确保所有 `enemyIds` 引用的敌人 id 均存在且无悬挂引用。 Refs: Game.Core.Tests/Domain/EncounterDefinitionsTests.cs",
+      "补齐 xUnit 测试验证静态配置可读取、id 唯一、遭遇引用有效；在 Windows 上 `dotnet test` 通过。若引入/变更契约/事件/DTO，必须落盘到 `Game.Core/Contracts/Rouge/**` 并同步更新相关 Overlay 文档的 Test-Refs。 Refs: Game.Core.Tests/Domain/EnemyDefinitionsTests.cs Game.Core.Tests/Domain/EncounterDefinitionsTests.cs"
     ],
     "test_strategy": [
       "集成测试:",
@@ -1146,11 +1203,15 @@
       "t2"
     ],
     "owner": "gameplay",
-    "test_refs": [],
+    "test_refs": [
+      "Game.Core.Tests/Rouge/RunEvents/EventConfigSchemaTests.cs",
+      "Game.Core.Tests/Rouge/RunEvents/MinimumEventSetTests.cs",
+      "Game.Core.Tests/Rouge/RunEvents/EventConfigLoadAndRequirementsTests.cs"
+    ],
     "acceptance": [
-      "Implement the domain model/service in Game.Core without Godot dependencies.",
-      "Add/adjust xUnit tests listed in test_refs and ensure dotnet test passes on Windows.",
-      "If contracts/events are introduced or changed, land them in Game.Core/Contracts/Rouge/** and keep overlay Test-Refs aligned."
+      "在 `Game.Core/Data` 或 Godot Resources 中创建事件静态配置（至少包含 EventId/TextKey/Options）：Options 中的 `EventOption` 包含 `OptionTextKey`、`Requirements`（可选，如金币门槛）与 `Effects: List<EffectCommand>`（复用 EffectResolver 命令）。 Refs: Game.Core.Tests/Rouge/RunEvents/EventConfigSchemaTests.cs",
+      "静态配置至少包含任务最低事件集合（神秘宝箱/流浪商人/强盗伏击/神殿祝福/诅咒祭坛），并满足关键语义：强盗伏击选项 B 为“交 50 金离开”且要求金币 ≥ 50；T2 允许先硬编码这些最小事件集合。 Refs: Game.Core.Tests/Rouge/RunEvents/MinimumEventSetTests.cs",
+      "补齐 xUnit 测试验证静态配置可读取、字段结构与金币门槛可被判定（例如 Requirements 包含 GoldRequired）；在 Windows 上 `dotnet test` 通过。若引入/变更契约/事件/DTO，必须落盘到 `Game.Core/Contracts/Rouge/**` 并同步更新相关 Overlay 文档的 Test-Refs。 Refs: Game.Core.Tests/Rouge/RunEvents/EventConfigLoadAndRequirementsTests.cs"
     ],
     "test_strategy": [
       "集成测试:",
@@ -1204,11 +1265,18 @@
       "ui"
     ],
     "owner": "gameplay",
-    "test_refs": [],
+    "test_refs": [
+      "Tests.Godot/tests/Battle/test_battle_screen_scene.gd",
+      "Tests.Godot/tests/Battle/test_unit_status_view_scene.gd",
+      "Tests.Godot/tests/Battle/test_card_view_select_enters_target_mode.gd",
+      "Tests.Godot/tests/Battle/test_target_highlight_and_play_card_invoked_once.gd",
+      "Tests.Godot/tests/Battle/test_battle_screen_controller_event_driven_ui_updates.gd",
+      "Tests.Godot/tests/Battle/test_end_turn_button_invokes_battle_manager.gd"
+    ],
     "acceptance": [
-      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
-      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
-      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+      "已创建并可加载 `Game.Godot/Scenes/Battle/BattleScreen.tscn`，且场景结构可验证包含：左侧英雄列表容器（显示 HP/护盾/状态图标）、右侧敌人列表容器（显示 HP/护盾/意图预告）、底部手牌容器（CardView 容器）+ 能量显示 + 结束回合按钮；同时提供可复用的 `UnitStatusView.tscn`，可实例化并可见地呈现 HP/护盾与状态图标列表（不通过隐藏占位满足）；并满足文档路径要求可被文本检索到：`docs/architecture/overlays/PRD-rouge-manager/08/_index.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`。 Refs: Tests.Godot/tests/Battle/test_battle_screen_scene.gd Tests.Godot/tests/Battle/test_unit_status_view_scene.gd",
+      "已提供 `Game.Godot/Scenes/Battle/CardView.tscn` 及其控制脚本，实现并可验证显示卡牌名称/消耗/描述/类型图标；CardView 支持点击或拖拽选中（两种交互任一触发都必须可观察到“选中状态变化”，且会进入目标选择模式而不是静默失败）；在目标选择模式下，BattleScreen 会依据卡牌 `TargetRule`（SingleEnemy/AllEnemies/SingleAlly/AllAllies）高亮可选目标，并且仅当点击被高亮目标时才会触发一次 `PlayCard` 用例调用（规则/校验与状态变更不落在 Scene 层）；并满足文档路径要求可被文本检索到：`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`。 Refs: Tests.Godot/tests/Battle/test_card_view_select_enters_target_mode.gd Tests.Godot/tests/Battle/test_target_highlight_and_play_card_invoked_once.gd",
+      "已实现 `Game.Godot/Scripts/Battle/BattleScreenController.cs` 作为 UI→UseCase 编排入口并调用 `BattleManager`：订阅并响应 `CardPlayed`（手牌 UI 移除/重排可观察）、`core.rouge.combat.damage.applied`（受击动画播放且 HP 条更新可观察）、`core.rouge.status.applied`（状态图标刷新可观察）、`core.rouge.battle.won`/`core.rouge.battle.lost`（切换到奖励/结算界面可观察）；且在 `_ExitTree()` 中解绑事件后，再触发这些事件不会继续导致 UI 变更；同时提供至少 1 个 headless GdUnit4/E2E 场景测试覆盖“场景可加载 + 事件驱动刷新 + 结束回合按钮调用 BattleManager.EndPlayerTurn”，并将测试产物输出到 `logs/e2e/**`；并满足文档路径要求可被文本检索到：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`。 Refs: Tests.Godot/tests/Battle/test_battle_screen_controller_event_driven_ui_updates.gd Tests.Godot/tests/Battle/test_end_turn_button_invokes_battle_manager.gd"
     ],
     "test_strategy": [
       "GdUnit4 场景测试:",
@@ -1240,7 +1308,7 @@
     "id": "GM-0121",
     "story_id": "PRD-ROUGE-T2-VS-0001",
     "title": "实现地图 UI (MapScreen)",
-    "description": "Godot 场景实现地图界面:节点渲染/连线/选择/进入\n\n创建 Game.Godot/Scenes/Map/MapScreen.tscn:\n- 布局:\n  - 中央: 节点图(分层节点 + 连线)\n  - 顶部: 队伍信息(金币/英雄 HP)\n- 节点渲染:\n  - 每个 MapNode 绘制为图标(战斗/事件/休息/商店/精英/Boss)\n  - 当前节点高亮\n  - 可达节点可点击,不可达节点置灰\n  - 已完成节点显示勾选标记\n- 连线绘制:\n  - 使用 Line2D 或自定义绘制连线\n- 节点点击:\n  - 点击可达节点 → 调用 RunManager.EnterNode → 切换到对应场景(BattleScreen/EventDialog/RestPanel/ShopPanel)\n脚本: Game.Godot/Scripts/Map/MapScreenController.cs(调用 RunManager 用例)。\n\n参考实现（demo/）：\n- demo/godot-demo-projects/2d/custom_drawing/lines.gd（自绘连线/节点连通的实现方式）\n- demo/godot-demo-projects/gui/accessibility/custom_control.gd（自定义控件与键盘导航思路）\n- demo/godot-demo-projects/2d/tween/main.gd（节点选中/过渡动画）\n\n实现建议：\n- 连线优先走单个 Node2D _Draw() 批量绘制，减少大量 Line2D/节点实例带来的开销。\n- 节点点击/高亮建议统一用一个 MapInputController 管理可达/不可达状态，避免 UI 状态分散。",
+    "description": "Godot 场景实现地图界面:节点渲染/连线/选择/进入",
     "status": "pending",
     "priority": "P1",
     "layer": "adapter",
@@ -1275,11 +1343,16 @@
       "ui"
     ],
     "owner": "gameplay",
-    "test_refs": [],
+    "test_refs": [
+      "Tests.Godot/tests/UI/test_map_screen_scene.gd",
+      "Tests.Godot/tests/UI/test_map_screen_connections_and_reachability.gd",
+      "Tests.Godot/tests/E2E/test_map_enter_node_navigation_smoke.gd",
+      "Game.Core.Tests/Tasks/Task21AcceptanceTests.cs"
+    ],
     "acceptance": [
-      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
-      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
-      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+      "新增并可在 Godot 中成功加载 `Game.Godot/Scenes/Map/MapScreen.tscn`，其布局包含顶部队伍信息区（金币、英雄 HP）与中央分层节点图容器；界面能基于 RunManager 的当前地图数据渲染节点图标（Battle/Event/Rest/Shop/Elite/Boss），且可观察到：当前节点高亮、已完成节点带勾选标记、可达/不可达节点状态区分（不可达置灰）；游戏规则与状态推进逻辑保持在 Game.Core；涉及的 OverlayDocs 路径需逐字匹配出现在本任务交付中：docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md, docs/architecture/overlays/PRD-rouge-manager/08/_index.md Refs: Tests.Godot/tests/UI/test_map_screen_scene.gd Game.Core.Tests/Tasks/Task21AcceptanceTests.cs",
+      "节点之间的连线在地图界面中可见（使用 Line2D 或自定义绘制均可），并与节点位置保持同步；连线与节点的“可达性”在视觉与交互上可验证：可达节点可点击且有明确的 hover/pressed 视觉反馈，不可达节点置灰且点击后界面/状态保持不变；输入与渲染只做路由与展示，不在 scene 层内实现业务规则或推进。 Refs: Tests.Godot/tests/UI/test_map_screen_connections_and_reachability.gd",
+      "点击可达节点会调用 `RunManager.EnterNode(nodeId)` 且根据节点类型进入对应场景（BattleScreen/EventDialog/RestPanel/ShopPanel/Elite/Boss），完成后可返回地图并刷新节点状态（进入过的节点标记为已完成，并解锁下一层可达节点）；进入节点的行为会产生可用于调试的进入日志。Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**. Refs: Tests.Godot/tests/E2E/test_map_enter_node_navigation_smoke.gd"
     ],
     "test_strategy": [
       "GdUnit4 场景测试:",
@@ -1340,11 +1413,16 @@
       "ui"
     ],
     "owner": "gameplay",
-    "test_refs": [],
+    "test_refs": [
+      "Game.Core.Tests/Tasks/Task22AcceptanceTests.cs",
+      "Tests.Godot/tests/UI/test_reward_panel_selection_and_skip.gd",
+      "Game.Core.Tests/Reward/RewardSelectionAppliesCardToDeckTests.cs",
+      "Tests.Godot/tests/Tasks/test_task22_acceptance.gd"
+    ],
     "acceptance": [
-      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
-      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
-      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+      "在不把玩法规则塞进场景层的前提下，实现并可验证加载 `Game.Godot/Scenes/Reward/RewardPanel.tscn` 与 `Game.Godot/Scripts/Reward/RewardPanelController.cs`：面板顶部存在可见标题文本且内容为“战斗胜利!”；中央存在且可见的 3 个候选卡位（使用 CardView 组件）；底部存在且可见的金币奖励文本与“跳过”按钮；UI 层只负责展示与输入路由，牌组/奖励生成等玩法规则仍位于 `Game.Core` 可被单测覆盖。 Refs: Game.Core.Tests/Tasks/Task22AcceptanceTests.cs",
+      "卡牌选择与跳过交互可被验证且不可空跑：当选择任意一张候选卡时，必须对目标英雄执行 `Party.GetHero(heroId).Deck.AddCard(cardDef)`（可通过可观测结果验证：牌组卡牌数量/内容变化，且 cardDef 与所选卡一致），随后执行同一套关闭流程使奖励面板关闭并回到地图；当点击“跳过”时，不得新增卡牌（牌组保持不变），但同样必须关闭面板并回到地图；选择与跳过必须走同一 ClosePanel 流程以避免分支行为不一致（以外部可观测效果为准：最终状态一致且无重复关闭副作用）。 Refs: Tests.Godot/tests/UI/test_reward_panel_selection_and_skip.gd Game.Core.Tests/Reward/RewardSelectionAppliesCardToDeckTests.cs",
+      "事件驱动打开与数据填充、测试与工件产出可被验证：订阅并响应 `core.rouge.battle.won` 事件后，奖励面板必须被打开/显示，并从 RewardManager 获取 3 张候选卡与金币数值，分别填充到 3 个 CardView 与金币文本中；至少提供 1 个 headless GdUnit4 或 E2E 冒烟测试（see test_refs）覆盖“事件触发打开+三选卡展示+点击选卡 AddCard+点击跳过不加卡+两者都会关闭并回地图”的关键路径，并在 `logs/e2e/**` 下生成可审计工件；同时要求下列文档路径在仓库中可被文本检索到并作为本任务验收/契约依据的一部分：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`、`docs/architecture/overlays/PRD-rouge-manager/08/_index.md`。 Refs: Game.Core.Tests/Tasks/Task22AcceptanceTests.cs Tests.Godot/tests/Tasks/test_task22_acceptance.gd"
     ],
     "test_strategy": [
       "GdUnit4 场景测试:",
@@ -1363,7 +1441,7 @@
     "id": "GM-0123",
     "story_id": "PRD-ROUGE-T2-VS-0001",
     "title": "实现事件对话框 UI (EventDialog)",
-    "description": "事件节点展示文本与选项按钮\n\n创建 Game.Godot/Scenes/Event/EventDialog.tscn:\n- 布局:\n  - 中央: 事件文本框(RichTextLabel)\n  - 底部: 2–3 个选项按钮(动态生成)\n- 交互:\n  - 加载事件时从 EventManager 获取 EventDefinition\n  - 根据 Options 动态创建按钮\n  - 按钮文本从本地化 key 获取(或暂时硬编码)\n  - 点击选项 → 调用 EventManager.SelectOption → 执行 Effects → 关闭对话框回地图\n- 条件选项:\n  - 金币不足时按钮置灰并显示提示\n脚本: Game.Godot/Scripts/Event/EventDialogController.cs。",
+    "description": "事件节点展示文本与选项按钮",
     "status": "pending",
     "priority": "P2",
     "layer": "adapter",
@@ -1398,11 +1476,14 @@
       "ui"
     ],
     "owner": "gameplay",
-    "test_refs": [],
+    "test_refs": [
+      "Tests.Godot/tests/UI/test_event_dialog_controller.gd",
+      "Game.Core.Tests/Tasks/Task23AcceptanceTests.cs"
+    ],
     "acceptance": [
-      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
-      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
-      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+      "在 `Game.Godot/Scenes/Event/EventDialog.tscn` 创建并可在 Godot 编辑器中无错误加载的事件对话框场景：中央包含用于显示事件文本的 `RichTextLabel`（支持富文本/`bbcode_enabled = true`），底部包含用于动态生成 2–3 个选项按钮的容器（例如 `VBoxContainer`）；并提供脚本 `Game.Godot/Scripts/Event/EventDialogController.cs` 负责 UI 装配与交互绑定；同时仓库中可通过文本检索确认以下 OverlayDocs 路径均存在且未被移除：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`、`docs/architecture/overlays/PRD-rouge-manager/08/_index.md`。 Refs: Tests.Godot/tests/UI/test_event_dialog_controller.gd",
+      "加载事件时，对话框通过 `EventManager` 获取 `EventDefinition` 并按其 `Options` 动态创建按钮；按钮文本来自本地化 key（或明确采用暂时硬编码）；点击任一可用选项会调用 `EventManager.SelectOption`，由事件系统执行对应 `Effects`，随后对话框关闭并回到地图界面；当金币不足导致某选项不可选时，该选项按钮必须处于禁用状态且在 UI 上有可见提示（例如 Tooltip 或提示文本），使其不可通过“未渲染/未创建按钮”来规避该规则；与具体玩法规则/效果结算相关的业务逻辑仍位于 `Game.Core`（UI 层仅做输入路由与显示/调用）。 Refs: Tests.Godot/tests/UI/test_event_dialog_controller.gd Game.Core.Tests/Tasks/Task23AcceptanceTests.cs",
+      "新增至少 1 个可在 headless 下运行的 GdUnit4 场景测试或 E2E 冒烟测试 (see test_refs)，验证事件文本正确显示、选项按钮数量与文案随 `EventDefinition.Options` 变化、模拟点击触发 `EventManager.SelectOption` 调用路径、以及“金币不足”选项按钮禁用且提示可见；测试运行产物输出到 `logs/e2e/**`。 Refs: Tests.Godot/tests/UI/test_event_dialog_controller.gd"
     ],
     "test_strategy": [
       "GdUnit4 场景测试:",
@@ -1456,11 +1537,16 @@
       "ui"
     ],
     "owner": "gameplay",
-    "test_refs": [],
+    "test_refs": [
+      "Game.Core.Tests/Tasks/Task24AcceptanceTests.cs",
+      "Tests.Godot/tests/UI/test_rest_panel_scene.gd",
+      "Tests.Godot/tests/UI/test_rest_panel_flow.gd",
+      "Tests.Godot/tests/Tasks/test_task24_acceptance.gd"
+    ],
     "acceptance": [
-      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
-      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
-      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+      "已实现并提交本任务所需的 Godot UI/场景/脚本：`Game.Godot/Scenes/Rest/RestPanel.tscn` 可被实例化（包含可见的标题与交互控件），其中标题文本精确为“休息营地”，并包含两个可见且可交互的按钮，其文本精确为“回复生命”与“升级卡牌”；同时，游戏规则/业务计算逻辑不应通过场景层脚本实现，而应保持在 `Game.Core`（场景层仅负责输入路由与渲染/展示）。 Refs: Game.Core.Tests/Tasks/Task24AcceptanceTests.cs",
+      "在 `Game.Godot/Scripts/Rest/RestPanelController.cs` 中完成交互闭环：点击“回复生命”会触发一次 `RestService.HealParty`，并在其完成后关闭 RestPanel 且回到地图状态；点击“升级卡牌”会打开牌组选择器（`Game.Godot/Scenes/Rest/CardSelectorPanel.tscn` + `Game.Godot/Scripts/Rest/CardSelectorController.cs`），该选择器需展示当前英雄牌组的全部卡牌并支持“选中高亮 + 确认”，确认后触发一次 `RestService.UpgradeCard(selectedCard)`，并在其完成后关闭选择器与 RestPanel 且回到地图状态；在未确认的取消/关闭路径上不得调用 `RestService.UpgradeCard`，且 RestPanel 仍可继续选择“回复生命/升级卡牌”。 Refs: Tests.Godot/tests/UI/test_rest_panel_scene.gd Tests.Godot/tests/UI/test_rest_panel_flow.gd",
+      "至少提供 1 个 headless 的 GdUnit4 或 E2E 冒烟测试（按 test_refs 口径），其断言需覆盖：`Game.Godot/Scenes/Rest/RestPanel.tscn` 可加载；两个按钮可点击；模拟点击“回复生命”可观测到 `RestService.HealParty` 被调用且 RestPanel 关闭/回地图；模拟“升级卡牌”全流程（打开选择器→选卡→确认）可观测到 `RestService.UpgradeCard` 被调用且选择器与 RestPanel 关闭/回地图；测试产物必须落盘到 `logs/e2e/**`。同时，下列 ExtractedMeta OverlayDocs 路径必须作为该功能纵切的可审计依据并保持与实现一致（可通过文本检索验证）：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`, `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`, `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`, `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`, `docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`, `docs/architecture/overlays/PRD-rouge-manager/08/_index.md`。 Refs: Game.Core.Tests/Tasks/Task24AcceptanceTests.cs Tests.Godot/tests/Tasks/test_task24_acceptance.gd"
     ],
     "test_strategy": [
       "GdUnit4 场景测试:",
@@ -1516,12 +1602,16 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Contracts/RougeShopDtoContractsTests.cs"
+      "Game.Core.Tests/Contracts/RougeShopDtoContractsTests.cs",
+      "Game.Core.Tests/Tasks/Task25AcceptanceTests.cs",
+      "Tests.Godot/tests/UI/test_shop_panel_scene.gd",
+      "Tests.Godot/tests/UI/test_shop_panel_interactions.gd",
+      "Tests.Godot/tests/Tasks/test_task25_acceptance.gd"
     ],
     "acceptance": [
-      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
-      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
-      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+      "在 `Game.Godot/Scenes/Shop/ShopPanel.tscn` 创建可实例化的 ShopPanel 场景，并由 `Game.Godot/Scripts/Shop/ShopPanelController.cs` 驱动：顶部金币显示、左侧售卖卡牌列表（CardView + 价格）、右侧“移除卡牌”按钮、底部“离开商店”按钮在场景树中可见且可交互；购买/移除等规则由 `Game.Core` 层能力承载，场景层仅做输入路由与显示更新。 Refs: Game.Core.Tests/Tasks/Task25AcceptanceTests.cs",
+      "进入商店时会调用 `ShopService.GenerateShopInventory` 生成商品并渲染到列表；点击商品卡牌会调用 `ShopService.PurchaseCard` 并可观察到金币减少、牌组增加、金币显示刷新；点击“移除卡牌”会打开牌组选择器并在选择一张卡后调用 `ShopService.RemoveCard`，并可观察到金币减少、牌组减少；当金币不足以购买或移除时，对应购买入口与“移除卡牌”按钮处于不可用/置灰状态；点击“离开商店”会关闭面板并返回地图。 Refs: Tests.Godot/tests/UI/test_shop_panel_scene.gd Tests.Godot/tests/UI/test_shop_panel_interactions.gd",
+      "提供至少 1 个 headless 的 GdUnit4 场景测试或 E2E 冒烟测试，覆盖：商品列表生成、购买触发与金币显示刷新、金币不足时置灰、离开商店关闭；测试产物写入 `logs/e2e/**`；并且验收文本需显式包含并可通过全文检索定位以下 OverlayDocs 路径：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Shop-DTOs.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`、`docs/architecture/overlays/PRD-rouge-manager/08/_index.md`。 Refs: Game.Core.Tests/Tasks/Task25AcceptanceTests.cs Tests.Godot/tests/Tasks/test_task25_acceptance.gd"
     ],
     "test_strategy": [
       "GdUnit4 场景测试:",
@@ -1541,7 +1631,7 @@
     "id": "GM-0126",
     "story_id": "PRD-ROUGE-T2-VS-0001",
     "title": "实现主菜单与开局流程 UI (MainMenu)",
-    "description": "主菜单提供开始新局/继续/设置功能\n\n创建 Game.Godot/Scenes/MainMenu.tscn:\n- 布局:\n  - 中央: 游戏标题\n  - 按钮:\n    - \"开始新局\": 调用 RunManager.StartNewRun(随机 Seed) → 切换到 MapScreen\n    - \"继续\" (可选): 加载存档 → 切换到 MapScreen(T2 可先占位不实现)\n    - \"设置\": 打开设置面板(音量等,可复用现有 SettingsPanel)\n    - \"退出\": 退出游戏\n- 开局流程:\n  - 点击 \"开始新局\" → (可选)选择初始英雄与职业 → 生成初始牌组 → StartNewRun → 进入地图\n  - T2 可简化为固定 2 名英雄(战士 + 法师)直接开局\n脚本: Game.Godot/Scripts/MainMenuController.cs。",
+    "description": "主菜单提供开始新局/继续/设置功能",
     "status": "pending",
     "priority": "P2",
     "layer": "adapter",
@@ -1575,11 +1665,15 @@
       "ui"
     ],
     "owner": "gameplay",
-    "test_refs": [],
+    "test_refs": [
+      "Tests.Godot/tests/UI/test_main_menu_scene.gd",
+      "Tests.Godot/tests/UI/test_main_menu_settings_button.gd",
+      "Tests.Godot/tests/E2E/test_main_menu_start_run_to_map.gd"
+    ],
     "acceptance": [
-      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
-      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
-      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+      "实现本任务所需的 Godot UI/场景/脚本：创建 `Game.Godot/Scenes/MainMenu.tscn` 并挂载 `Game.Godot/Scripts/MainMenuController.cs`；主菜单在屏幕中央显示游戏标题与按钮（\"开始新局\"/\"继续\"/\"设置\"/\"退出\"），按钮样式与现有主题一致。 Refs: Tests.Godot/tests/UI/test_main_menu_scene.gd",
+      "点击\"开始新局\"会以随机 Seed 调用 `RunManager.StartNewRun(...)` 并切换到 MapScreen；点击\"设置\"打开设置面板；点击\"退出\"退出游戏；\"继续\"按钮为可选：T2 允许先占位不实现（禁用/提示），若实现则加载存档并切换到 MapScreen。 Refs: Tests.Godot/tests/UI/test_main_menu_settings_button.gd",
+      "新增至少 1 个 headless GdUnit4 或 E2E 冒烟测试（see test_refs），验证 MainMenu 场景可无错误加载且\"开始新局\"触发开局并进入/加载 MapScreen；测试产物输出到 `logs/e2e/**`。 Refs: Tests.Godot/tests/E2E/test_main_menu_start_run_to_map.gd"
     ],
     "test_strategy": [
       "GdUnit4 场景测试:",
@@ -1633,11 +1727,16 @@
       "ui"
     ],
     "owner": "gameplay",
-    "test_refs": [],
+    "test_refs": [
+      "Game.Core.Tests/Tasks/Task27AcceptanceTests.cs",
+      "Tests.Godot/tests/UI/test_run_end_screen_opens_on_run_ended.gd",
+      "Tests.Godot/tests/UI/test_run_end_screen_buttons_navigation.gd",
+      "Tests.Godot/tests/Tasks/test_task27_acceptance.gd"
+    ],
     "acceptance": [
-      "Implement the Godot UI/scene/scripts for this task and keep gameplay rules in Game.Core.",
-      "Route inputs and rendering in scenes; do not embed business logic in the scene layer.",
-      "Add at least one headless GdUnit4 or E2E smoke test (see test_refs) and produce artifacts under logs/e2e/**."
+      "创建并可加载 `Game.Godot/Scenes/RunEnd/RunEndScreen.tscn`，并由 `Game.Godot/Scripts/RunEnd/RunEndScreenController.cs` 驱动；场景包含可被测试引用的顶部结果标题 Label（文本严格为“胜利!”或“失败”之一）、中央统计区（用时/击杀数/获得卡牌数/最终金币对应的 Label 节点存在，允许在无数据时为空）、底部两个按钮节点（分别为“重新开始”与“返回主菜单”，且可通过节点路径稳定获取）。 Refs: Game.Core.Tests/Tasks/Task27AcceptanceTests.cs",
+      "运行结束时（收到 `RunEnded`）会打开/显示结算界面并正确渲染胜负标题；点击“重新开始”会触发 `RunManager.StartNewRun` 且使用新 Seed（与刚结束的那局不同）并返回地图流程；点击“返回主菜单”会切换到 MainMenu；控制器与场景层只负责 UI/输入/导航与对外调用，不在 scene 层实现或埋入任何玩法规则，玩法规则保持在 `Game.Core`。 Refs: Tests.Godot/tests/UI/test_run_end_screen_opens_on_run_ended.gd Tests.Godot/tests/UI/test_run_end_screen_buttons_navigation.gd Game.Core.Tests/Tasks/Task27AcceptanceTests.cs",
+      "提供至少 1 个 headless 的 GdUnit4（或 E2E 冒烟）测试覆盖：场景可加载、关键子节点可寻址、胜利/失败文本显示可被断言、模拟点击两按钮可观测到对应行为（重开触发 StartNewRun 且新 Seed、返回主菜单触发切换）；测试产物输出到 `logs/e2e/**`；并且以下文档路径必须存在且包含可通过全文检索定位的对齐内容（至少提及本功能/场景/交互中的关键路径或名称）：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`、`docs/architecture/overlays/PRD-rouge-manager/08/_index.md`。 Refs: Game.Core.Tests/Tasks/Task27AcceptanceTests.cs Tests.Godot/tests/Tasks/test_task27_acceptance.gd"
     ],
     "test_strategy": [
       "GdUnit4 场景测试:",
@@ -1655,7 +1754,7 @@
     "id": "GM-0128",
     "story_id": "PRD-ROUGE-T2-VS-0001",
     "title": "实现存档与读档功能 (DataStore 集成)",
-    "description": "利用 DataStore Autoload 保存/加载 RunGameState（单机离线）\n\n实现方式（遵循 Ports/Adapters）：\n- 复用现有适配器: Game.Godot/Adapters/DataStoreAdapter.cs（实现 IDataStore）\n- 在 Core 层新增 Save/Load 用例（例如 RunManager 或 SaveGameService），调用 IDataStore.SaveAsync/LoadAsync：\n  - key: \"current_run\"（最终落盘为 user://saves/current_run.json）\n\n调用时机（T2 最小集）：\n- 每次节点完成后自动保存（RunManager.CompleteNode 后）\n- 主菜单 \"继续\"：若存在存档则加载并进入 MapScreen\n\n版本迁移（T2 最小集）：\n- 存档包含 Version 字段；版本不匹配时给出明确提示并拒绝加载（迁移留到后续迭代）。",
+    "description": "利用 DataStore Autoload 保存/加载 RunGameState（单机离线）",
     "status": "pending",
     "priority": "P3",
     "layer": "adapter",
@@ -1693,12 +1792,22 @@
     "test_refs": [
       "Tests.Godot/tests/Adapters/test_data_store_adapter.gd",
       "Tests.Godot/tests/Integration/test_run_save_load_flow.gd",
-      "Game.Core.Tests/State/RunGameStateManagerTests.cs"
+      "Game.Core.Tests/State/RunGameStateManagerTests.cs",
+      "Game.Core.Tests/DataStore/RunGameStateSerializationTests.cs",
+      "Tests.Godot/tests/datastore/test_autosave_after_complete_node.gd",
+      "Tests.Godot/tests/ui/test_main_menu_continue_load_save.gd",
+      "标记）。",
+      "Tests.Godot/tests/Tasks/test_task28_acceptance.gd",
+      "Game.Core.Tests/Tasks/Task28AcceptanceTests.cs"
     ],
     "acceptance": [
-      "Integrate save/load via IDataStore (adapter) and keep save/load orchestration in Game.Core (no Godot dependency in Core).",
-      "Persist only to user:// and never accept absolute paths or traversal; failures are surfaced with context.",
-      "Add at least one headless GdUnit4 integration test for save+restart+load flow (see test_refs)."
+      "通过 `Game.Godot/Adapters/DataStoreAdapter.cs` 提供可调用的 `SaveRun(RunGameState)`/`LoadRun()`/`HasSave()`/`VerifyVersion()` 能力：保存时将 `RunGameState` 序列化为 JSON 并写入 `user://saves/current_run.json` 且包含可校验的 `Version` 字段；加载时可从同一路径反序列化还原完整状态；核心序列化/版本校验逻辑在 `Game.Core` 保持纯 C#（不依赖 Godot API）并有 xUnit 用例可验证无损往返与版本不匹配行为；同时本任务相关说明在 `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md` 与 `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` 中可被文本检索到并与实现一致。 Refs: Game.Core.Tests/DataStore/RunGameStateSerializationTests.cs",
+      "所有存档读写仅允许 `user://`（目标为 `user://saves/current_run.json`），不得接受绝对路径或路径穿越输入；当序列化/反序列化/文件 IO/版本校验失败时，必须以“包含上下文信息”的可观测方式暴露（日志或错误对象），并且在 `RunManager.CompleteNode` 的自动保存触发链路中失败不得中断游戏主流程；完成节点后确实发生自动保存调用，主菜单“继续”按钮在 `HasSave()` 为真时触发加载并恢复关键进度且在关键字段为空/不完整时拒绝进入并给出可见提示；同时 `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md` 与 `docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md` 中明确记录上述触发点与安全边界且与实现一致。 Refs: Tests.Godot/tests/datastore/test_autosave_after_complete_node.gd Tests.Godot/tests/ui/test_main_menu_continue_load_save.gd",
+      "至少提供 1 个 headless 的 GdUnit4 集成测试覆盖“完成节点后产生 `user://saves/current_run.json` → 重启/重新进入后通过主菜单继续加载 → 地图进度与牌组等关键状态被正确恢复”的可复现实证；同时覆盖版本语义：存档包含 `Version`，当版本不匹配时必须拒绝加载并在主菜单给出清晰用户提示（例如存档过旧/不兼容）且可在 UI 上查看存档版本与兼容性状态；并确保这些验收点在 `docs/architecture/overlays/PRD-rouge-manager/08/_index.md` 与 `docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md` 中可被文本检索到并与测试/实现对应（不要求新增 refs 标记）。 Refs: Tests.Godot/tests/Tasks/test_task28_acceptance.gd",
+      "完成节点触发自动保存时：成功保存必须产生可被测试捕获的“已保存”反馈（例如发射 `RunStateSaved(RunGameState)` 信号/事件或等价机制供 UI 订阅）；保存失败必须产生可观测的错误信息且不得向上传播为未处理异常来中断节点完成与后续游戏流程。 Refs: Tests.Godot/tests/Tasks/test_task28_acceptance.gd",
+      "主菜单“继续”交互必须可证伪：当 `HasSave()` 为假时不得调用 `LoadRun()` 且不得进入继续流程；当 `HasSave()` 为真且 `LoadRun()` 成功时必须恢复并可验证关键进度（至少包含地图进度与牌组/等价关键字段）；当关键字段缺失/不完整或版本不兼容时必须拒绝进入并展示清晰提示，且不得覆盖现有存档或隐式改变当前进度状态。 Refs: Tests.Godot/tests/Tasks/test_task28_acceptance.gd",
+      "版本语义必须可验证：`user://saves/current_run.json` 中的 `Version` 必须等于当前运行版本；`LoadRun()` 在版本不匹配时必须给出一致且可断言的拒绝结果（抛出明确异常或返回明确兼容性状态），并与主菜单提示和“版本信息/兼容性状态可见”一致；初期允许仅执行版本号严格一致性校验（不要求自动迁移），但不得静默忽略版本不匹配继续加载。 Refs: Tests.Godot/tests/Tasks/test_task28_acceptance.gd",
+      "测试义务必须覆盖三个子任务的可验证点：xUnit 覆盖 Save/Load 往返一致性、`HasSave()` 行为、版本不匹配拒绝；以及 CompleteNode 触发保存与“已保存”反馈（信号/事件或等价机制）和保存失败不影响主流程；GdUnit4 headless 覆盖完成节点后文件生成与重启后通过主菜单继续加载恢复关键状态。 Refs: Game.Core.Tests/Tasks/Task28AcceptanceTests.cs Tests.Godot/tests/Tasks/test_task28_acceptance.gd"
     ],
     "test_strategy": [
       "xUnit 单元测试:",
@@ -1758,11 +1867,20 @@
       "t2"
     ],
     "owner": "gameplay",
-    "test_refs": [],
+    "test_refs": [
+      "Game.Core.Tests/Tasks/Task29AcceptanceTests.cs",
+      "Tests.Godot/tests/e2e/test_mvp_run.gd",
+      "Tests.Godot/tests/Tasks/test_task29_acceptance.gd"
+    ],
     "acceptance": [
-      "Provide a one-command entry for Windows/CI headless runs and write artifacts under logs/ci/** or logs/e2e/**.",
-      "Use non-zero exit code on failure with an actionable summary; emit machine-readable summary JSON on success.",
-      "Align with ADR-0005 (quality gates) and ADR-0015 (performance budgets) where applicable."
+      "在 Windows/CI 上提供可执行的 headless 运行入口来运行本任务的 GdUnit4 E2E，并且测试脚本路径满足：`tests/e2e/test_mvp_run.gd` 与视图约定的 `Tests.Godot/tests/Integration/test_mvp_run.gd` 二者至少其一真实存在且被该入口实际执行；运行后在 `logs/ci/**` 或 `logs/e2e/**` 产出可归档工件；headless 下至少完成“基础冒烟”且可证伪：加载主菜单场景 `res://Scenes/MainMenu.tscn`，并验证主菜单/地图/战斗相关场景均可在 headless 模式加载（任一加载崩溃或缺失依赖则判失败）；同一脚本中必须包含可复用的初始化与清理辅助方法 `setup_new_game()`、`cleanup_scene()`，并在用例中被实际调用以支撑后续流程测试。 Refs: Game.Core.Tests/Tasks/Task29AcceptanceTests.cs Tests.Godot/tests/Tasks/test_task29_acceptance.gd",
+      "满足以下之一且可证伪：A) 自动化：GdUnit4 E2E 在 headless 下覆盖并断言完整可玩闭环流程（开局→选路→战斗→奖励→Boss→结算→重开），且至少包含并能失败定位到具体断言：点击“开始新局”后进入 MapScreen 且 MapScreen 初始化满足（第 1 层节点列表长度 ≥3 且可识别普通战斗/精英/宝箱/Boss 类型，且至少 1 个节点处于 Accessible 并可点击）；点击一个可交互战斗节点进入 BattleScreen 且 BattleScreen 初始化包含可观测状态（玩家/敌人 HP、初始手牌、敌人意图可见/可读取）；模拟出牌后敌人 HP 下降且该牌从 Hand 移至 Discard（或等价的可观测移动结果）；模拟结束回合后敌方回合执行且产生可观测结果（如玩家 HP 变化或 Block 被消耗）；敌人全灭时触发 `core.rouge.battle.won` 且 RewardPanel 打开；在 RewardPanel 选择卡牌奖励后牌组新增卡牌；回到地图后当前节点标记 Completed 且不可再次点击，下一层至少 1 个节点变为 Accessible 且可点击；重复推进直至 Boss 节点并验证其为 Boss 类型；Boss 胜利后触发 `core.rouge.battle.won`（或等价的胜利事件）且进入 RunEndScreen 显示胜利结算（而非 RewardPanel），并显示最终统计（累积伤害、卡牌数量、运行时间）且“重新开始”按钮可点击；点击“重新开始”后回到 MapScreen 且地图重新生成（节点 ID/类型与上一局可证伪地不同/由不同随机种子生成）、牌组回到初始卡组，且能继续开始下一局；为保证 headless 稳定复现，自动化路径必须使用固定敌人与确定性随机。B) 手动替代：提供 `docs/testing/mvp-smoke-test.md`，其中包含可执行的步骤清单覆盖上述闭环（至少包含：开局→选路→3-4 个节点战斗→Boss→结算→重开）与通过/失败记录方式，并明确通过标准（无崩溃、无卡死、节点可点击且可完成、敌人 AI/意图可观察且可执行、奖励可选择、Boss 胜利后可重开）。若采用 A，则自动化运行失败时必须返回非 0 退出码并输出可操作的失败摘要，成功时输出机器可读的摘要 JSON；若采用 B，则必须提供可归档的执行记录模板并在一次执行中能明确标记通过/失败。 Refs: Tests.Godot/tests/e2e/test_mvp_run.gd",
+      "以下 ExtractedMeta 中列出的 Overlay 文档必须逐字包含并可通过文本检索确认已对齐本任务的验收与运行方式（可引用但不复制阈值/策略）：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`、`docs/architecture/overlays/PRD-rouge-manager/08/_index.md`；并在适用处明确声明与 ADR-0005（质量门禁）及 ADR-0015（性能预算）对齐。 Refs: Game.Core.Tests/Tasks/Task29AcceptanceTests.cs",
+      "自动化路径（若选择 A）必须在同一测试脚本中包含并通过“基础架构与场景可加载”验证：套件初始化后可在 headless 下依次加载主菜单/地图/战斗相关场景，且任一场景加载期间出现崩溃、缺失依赖、或关键根节点不可见/不可交互时判定失败；并且 `setup_new_game()` 与 `cleanup_scene()` 分别在至少一个用例中被调用以证明可复用性。 Refs: Tests.Godot/tests/e2e/test_mvp_run.gd",
+      "自动化路径（若选择 A）必须包含并通过“主菜单到地图”验证：用例能在 headless 下模拟点击主菜单“开始新局”，等待场景转换后断言 MapScreen 可见；并断言地图初始化满足：第 1 层节点列表长度 ≥3、节点类型可区分且包含普通战斗/精英/宝箱/Boss（以项目定义的可观测方式），且第 1 个可选节点处于 Accessible 并可点击（任一不满足则失败）。 Refs: Tests.Godot/tests/e2e/test_mvp_run.gd",
+      "自动化路径（若选择 A）必须包含并通过“战斗到奖励”验证：用例能从 MapScreen 点击一个可点击节点进入 BattleScreen，断言玩家/敌人 HP、初始手牌、敌人意图存在且可观察；模拟至少一次“选择攻击卡→点击敌人”并断言敌人 HP 下降且该牌从手牌区移出至弃牌区（或等价可观测状态变化）；模拟“结束回合”并断言敌方回合执行且产生可观测结果；最终消灭所有敌人时断言触发 `core.rouge.battle.won` 且 RewardPanel 打开；在 RewardPanel 选择卡牌奖励后断言牌组新增卡牌。 Refs: Tests.Godot/tests/e2e/test_mvp_run.gd",
+      "自动化路径（若选择 A）必须包含并通过“地图推进与 Boss 结算”验证：在至少 3-4 次节点循环推进中，每次战斗后回到 MapScreen 都能断言上一节点标记 Completed 且不可再次点击、下一层至少 1 个节点变为 Accessible 且可点击、且牌组相对上一层增长；到达 Boss 层时断言节点为 Boss 类型；Boss 胜利后断言进入 RunEndScreen（非 RewardPanel）并显示胜利与最终统计，且“重新开始”按钮可点击。 Refs: Tests.Godot/tests/e2e/test_mvp_run.gd",
+      "自动化路径（若选择 A）必须包含并通过“重新开始”验证：在 RunEndScreen 点击“重新开始”后返回 MapScreen，且新地图为可证伪的重新生成结果（例如节点 ID/类型序列与上一局不同或由不同随机种子生成），所有节点状态重置为初始（仅第 1 层可访问），且牌组重置为初始卡组，并能继续开始第二局；手动路径（若选择 B）必须在 `docs/testing/mvp-smoke-test.md` 中覆盖“重开后可继续第二局”的验证步骤与记录项。 Refs: Tests.Godot/tests/e2e/test_mvp_run.gd"
     ],
     "test_strategy": [
       "GdUnit4 场景集成测试:",
@@ -1840,12 +1958,15 @@
       "scripts/ci/quality_gate.ps1",
       "scripts/python/quality_gates.py",
       "scripts/ci/check_perf_budget.ps1",
-      ".github/workflows/windows-quality-gate.yml"
+      ".github/workflows/windows-quality-gate.yml",
+      "Game.Core.Tests/Tasks/Task30AcceptanceTests.cs",
+      "Game.Core.Tests/Utilities/QualityGatesHardGateExitCodeTests.cs",
+      "Game.Core.Tests/Utilities/QualityGatesSoftGateWarningLogTests.cs"
     ],
     "acceptance": [
-      "Quality gate can run headless on Windows (CI and local) and produces artifacts under logs/**.",
-      "Hard gate failures return non-zero; soft gate failures are recorded as warnings with actionable context.",
-      "Gate composition aligns with ADR-0005 (quality gates) and ADR-0015 (performance budgets) and does not introduce new tooling dependencies."
+      "在 Windows headless 环境下能够运行 `py -3 scripts/python/quality_gates.py`（覆盖率门禁、性能烟测、安全烟测），并产出可核验工件：`logs/unit/coverage.json`、`logs/perf/summary.json`、`logs/ci/security-audit.jsonl`。 Refs: Game.Core.Tests/Tasks/Task30AcceptanceTests.cs",
+      "门禁判定与退出码可证伪：hard gate 未达标必须返回非 0 退出码；soft gate 未达标必须在 `logs/ci/**` 记录 warning（包含门禁项、阈值、实测值与触发命令/位置）。 Refs: Game.Core.Tests/Utilities/QualityGatesHardGateExitCodeTests.cs Game.Core.Tests/Utilities/QualityGatesSoftGateWarningLogTests.cs",
+      "门禁内容与 ADR-0005（quality gates）与 ADR-0015（performance budgets）语义对齐且不引入新的工具链依赖；覆盖率/性能/安全的阈值与产物路径以本任务 details 所列为准，并可通过脚本输出与日志文件共同验证。 Refs: Game.Core.Tests/Tasks/Task30AcceptanceTests.cs"
     ],
     "test_strategy": [
       "CI 工作流:",
@@ -1913,12 +2034,16 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Tests.Godot/tests/UI/test_card_view_scene.gd"
+      "Tests.Godot/tests/UI/test_card_view_scene.gd",
+      "Game.Core.Tests/Contracts/RougeCardPresentationContractsTests.cs",
+      "Tests.Godot/tests/UI/test_hand_layout_card_states.gd",
+      "Tests.Godot/tests/UI/test_hover_preview_focus_navigation.gd"
     ],
     "acceptance": [
-      "Provide reusable CardView + HandLayout components and keep gameplay rules in Game.Core.",
-      "Hover preview works in both mouse and keyboard focus navigation scenarios.",
-      "Add at least one headless GdUnit4 UI test (see test_refs) and produce artifacts under logs/e2e/**."
+      "Provide reusable CardView + HandLayout components and keep gameplay rules in Game.Core; CardView renders front-facing card info (at least name, cost, and a visual hint for type/target/rarity) and HandLayout arranges a variable-sized hand with consistent spacing/fan and supports a max-hand constraint. Refs: Game.Core.Tests/Contracts/RougeCardPresentationContractsTests.cs",
+      "HandLayout supports both a selected state and a playable state highlight (visual feedback) that can be set deterministically per card, without encoding gameplay rules inside the UI layer. Refs: Tests.Godot/tests/UI/test_hand_layout_card_states.gd",
+      "Hover preview works in both mouse and keyboard focus navigation scenarios (e.g., focus/highlight moves across cards and still shows preview). Refs: Tests.Godot/tests/UI/test_hover_preview_focus_navigation.gd",
+      "Add at least one headless GdUnit4 UI test (see test_refs) and produce artifacts under logs/e2e/**. Refs: Tests.Godot/tests/UI/test_card_view_scene.gd"
     ],
     "test_strategy": [
       "GdUnit4 UI 测试（headless）:",
@@ -1982,13 +2107,19 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Tests.Godot/tests/Integration/test_battle_card_input_flow.gd"
+      "Tests.Godot/tests/Integration/test_battle_card_input_flow.gd",
+      "Game.Core.Tests/Tasks/Task55AcceptanceTests.cs",
+      "Game.Core.Tests/Battle/BattleManagerPlayCardRejectionTests.cs",
+      "Tests.Godot/tests/Tasks/test_task55_acceptance.gd"
     ],
-    "acceptance": [
-      "BattleScreen supports click-to-select and target selection based on TargetRule; cancel path is supported.",
-      "Invalid plays (no energy / invalid target) do not mutate battle state and show a clear reason.",
-      "Add at least one headless GdUnit4 integration test (see test_refs) that covers a full play+cancel+invalid attempt flow."
-    ],
+  "acceptance": [
+    "在 BattleScreen 中必须形成可操作的输入闭环：点击手牌选中卡牌后，按 CardDefinition.TargetRule 引导并完成目标选择，并提供行为一致且可重复的取消路径；当玩家完成“选卡→选目标→确认出牌”（或规则允许的直接出牌）时，必须以语义一致的参数调用 BattleManager.PlayCard(heroId, cardId, targetId)（heroId=当前行动英雄，cardId=被选卡，targetId=被选目标）。 Refs: Game.Core.Tests/Tasks/Task55AcceptanceTests.cs",
+    "当能量不足或目标非法时，玩家的出牌尝试必须被拒绝且不改变战斗状态（例如能量/手牌/牌堆/回合/单位状态等保持不变），并在 UI 中显示可被 headless 测试断言到的明确原因；BattleManager.PlayCard 对被拒绝的操作必须保持状态不变。 Refs: Game.Core.Tests/Battle/BattleManagerPlayCardRejectionTests.cs Tests.Godot/tests/Integration/test_battle_card_input_flow.gd",
+    "必须提供并在 headless 下可运行的 GdUnit4 集成测试，且测试文件路径必须为 Tests.Godot/tests/Integration/test_battle_card_input_flow.gd；测试至少覆盖：成功出牌（选择卡+选择目标+确认/执行）、取消路径（选卡或选目标后取消回到 Idle）、以及无效尝试的失败路径（至少分别覆盖“能量不足”和“非法目标”），并将测试报告工件输出到 logs/e2e/**（至少包含 JUnit/XML 之一）。 Refs: Game.Core.Tests/Tasks/Task55AcceptanceTests.cs Tests.Godot/tests/Tasks/test_task55_acceptance.gd",
+    "出牌交互必须在 UI 层体现为可观测且可验证的状态机闭环：Idle（未选卡）→ CardSelected（已选卡）→ Targeting（选择目标）→ Confirm（等待确认或可直接出牌）；并且可从 CardSelected/Targeting/Confirm 任意阶段取消回到 Idle；取消后不得保留任何目标高亮/指示/选中残留，重复“选卡→选目标→取消→再次选卡”不会累积节点或残留高亮/指示状态。 Refs: Tests.Godot/tests/Tasks/test_task55_acceptance.gd",
+    "目标高亮与选择必须由 CardDefinition.TargetRule 驱动的“合法目标集合”决定（覆盖 SingleEnemy/AllEnemies/SingleAlly/AllAllies/Random 的交互语义），并满足：hover/click 可选择合法目标；点击非法目标不得进入 Confirm/出牌且必须提示原因；同时以下 OverlayDocs 文件中必须可文本检索到 BattleManager.PlayCard(heroId, cardId, targetId) 与 Tests.Godot/tests/Integration/test_battle_card_input_flow.gd，以反映本任务输入闭环与失败不变性约束：docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md, docs/architecture/overlays/PRD-rouge-manager/08/_index.md Refs: Tests.Godot/tests/Tasks/test_task55_acceptance.gd",
+    "职责边界必须明确且可证伪：UI 层仅负责输入路由/高亮/预览与状态机推进，不得在 UI 层复制或推导出牌合法性/能量校验/目标合法性等 Game.Core 规则计算；相应规则必须通过调用 Game.Core（例如 BattleManager/目标计算服务）得到结果与拒绝原因。取消路径必须不触发任何 Game.Core 的状态变更（不得调用 PlayCard/结算类方法），取消前后核心战斗状态保持不变（在 headless 集成测试中可断言）。 Refs: Game.Core.Tests/Tasks/Task55AcceptanceTests.cs Tests.Godot/tests/Integration/test_battle_card_input_flow.gd"
+  ],
     "test_strategy": [
       "GdUnit4 集成测试（headless）:",
       "- 进入 BattleScreen → 选择攻击卡 → 点击敌人 → 敌人 HP 下降且手牌进入弃牌堆",
@@ -2047,12 +2178,15 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Tests.Godot/tests/Integration/test_enemy_intent_ui_updates.gd"
+      "Tests.Godot/tests/Integration/test_enemy_intent_ui_updates.gd",
+      "Game.Core.Tests/Tasks/Task56AcceptanceTests.cs",
+      "Tests.Godot/tests/UI/test_intent_view_binds_to_enemy_intent.gd",
+      "Tests.Godot/tests/Tasks/test_task56_acceptance.gd"
     ],
     "acceptance": [
-      "BattleScreen displays enemy intents before the enemy acts and refreshes them at the defined phase boundaries.",
-      "Intent view is data-driven from Enemy.Intent and does not duplicate game logic in UI.",
-      "Add at least one headless GdUnit4 integration test (see test_refs) to validate intent refresh behavior."
+      "BattleScreen displays enemy intents before the enemy acts and refreshes them at the defined phase boundaries. Refs: Game.Core.Tests/Tasks/Task56AcceptanceTests.cs",
+      "Intent view is data-driven from Enemy.Intent and does not duplicate game logic in UI. Refs: Tests.Godot/tests/Integration/test_enemy_intent_ui_updates.gd Tests.Godot/tests/UI/test_intent_view_binds_to_enemy_intent.gd",
+      "Add at least one headless GdUnit4 integration test (see test_refs) to validate intent refresh behavior. Refs: Game.Core.Tests/Tasks/Task56AcceptanceTests.cs Tests.Godot/tests/Tasks/test_task56_acceptance.gd"
     ],
     "test_strategy": [
       "GdUnit4 集成测试（headless）:",

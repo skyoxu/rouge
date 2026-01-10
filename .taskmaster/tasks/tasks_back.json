@@ -35,13 +35,18 @@
     "test_refs": [
       "logs/ci/<date>/smoke/headless.out.log",
       "logs/ci/<date>/smoke/headless.err.log",
-      "logs/ci/<date>/smoke/summary.json"
+      "logs/ci/<date>/smoke/summary.json",
+      "Tests/CI/Smoke/SmokeHeadlessRunnerCliArgsTests.cs",
+      "Tests/CI/Smoke/SmokeHeadlessRunnerArtifactsAndExitCodeTests.cs",
+      "Tests.Godot/tests/Scenes/Smoke/test_main_scene_smoke.gd",
+      "Tests.Godot/tests/Adapters/Db/test_journal_modes_cross_restart.gd",
+      "Tests/CI/Smoke/SmokeHeadlessRunnerNonStrictPermissiveTests.cs"
     ],
     "acceptance": [
-      "Provide scripts/python/smoke_headless.py with --godot-bin, --scene, --timeout-sec, --project-path, and --strict.",
-      "Write outputs under logs/ci/<date>/smoke/** and return non-zero on strict failures.",
-      "Strict mode passes only if logs contain [TEMPLATE_SMOKE_READY] or [DB] opened.",
-      "Non-strict mode remains permissive to preserve template ergonomics."
+      "Provide scripts/python/smoke_headless.py with --godot-bin, --scene, --timeout-sec, --project-path, and --strict. Refs: Tests/CI/Smoke/SmokeHeadlessRunnerCliArgsTests.cs",
+      "Write outputs under logs/ci/<date>/smoke/** and return non-zero on strict failures. Refs: Tests/CI/Smoke/SmokeHeadlessRunnerArtifactsAndExitCodeTests.cs",
+      "Strict mode passes only if logs contain [TEMPLATE_SMOKE_READY] or [DB] opened. Refs: Tests.Godot/tests/Scenes/Smoke/test_main_scene_smoke.gd Tests.Godot/tests/Adapters/Db/test_journal_modes_cross_restart.gd",
+      "Non-strict mode remains permissive to preserve template ergonomics. Refs: Tests/CI/Smoke/SmokeHeadlessRunnerNonStrictPermissiveTests.cs"
     ],
     "test_strategy": [
       "Run locally on Windows against a known-good scene and verify exit code + artifacts.",
@@ -85,12 +90,14 @@
     "owner": "architecture",
     "test_refs": [
       "logs/ci/<date>/quality-gates/summary.json",
-      "logs/e2e/<date>/gdunit/junit.xml"
+      "logs/e2e/<date>/gdunit/junit.xml",
+      "Tests.Godot/tests/ci/test_gdunit_suite_wiring.gd",
+      "Game.Core.Tests/Tasks/Task32AcceptanceTests.cs"
     ],
     "acceptance": [
-      "quality_gates.py exposes flags to run GdUnit4 suites and includes them in the unified decision.",
-      "Adapters+Security suite is treated as hard gate; Integration/UI remains soft gate initially.",
-      "All outputs land under logs/ci/** and logs/e2e/** with a machine-readable summary."
+      "quality_gates.py exposes flags to run GdUnit4 suites and includes them in the unified decision. Refs: Tests.Godot/tests/ci/test_gdunit_suite_wiring.gd",
+      "Adapters+Security suite is treated as hard gate; Integration/UI remains soft gate initially. Refs: Game.Core.Tests/Tasks/Task32AcceptanceTests.cs",
+      "All outputs land under logs/ci/** and logs/e2e/** with a machine-readable summary. Refs: Game.Core.Tests/Tasks/Task32AcceptanceTests.cs"
     ],
     "test_strategy": [
       "Run quality_gates.py locally with and without GdUnit4 flags to verify behavior.",
@@ -104,7 +111,7 @@
     "id": "NG-0003",
     "story_id": "PH13-BACKLOG-B1",
     "title": "Coverage thresholds as configurable soft/hard gate",
-    "description": "Align xUnit coverage thresholds to the blueprint target (lines >= 90%, branches >= 85%) and allow overriding via environment variables. Provide soft/hard gate modes in scripts/python/run_dotnet.py and scripts/python/quality_gates.py.\n\nSource: docs/migration/Phase-13-Quality-Gates-Backlog.md (B1).",
+    "description": "Align xUnit coverage thresholds to the blueprint target (lines >= 90%, branches >= 85%) and allow overriding via environment variables. Provide soft/hard gate modes in scripts/python/run_dotnet.py and scripts/python/quality_gates.py.",
     "status": "pending",
     "priority": "P1",
     "layer": "ci",
@@ -129,12 +136,15 @@
     "owner": "architecture",
     "test_refs": [
       "logs/unit/<date>/summary.json",
-      "logs/ci/<date>/quality-gates/summary.json"
+      "logs/ci/<date>/quality-gates/summary.json",
+      "Tests/CI/CoverageThresholdOverridesTests.cs",
+      "Tests/CI/CoverageGateModeSoftHardTests.cs",
+      "Tests/CI/CoverageSummaryJsonEmissionTests.cs"
     ],
     "acceptance": [
-      "Default thresholds match the project standard (lines>=90, branches>=85) while remaining overrideable by env vars.",
-      "Soft gate records warnings; hard gate fails the pipeline with a non-zero exit code.",
-      "Coverage results are surfaced in a single summary JSON for CI consumption."
+      "In scripts/python/run_dotnet.py and scripts/python/quality_gates.py, the default xUnit coverage thresholds are lines>=90 and branches>=85, and the effective thresholds can be overridden via environment variables such that a run can demonstrate non-default thresholds without modifying code. Refs: Tests/CI/CoverageThresholdOverridesTests.cs",
+      "Both scripts provide a selectable soft/hard gate mode: when coverage is below the effective thresholds, soft mode completes with exit code 0 while recording a warning, and hard mode exits non-zero (failing the pipeline); when coverage meets/exceeds thresholds, both modes complete successfully with exit code 0. Refs: Tests/CI/CoverageGateModeSoftHardTests.cs",
+      "Coverage results are emitted as a single machine-readable summary JSON for CI consumption that includes (at minimum) measured line/branch coverage, the effective thresholds used (after env overrides), gate mode, and pass/fail outcome; the required summaries are present at logs/unit/<date>/summary.json and logs/ci/<date>/quality-gates/summary.json, and this work remains traceable to ADR-0005 and CH07 and the overlay docs docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md and docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md. Refs: Tests/CI/CoverageSummaryJsonEmissionTests.cs"
     ],
     "test_strategy": [
       "Run dotnet tests on Windows and verify threshold behavior by temporarily setting env vars."
@@ -178,12 +188,14 @@
     "owner": "architecture",
     "test_refs": [
       "logs/ci/<date>/security-audit.jsonl",
-      "logs/ci/<date>/audit-validate/report.json"
+      "logs/ci/<date>/audit-validate/report.json",
+      "Tests/CI/AuditLogs/ValidateAuditLogsTests.cs",
+      "Game.Core.Tests/Tasks/Task34AcceptanceTests.cs"
     ],
     "acceptance": [
-      "Provide scripts/python/validate_audit_logs.py to validate JSONL structure and required fields.",
-      "quality_gates.py optionally calls the validator and records results in its summary JSON.",
-      "Validation failures are actionable and include offending line numbers and reasons."
+      "Provide scripts/python/validate_audit_logs.py to validate JSONL structure and required fields. Refs: Tests/CI/AuditLogs/ValidateAuditLogsTests.cs",
+      "quality_gates.py optionally calls the validator and records results in its summary JSON. Refs: Game.Core.Tests/Tasks/Task34AcceptanceTests.cs",
+      "Validation failures are actionable and include offending line numbers and reasons. Refs: Game.Core.Tests/Tasks/Task34AcceptanceTests.cs"
     ],
     "test_strategy": [
       "Use a small fixture JSONL (valid and invalid) to verify pass/fail behavior."
@@ -227,12 +239,15 @@
     "owner": "architecture",
     "test_refs": [
       "Game.Core.Tests/Security/ExternalUrlPolicyTests.cs",
-      "logs/ci/<date>/security-audit.jsonl"
+      "logs/ci/<date>/security-audit.jsonl",
+      "Tests.Godot/tests/Adapters/Security/test_shell_open_adapter.gd",
+      "Game.Core.Tests/Security/AllowedExternalHostsConfigTests.cs",
+      "Game.Core.Tests/Security/OfflineModePolicyTests.cs"
     ],
     "acceptance": [
-      "All OS.ShellOpen usage goes through a single adapter that enforces HTTPS + allowlist.",
-      "Allowed hosts are configured via ALLOWED_EXTERNAL_HOSTS (env/config) and audited on deny.",
-      "GD_OFFLINE_MODE=1 denies all external URL opens and records an audit entry."
+      "All OS.ShellOpen usage goes through a single adapter that enforces HTTPS + allowlist. Refs: Game.Core.Tests/Security/ExternalUrlPolicyTests.cs Tests.Godot/tests/Adapters/Security/test_shell_open_adapter.gd",
+      "Allowed hosts are configured via ALLOWED_EXTERNAL_HOSTS (env/config) and audited on deny. Refs: Game.Core.Tests/Security/AllowedExternalHostsConfigTests.cs Game.Core.Tests/Security/ExternalUrlPolicyTests.cs",
+      "GD_OFFLINE_MODE=1 时必须拒绝所有“出网/网络样行为”，至少包含：外部 URL 打开（OS.ShellOpen 适配器）与安全 HTTP 客户端/网络请求入口；拒绝必须留下审计记录（logs/ci/<date>/security-audit.jsonl 或等价路径），并可由 xUnit 测试覆盖 offline 行为。 Refs: Game.Core.Tests/Security/OfflineModePolicyTests.cs Game.Core.Tests/Security/ExternalUrlPolicyTests.cs"
     ],
     "test_strategy": [
       "xUnit tests cover allow/deny/invalid URL cases and offline mode behavior."
@@ -245,7 +260,7 @@
     "id": "NG-0006",
     "story_id": "PH14-BACKLOG-B2",
     "title": "Secure file access adapter (res:// read-only, user:// read-write)",
-    "description": "Introduce a file access adapter that enforces the allowed roots (res://, user://), rejects absolute paths and path traversal, and emits audit records on violations.\n\nSource: docs/migration/Phase-14-Godot-Security-Backlog.md (B2).",
+    "description": "Introduce a file access adapter that enforces the allowed roots (res://, user://), rejects absolute paths and path traversal, and emits audit records on violations.",
     "status": "pending",
     "priority": "P2",
     "layer": "adapter",
@@ -273,12 +288,14 @@
     "owner": "architecture",
     "test_refs": [
       "Game.Core.Tests/Security/FilePolicyTests.cs",
-      "logs/ci/<date>/security-audit.jsonl"
+      "logs/ci/<date>/security-audit.jsonl",
+      "Tests.Godot/tests/Adapters/Security/test_secure_file_access_adapter.gd",
+      "Tests.Godot/tests/Adapters/Security/test_secure_file_access_audit.gd"
     ],
     "acceptance": [
-      "Provide a single adapter for FileAccess/DirAccess that enforces res:// and user:// rules.",
-      "Reject absolute paths and ../ traversal across all entry points.",
-      "Denied accesses write an audit JSONL record with reason + target."
+      "提供一个统一的文件访问适配器（覆盖 FileAccess/DirAccess 的使用入口），其强制根目录只允许 res:// 与 user://：res:// 仅允许读取且任何写入/创建/删除必须被拒绝，user:// 允许读写；行为需符合 ADR-0006、ADR-0011、ADR-0019（CH02、CH05、CH07、CH10），且在 docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md 与 docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md 中可被逐字检索验证。 Refs: Tests.Godot/tests/Adapters/Security/test_secure_file_access_adapter.gd",
+      "对所有入口点（不因调用方/路径形态而例外）拒绝绝对路径与路径穿越：绝对路径（例如 Windows 盘符/UNC 等）与包含 ../（或等价的规范化后穿越）必须被拒绝，且拒绝发生在实际触达文件系统之前；上述 allow/deny 语义可由 Game.Core.Tests/Security/FilePolicyTests.cs 的可重复运行用例验证。 Refs: Game.Core.Tests/Security/FilePolicyTests.cs",
+      "每一次被拒绝的访问都必须写入一条 JSONL 审计记录到 logs/ci/<date>/security-audit.jsonl，记录中至少包含 reason 与 target，且对以下拒绝原因均会产生日志：res:// 写入尝试、绝对路径、路径穿越；审计输出可通过检查 logs/ci/<date>/security-audit.jsonl 的新增行与字段存在性进行验证。 Refs: Tests.Godot/tests/Adapters/Security/test_secure_file_access_audit.gd"
     ],
     "test_strategy": [
       "xUnit tests cover user:// allow, res:// allow-read-only, absolute path deny, and traversal deny."
@@ -319,13 +336,17 @@
     "owner": "architecture",
     "test_refs": [
       "logs/perf/<date>/summary.json",
-      "logs/ci/<date>/quality-gates/summary.json"
+      "logs/ci/<date>/quality-gates/summary.json",
+      "Tests.Godot/tests/Perf/test_perf_p95_budget_writes_summary.gd",
+      "Game.Core.Tests/Utilities/QualityGatesPerfIntegrationTests.cs",
+      "Game.Core.Tests/Utilities/QualityGatesPerfSoftHardModeTests.cs",
+      "Game.Core.Tests/Utilities/Docs/PerfGateDocsAnchorsTests.cs"
     ],
     "acceptance": [
-      "CI 中以 headless 方式执行 Perf P95 预算检查；每次执行后都在 `logs/perf/<date>/summary.json` 写出可解析的结果文件，且文件至少包含可核验的 P95 指标值与预算判定信息（例如阈值/预算值、判定结果、运行上下文），并与 ADR-0015、CH09 的口径一致（可通过文本检索到“ADR-0015”“CH09”来审计对齐）。",
-      "`quality_gates.py` 消费 `logs/perf/<date>/summary.json` 并将 Perf P95 预算结果纳入统一质量门禁汇总：在 `logs/ci/<date>/quality-gates/summary.json` 中明确记录 perf gate 的 pass/fail，且通过配置可切换 soft/hard 模式；汇总中需能区分同一类 perf 失败在 soft 与 hard 下的门禁语义差异，并与 ADR-0005、CH07 的质量门禁口径一致（可通过文本检索到“ADR-0005”“CH07”来审计对齐）。",
-      "按 MasterTestStrategy：在本地将 P95 阈值设置为足够低以强制失败时，统一门禁汇总中 perf gate 的失败必须可观察；切换 soft/hard 模式后，统一汇总的门禁结论差异必须可被验证（例如 perf 失败在 hard 下阻断、在 soft 下不阻断或以非阻断方式标识），且对应的 `logs/perf/<date>/summary.json` 与 `logs/ci/<date>/quality-gates/summary.json` 均被写出以用于取证。",
-      "在 `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` 与 `docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md` 中，对“Perf P95 预算门禁并入 unified quality gates”的要求存在可检索条目，且条目中必须字面包含以下审计锚点以防口径漂移：ADR-0005、ADR-0015、CH07、CH09、logs/perf/<date>/summary.json、logs/ci/<date>/quality-gates/summary.json。"
+      "CI 中以 headless 方式执行 Perf P95 预算检查；每次执行后都在 `logs/perf/<date>/summary.json` 写出可解析的结果文件，且文件至少包含可核验的 P95 指标值与预算判定信息（例如阈值/预算值、判定结果、运行上下文），并与 ADR-0015、CH09 的口径一致（可通过文本检索到“ADR-0015”“CH09”来审计对齐）。 Refs: Tests.Godot/tests/Perf/test_perf_p95_budget_writes_summary.gd",
+      "`quality_gates.py` 消费 `logs/perf/<date>/summary.json` 并将 Perf P95 预算结果纳入统一质量门禁汇总：在 `logs/ci/<date>/quality-gates/summary.json` 中明确记录 perf gate 的 pass/fail，且通过配置可切换 soft/hard 模式；汇总中需能区分同一类 perf 失败在 soft 与 hard 下的门禁语义差异，并与 ADR-0005、CH07 的质量门禁口径一致（可通过文本检索到“ADR-0005”“CH07”来审计对齐）。 Refs: Game.Core.Tests/Utilities/QualityGatesPerfIntegrationTests.cs",
+      "按 MasterTestStrategy：在本地将 P95 阈值设置为足够低以强制失败时，统一门禁汇总中 perf gate 的失败必须可观察；切换 soft/hard 模式后，统一汇总的门禁结论差异必须可被验证（例如 perf 失败在 hard 下阻断、在 soft 下不阻断或以非阻断方式标识），且对应的 `logs/perf/<date>/summary.json` 与 `logs/ci/<date>/quality-gates/summary.json` 均被写出以用于取证。 Refs: Game.Core.Tests/Utilities/QualityGatesPerfSoftHardModeTests.cs",
+      "在 `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` 与 `docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md` 中，对“Perf P95 预算门禁并入 unified quality gates”的要求存在可检索条目，且条目中必须字面包含以下审计锚点以防口径漂移：ADR-0005、ADR-0015、CH07、CH09、logs/perf/<date>/summary.json、logs/ci/<date>/quality-gates/summary.json。 Refs: Game.Core.Tests/Utilities/Docs/PerfGateDocsAnchorsTests.cs"
     ],
     "test_strategy": [
       "Run perf suite locally with a low threshold to force a failure and verify gate behavior."
@@ -365,16 +386,18 @@
     "owner": "architecture",
     "test_refs": [
       "benchmarks/*.json",
-      "logs/perf/<date>/comparison.json"
+      "logs/perf/<date>/comparison.json",
+      "Game.Core.Tests/Ci/PerformanceGates/PerformanceGatesDiffJsonTests.cs",
+      "Game.Core.Tests/Tasks/Task38AcceptanceTests.cs"
     ],
     "acceptance": [
-      "提供 `scripts/python/performance_gates.py`：给定 baseline JSON 与 current JSON 输入时，脚本对双方都存在且可比较的指标逐项计算偏离，并输出可机读的差异 JSON；差异 JSON 中可直接判定每个指标的 baseline 值、current 值与偏离结果（含是否超阈/回归结论），并将该差异 JSON 写入调用方指定的输出路径。",
-      "支持按“百分比”配置的容差：对每个被比较指标，按百分比口径计算其相对 baseline 的偏离；当偏离百分比超过容差时判定为回归（用于抑制噪声驱动的误报）；当容差为 0 时，任何可计算的非零偏离都必须触发回归判定。",
-      "退出码语义可用于 CI 门禁：当任一被比较指标被判定为回归时脚本必须以非零退出码失败；当 baseline 比较已执行且所有被比较指标均未超出容差时，脚本必须以 0 退出码成功；为避免“做了但等于没做”，若 baseline 比较已执行但未产生任何可比较指标，脚本不得以 0 退出码返回成功。",
-      "“可选 baseline 比较”行为可观察且可断言：当未提供 baseline 输入从而导致比较不执行时，脚本必须明确输出“比较已跳过”的状态（在差异 JSON 或标准输出中可被自动化读取/断言），且不得以非零退出码将“跳过”误报为回归失败。",
-      "提供一个最小 fixture baseline/current JSON 对：该输入对可被自动化测试直接使用，用于验证逐指标对比逻辑、差异输出的可复现性，以及容差阈值下的通过/失败判定在相同输入下可稳定复现。",
-      "验收与可检索引用必须显式包含以下标识符/路径（可通过全文搜索验证）：ADR-0005、ADR-0015、CH07、CH09、benchmarks/*.json、logs/perf/<date>/comparison.json。",
-      "与 Overlay 文档的可验证对齐：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md` 与 `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` 中必须出现对该 baseline 对比工作流/脚本（`scripts/python/performance_gates.py`）以及测试/产物路径（benchmarks/*.json、logs/perf/<date>/comparison.json）的明确引用（可全文搜索验证）。"
+      "提供 `scripts/python/performance_gates.py`：给定 baseline JSON 与 current JSON 输入时，脚本对双方都存在且可比较的指标逐项计算偏离，并输出可机读的差异 JSON；差异 JSON 中可直接判定每个指标的 baseline 值、current 值与偏离结果（含是否超阈/回归结论），并将该差异 JSON 写入调用方指定的输出路径。 Refs: Game.Core.Tests/Ci/PerformanceGates/PerformanceGatesDiffJsonTests.cs",
+      "支持按“百分比”配置的容差：对每个被比较指标，按百分比口径计算其相对 baseline 的偏离；当偏离百分比超过容差时判定为回归（用于抑制噪声驱动的误报）；当容差为 0 时，任何可计算的非零偏离都必须触发回归判定。 Refs: Game.Core.Tests/Tasks/Task38AcceptanceTests.cs",
+      "退出码语义可用于 CI 门禁：当任一被比较指标被判定为回归时脚本必须以非零退出码失败；当 baseline 比较已执行且所有被比较指标均未超出容差时，脚本必须以 0 退出码成功；为避免“做了但等于没做”，若 baseline 比较已执行但未产生任何可比较指标，脚本不得以 0 退出码返回成功。 Refs: Game.Core.Tests/Tasks/Task38AcceptanceTests.cs",
+      "“可选 baseline 比较”行为可观察且可断言：当未提供 baseline 输入从而导致比较不执行时，脚本必须明确输出“比较已跳过”的状态（在差异 JSON 或标准输出中可被自动化读取/断言），且不得以非零退出码将“跳过”误报为回归失败。 Refs: Game.Core.Tests/Tasks/Task38AcceptanceTests.cs",
+      "提供一个最小 fixture baseline/current JSON 对：该输入对可被自动化测试直接使用，用于验证逐指标对比逻辑、差异输出的可复现性，以及容差阈值下的通过/失败判定在相同输入下可稳定复现。 Refs: Game.Core.Tests/Tasks/Task38AcceptanceTests.cs",
+      "验收与可检索引用必须显式包含以下标识符/路径（可通过全文搜索验证）：ADR-0005、ADR-0015、CH07、CH09、benchmarks/*.json、logs/perf/<date>/comparison.json。 Refs: Game.Core.Tests/Tasks/Task38AcceptanceTests.cs",
+      "与 Overlay 文档的可验证对齐：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md` 与 `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` 中必须出现对该 baseline 对比工作流/脚本（`scripts/python/performance_gates.py`）以及测试/产物路径（benchmarks/*.json、logs/perf/<date>/comparison.json）的明确引用（可全文搜索验证）。 Refs: Game.Core.Tests/Tasks/Task38AcceptanceTests.cs"
     ],
     "test_strategy": [
       "Use a small fixture baseline/current JSON pair to validate compare logic."
@@ -415,12 +438,16 @@
     ],
     "owner": "architecture",
     "test_refs": [
-      "logs/ci/<date>/observability/selfcheck.json"
+      "logs/ci/<date>/observability/selfcheck.json",
+      "Tests.Godot/tests/observability/test_early_init_bootstrap.gd",
+      "Game.Core.Tests/Observability/StructuredLogFormatterTests.cs",
+      "Tests.Godot/tests/observability/test_structured_logs_write_to_logs.gd",
+      "Game.Core.Tests/Observability/SentryInitConfigTests.cs"
     ],
     "acceptance": [
-      "Provide an early-init entry point that is executed before the main scene is loaded.",
-      "Structured logs include consistent fields (ts, level, logger, message, tags/extra) and write to logs/**.",
-      "Sentry init is controlled by config/env vars and never hardcodes secrets."
+      "Provide an early-init entry point that is executed before the main scene is loaded. Refs: Tests.Godot/tests/observability/test_early_init_bootstrap.gd",
+      "Structured logs include consistent fields (ts, level, logger, message, tags/extra) and write to logs/**. Refs: Game.Core.Tests/Observability/StructuredLogFormatterTests.cs Tests.Godot/tests/observability/test_structured_logs_write_to_logs.gd",
+      "Sentry init is controlled by config/env vars and never hardcodes secrets. Refs: Game.Core.Tests/Observability/SentryInitConfigTests.cs"
     ],
     "test_strategy": [
       "Run headless selfcheck and verify structured log output is produced."
@@ -468,12 +495,16 @@
     ],
     "owner": "architecture",
     "test_refs": [
-      "logs/ci/<date>/release-health.json"
+      "logs/ci/<date>/release-health.json",
+      "Tests/CI/ReleaseHealthGateJsonContractTests.cs",
+      "Tests/CI/ReleaseHealthGateModesTests.cs",
+      "Tests/CI/ReleaseHealthGateEnvValidationTests.cs",
+      "Tests/CI/ReleaseHealthGateDocsReferencesTests.cs"
     ],
     "acceptance": [
-      "Provide scripts/python/release_health_gate.py that writes logs/ci/<date>/release-health.json.",
-      "CI can enable/disable this step via environment variables and does not require code changes.",
-      "No secrets are checked into git; scripts validate required env vars and fail fast with context."
+      "Provide `scripts/python/release_health_gate.py` (runnable on Windows via `py -3`) that, on every run (including failures/skips), writes `logs/ci/<date>/release-health.json`; the JSON must include at least `ts`, `mode`, `window_hours`, `threshold`, `crashfree_sessions`, `crashfree_users`, `status`, `reason`, `project`, `env`, and the computed values must come from querying Sentry Sessions/Users crash-free metrics and enforcing the threshold aligned to ADR-0003. Refs: Tests/CI/ReleaseHealthGateJsonContractTests.cs",
+      "CI and the script can enable/disable and configure the gate without code changes via env/args: `RELEASE_HEALTH_MODE=skip|warn|require` (default `require`), `RELEASE_HEALTH_WINDOW_HOURS` (default `24`), `RELEASE_CRASHFREE_THRESHOLD` (default aligned to ADR-0003), and `SENTRY_AUTH_TOKEN`/`SENTRY_ORG`/`SENTRY_PROJECT`/`SENTRY_ENV`; supports `--dry-run`/stub mode to run deterministically without network while still producing verifiable pass/fail outcomes and exit-code semantics (require: `rc!=0` on below-threshold or API error; warn: `rc=0` but `status=fail` in JSON; skip: `rc=0` and `status=skipped`). Refs: Tests/CI/ReleaseHealthGateModesTests.cs",
+      "Security and integration: no secrets are checked into git; the script must never print token values and must log only which required env vars are missing while failing fast with context; GitHub Actions integration (traceable to ADR-0005, ADR-0008, ADR-0011 and CH03, CH07, CH10) runs this gate in appropriate modes and uploads `logs/ci/<date>/release-health.json` as an artifact, and both `docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md` and `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` contain a searchable reference to this gate and the exact path `logs/ci/<date>/release-health.json`. Refs: Tests/CI/ReleaseHealthGateEnvValidationTests.cs Tests/CI/ReleaseHealthGateDocsReferencesTests.cs"
     ],
     "test_strategy": [
       "Run in dry-run mode with stub data (or missing env vars) and verify failure is explicit and logged."
@@ -516,12 +547,15 @@
     "owner": "architecture",
     "test_refs": [
       "logs/ci/<date>/export/export.log",
-      "logs/ci/<date>/export/summary.json"
+      "logs/ci/<date>/export/summary.json",
+      "Tests/CI/Export/ExportDeterminismAndSummaryTests.cs",
+      "Tests/CI/Export/ExportFailureDiagnosticsTests.cs",
+      "Tests/CI/Export/ExportArtifactsAlwaysEmittedTests.cs"
     ],
     "acceptance": [
-      "在 Windows 本机成功执行一次导出后：导出产物的文件名在相同输入下保持稳定（不因随机值/时间戳而变化）；并在 `logs/ci/<date>/export/summary.json` 写出可机器解析的 JSON，且其中列出本次生成的所有产物文件名与路径。",
-      "当导出失败（包括缺少前置条件/依赖）时：流程以非 0 退出码结束；并在 `logs/ci/**` 下输出包含环境诊断的日志，明确展示已检查的关键前置条件与结果（例如所需工具与版本、相关环境变量与 PATH/路径解析），以便定位失败原因。",
-      "每次导出尝试（无论成功或失败）都必须在 `logs/ci/<date>/export/` 目录下产出至少 `export.log` 与 `summary.json`，且 `summary.json` 为可解析 JSON，并符合该日志输出位置要求。"
+      "在 Windows 本机成功执行一次导出后：导出产物的文件名在相同输入下保持稳定（不因随机值/时间戳而变化）；并在 `logs/ci/<date>/export/summary.json` 写出可机器解析的 JSON，且其中列出本次生成的所有产物文件名与路径。 Refs: Tests/CI/Export/ExportDeterminismAndSummaryTests.cs",
+      "当导出失败（包括缺少前置条件/依赖）时：流程以非 0 退出码结束；并在 `logs/ci/**` 下输出包含环境诊断的日志，明确展示已检查的关键前置条件与结果（例如所需工具与版本、相关环境变量与 PATH/路径解析），以便定位失败原因。 Refs: Tests/CI/Export/ExportFailureDiagnosticsTests.cs",
+      "每次导出尝试（无论成功或失败）都必须在 `logs/ci/<date>/export/` 目录下产出至少 `export.log` 与 `summary.json`，且 `summary.json` 为可解析 JSON，并符合该日志输出位置要求。 Refs: Tests/CI/Export/ExportArtifactsAlwaysEmittedTests.cs"
     ],
     "test_strategy": [
       "Run export in a local Windows environment and confirm build artifacts + logs are generated."
@@ -562,17 +596,20 @@
     ],
     "owner": "architecture",
     "test_refs": [
-      "build/release-profile.json"
+      "build/release-profile.json",
+      "Tests/CI/ReleaseProfile/ReleaseProfileJsonTests.cs",
+      "Tests/CI/ReleaseProfile/ReleaseNotesFromProfileTests.cs",
+      "Tests/Docs/Overlay/PrdRougeManagerReleaseProfileReferencesTests.cs"
     ],
     "acceptance": [
-      "构建/导出产物中生成的 release profile JSON 必须包含可追溯字段：version（非空字符串）、commit（非空提交标识，能唯一定位源码修订）、channel（qa/internal/beta/stable 之一）、enabled flags（数组：本次构建实际启用的 FeatureFlags 标识）、built_at（可解析的时间戳）；并且当 CI run id 在构建环境中可获取时，必须写入该 run id（不可获取时允许缺省）。",
-      "Release notes 生成结果必须展示来自本次构建 release profile 的 channel 与 enabled flags，且两者的取值必须与该 profile 中记录的值一致（以 profile 为准，而不是固定常量）。",
-      "当设置环境变量 RELEASE_CHANNEL 为 qa/internal/beta/stable 之一并触发构建/导出时，生成的 release profile 中 channel 字段必须与该环境变量的取值一致。",
-      "当本次构建的 FeatureFlags 启用集合发生变化并触发构建/导出时，生成的 release profile 中 enabled flags 必须与本次构建实际启用的旗标集合一致：启用的必须出现，未启用的不得出现（集合一致性可通过对比验证）。",
-      "生成的 release profile 中 version 与 commit 必须对应本次构建实际使用的源码版本信息：两者不得为空、不得使用无法定位源码的占位值，并满足“可追溯性”（可用其定位到具体版本与提交）。",
-      "在执行构建/导出后，必须生成文件 `build/release-profile.json`，且其内容满足本视图验收 1–5 对 release profile JSON 的约束（字段存在性、取值一致性与可追溯性）。",
-      "`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md` 必须包含可文本检索到的引用：`ADR-0003`、`ADR-0005`、`ADR-0008`、`CH03`、`CH07`、`CH10`、`build/release-profile.json`。",
-      "`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` 必须包含可文本检索到的引用：`ADR-0003`、`ADR-0005`、`ADR-0008`、`CH03`、`CH07`、`CH10`、`build/release-profile.json`。"
+      "构建/导出产物中生成的 release profile JSON 必须包含可追溯字段：version（非空字符串）、commit（非空提交标识，能唯一定位源码修订）、channel（qa/internal/beta/stable 之一）、enabled flags（数组：本次构建实际启用的 FeatureFlags 标识）、built_at（可解析的时间戳）；并且当 CI run id 在构建环境中可获取时，必须写入该 run id（不可获取时允许缺省）。 Refs: Tests/CI/ReleaseProfile/ReleaseProfileJsonTests.cs",
+      "Release notes 生成结果必须展示来自本次构建 release profile 的 channel 与 enabled flags，且两者的取值必须与该 profile 中记录的值一致（以 profile 为准，而不是固定常量）。 Refs: Tests/CI/ReleaseProfile/ReleaseNotesFromProfileTests.cs",
+      "当设置环境变量 RELEASE_CHANNEL 为 qa/internal/beta/stable 之一并触发构建/导出时，生成的 release profile 中 channel 字段必须与该环境变量的取值一致。 Refs: Tests/CI/ReleaseProfile/ReleaseProfileJsonTests.cs",
+      "当本次构建的 FeatureFlags 启用集合发生变化并触发构建/导出时，生成的 release profile 中 enabled flags 必须与本次构建实际启用的旗标集合一致：启用的必须出现，未启用的不得出现（集合一致性可通过对比验证）。 Refs: Tests/CI/ReleaseProfile/ReleaseProfileJsonTests.cs",
+      "生成的 release profile 中 version 与 commit 必须对应本次构建实际使用的源码版本信息：两者不得为空、不得使用无法定位源码的占位值，并满足“可追溯性”（可用其定位到具体版本与提交）。 Refs: Tests/CI/ReleaseProfile/ReleaseProfileJsonTests.cs",
+      "在执行构建/导出后，必须生成文件 `build/release-profile.json`，且其内容满足本视图验收 1–5 对 release profile JSON 的约束（字段存在性、取值一致性与可追溯性）。 Refs: Tests/CI/ReleaseProfile/ReleaseProfileJsonTests.cs",
+      "`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md` 必须包含可文本检索到的引用：`ADR-0003`、`ADR-0005`、`ADR-0008`、`CH03`、`CH07`、`CH10`、`build/release-profile.json`。 Refs: Tests/Docs/Overlay/PrdRougeManagerReleaseProfileReferencesTests.cs",
+      "`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` 必须包含可文本检索到的引用：`ADR-0003`、`ADR-0005`、`ADR-0008`、`CH03`、`CH07`、`CH10`、`build/release-profile.json`。 Refs: Tests/Docs/Overlay/PrdRougeManagerReleaseProfileReferencesTests.cs"
     ],
     "test_strategy": [
       "Run build/export with RELEASE_CHANNEL set and verify release-profile.json contents."
@@ -608,16 +645,19 @@
       "logging"
     ],
     "owner": "architecture",
-    "test_refs": [],
+    "test_refs": [
+      "Tests/Docs/PrivacyComplianceDocsTests.cs",
+      "Tests/Docs/LoggingGuidelinesDocsTests.cs"
+    ],
     "acceptance": [
-      "docs/privacy-compliance.md exists and defines allowed/forbidden data in logs and telemetry.",
-      "docs/logging-guidelines.md exists and aligns with the logs/** SSoT directory structure.",
-      "Both docs explicitly reference ADR-0003 and ADR-0019 as the governing sources for observability/logging and security/privacy baseline guidance.",
-      "Doc review confirms both docs contain no unredacted secrets/PII examples; any illustrative samples use explicit redacted placeholders (e.g., <TOKEN_REDACTED>, <EMAIL_REDACTED>, <USER_ID_HASHED>) rather than real-looking values.",
-      "docs/privacy-compliance.md separates guidance for logs vs telemetry (each with allowed/forbidden data guidance) so a reviewer can verify the rules apply to both channels without inference.",
-      "docs/logging-guidelines.md includes a concrete, reviewable mapping to the repository logs/** structure (directories and intended artifact types) so a reviewer can verify alignment by comparing to the logs/** SSoT.",
-      "Both docs explicitly mention CH02 and CH03 (verbatim tokens) as applicable reference chapters for review/traceability.",
-      "Both docs explicitly mention these overlay doc paths verbatim for traceability: docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md and docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md."
+      "docs/privacy-compliance.md exists and defines allowed/forbidden data in logs and telemetry. Refs: Tests/Docs/PrivacyComplianceDocsTests.cs",
+      "docs/logging-guidelines.md exists and aligns with the logs/** SSoT directory structure. Refs: Tests/Docs/LoggingGuidelinesDocsTests.cs",
+      "Both docs explicitly reference ADR-0003 and ADR-0019 as the governing sources for observability/logging and security/privacy baseline guidance. Refs: Tests/Docs/PrivacyComplianceDocsTests.cs Tests/Docs/LoggingGuidelinesDocsTests.cs",
+      "Doc review confirms both docs contain no unredacted secrets/PII examples; any illustrative samples use explicit redacted placeholders (e.g., <TOKEN_REDACTED>, <EMAIL_REDACTED>, <USER_ID_HASHED>) rather than real-looking values. Refs: Tests/Docs/PrivacyComplianceDocsTests.cs Tests/Docs/LoggingGuidelinesDocsTests.cs",
+      "docs/privacy-compliance.md separates guidance for logs vs telemetry (each with allowed/forbidden data guidance) so a reviewer can verify the rules apply to both channels without inference. Refs: Tests/Docs/PrivacyComplianceDocsTests.cs",
+      "docs/logging-guidelines.md includes a concrete, reviewable mapping to the repository logs/** structure (directories and intended artifact types) so a reviewer can verify alignment by comparing to the logs/** SSoT. Refs: Tests/Docs/LoggingGuidelinesDocsTests.cs",
+      "Both docs explicitly mention CH02 and CH03 (verbatim tokens) as applicable reference chapters for review/traceability. Refs: Tests/Docs/PrivacyComplianceDocsTests.cs Tests/Docs/LoggingGuidelinesDocsTests.cs",
+      "Both docs explicitly mention these overlay doc paths verbatim for traceability: docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md and docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md. Refs: Tests/Docs/PrivacyComplianceDocsTests.cs Tests/Docs/LoggingGuidelinesDocsTests.cs"
     ],
     "test_strategy": [
       "Doc review: ensure ADR references are correct and no secrets/PII examples are included."
@@ -658,12 +698,15 @@
     "owner": "architecture",
     "test_refs": [
       "logs/ci/<date>/quality-gates/duplication.json",
-      "logs/ci/<date>/quality-gates/complexity.json"
+      "logs/ci/<date>/quality-gates/complexity.json",
+      "Tests/CI/QualityGates/QualityGatesSummaryJsonTests.cs",
+      "Tests/CI/QualityGates/QualityGatesSoftGateThresholdsTests.cs",
+      "Tests/CI/QualityGates/QualityGatesArtifactsPathTests.cs"
     ],
     "acceptance": [
-      "quality_gates.py can run duplication/complexity checks and records results in a summary JSON.",
-      "Checks have configurable thresholds and default to soft gate for T2 (upgradeable to hard gate later).",
-      "Artifacts are written under logs/ci/** for troubleshooting and archiving."
+      "quality_gates.py can run duplication/complexity checks and records results in a summary JSON. Refs: Tests/CI/QualityGates/QualityGatesSummaryJsonTests.cs",
+      "Checks have configurable thresholds and default to soft gate for T2 (upgradeable to hard gate later). Refs: Tests/CI/QualityGates/QualityGatesSoftGateThresholdsTests.cs",
+      "Artifacts are written under logs/ci/** for troubleshooting and archiving. Refs: Tests/CI/QualityGates/QualityGatesArtifactsPathTests.cs"
     ],
     "test_strategy": [
       "Run quality_gates.py locally on Windows and confirm reports are generated and parsed."
@@ -709,12 +752,12 @@
       "Game.Core.Tests/Architecture/LayerDependencyTests.cs"
     ],
     "acceptance": [
-      "运行 `dotnet test` 时：`Game.Core.Tests/Architecture/LayerDependencyTests.cs` 中的架构测试必须以可执行、可复现的方式判定 `Game.Core` 是否存在对 Godot 的依赖（例如出现 `Godot` 命名空间/类型使用，或 `Game.Core` 程序集对 Godot 程序集的引用）；当存在任一依赖时测试必须失败，当不存在上述依赖时测试必须通过。",
-      "在 `Game.Core.Tests/Architecture/LayerDependencyTests.cs` 中：边界规则必须在断言附近以清晰、可读、可维护的文字被显式写出，并且规则表达同时覆盖（a）`Game.Core` 不得引用 Godot API；（b）测试中必须显式定义被允许接触 Godot 的“Adapters 层”范围/匹配规则（例如基于程序集/项目/命名空间/目录的可读判定），并明确说明除该允许范围外不应出现 Godot API 依赖，避免依赖隐含/未文档化假设。",
-      "按测试策略对测试有效性做一次验证：在临时分支中对 `Game.Core` 临时引入一个最小的故意违规（例如添加 `using Godot;` 或引用某个 Godot 类型）并确认 `dotnet test` 失败；随后移除该违规并确认 `dotnet test` 恢复通过。",
-      "`Game.Core.Tests/Architecture/LayerDependencyTests.cs` 必须包含可全文检索的追溯信息，逐字包含以下标识/路径：`ADR-0005`、`ADR-0007`、`ADR-0018`、`ADR-0024`、`CH01`、`CH05`、`CH06`、`CH07`、`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`Game.Core.Tests/Architecture/LayerDependencyTests.cs`。",
-      "在按测试策略进行“故意引入最小违例”的验证时，必须留下可审计的验证证据：包含临时分支名与对应提交（或补丁摘要），以及“引入违例后 dotnet test 失败”和“移除违例后 dotnet test 恢复通过”的结果摘要；证据需落盘到 `logs/ci/<date>/architecture-tests/layer-deps-validation.md`（或等价文件）便于复查。",
-      "`Game.Core.Tests/Architecture/LayerDependencyTests.cs` 中必须以可全文检索的文字写明“故意违例验证”的复现步骤：包含临时分支操作、最小 `Godot` 依赖示例（如 `using Godot;`）、以及预期的失败信息/命中规则说明，用于证明该架构测试不是永远绿灯的空测试。"
+      "运行 `dotnet test` 时：`Game.Core.Tests/Architecture/LayerDependencyTests.cs` 必须以可执行、可复现的方式判定：`Game.Core` 不得引用/依赖任何 `Godot` 命名空间或类型（命中即测试失败）；并且以文字明确声明“与 Godot 交互仅允许发生在 Adapters 层/运行时层（例如 `Scripts/Adapters/**`、`Game.Godot/**`），Core 领域层不得触达 Godot”。 Refs: Game.Core.Tests/Architecture/LayerDependencyTests.cs",
+      "在 `Game.Core.Tests/Architecture/LayerDependencyTests.cs` 中：边界规则必须在断言附近以清晰、可读、可维护的文字被显式写出，并且规则表达同时覆盖（a）`Game.Core` 不得引用 Godot API；（b）测试中必须显式定义被允许接触 Godot 的“Adapters 层”范围/匹配规则（例如基于程序集/项目/命名空间/目录的可读判定），并明确说明除该允许范围外不应出现 Godot API 依赖，避免依赖隐含/未文档化假设。 Refs: Game.Core.Tests/Architecture/LayerDependencyTests.cs",
+      "按测试策略对测试有效性做一次验证：在临时分支中对 `Game.Core` 临时引入一个最小的故意违规（例如添加 `using Godot;` 或引用某个 Godot 类型）并确认 `dotnet test` 失败；随后移除该违规并确认 `dotnet test` 恢复通过。 Refs: Game.Core.Tests/Architecture/LayerDependencyTests.cs",
+      "`Game.Core.Tests/Architecture/LayerDependencyTests.cs` 必须包含可全文检索的追溯信息，逐字包含以下标识/路径：`ADR-0005`、`ADR-0007`、`ADR-0018`、`ADR-0024`、`CH01`、`CH05`、`CH06`、`CH07`、`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`Game.Core.Tests/Architecture/LayerDependencyTests.cs`。 Refs: Game.Core.Tests/Architecture/LayerDependencyTests.cs",
+      "在按测试策略进行“故意引入最小违例”的验证时，必须留下可审计的验证证据：包含临时分支名与对应提交（或补丁摘要），以及“引入违例后 dotnet test 失败”和“移除违例后 dotnet test 恢复通过”的结果摘要；证据需落盘到 `logs/ci/<date>/architecture-tests/layer-deps-validation.md`（或等价文件）便于复查。 Refs: Game.Core.Tests/Architecture/LayerDependencyTests.cs",
+      "`Game.Core.Tests/Architecture/LayerDependencyTests.cs` 中必须以可全文检索的文字写明“故意违例验证”的复现步骤：包含临时分支操作、最小 `Godot` 依赖示例（如 `using Godot;`）、以及预期的失败信息/命中规则说明，用于证明该架构测试不是永远绿灯的空测试。 Refs: Game.Core.Tests/Architecture/LayerDependencyTests.cs"
     ],
     "test_strategy": [
       "Introduce a small intentional violation in a temp branch to verify the test catches it."
@@ -754,12 +797,15 @@
     "owner": "architecture",
     "test_refs": [
       "Game.Core.Tests/Security/ProcessPolicyTests.cs",
-      "logs/ci/<date>/security-audit.jsonl"
+      "logs/ci/<date>/security-audit.jsonl",
+      "Game.Core.Tests/Security/OsExecuteUsageTests.cs",
+      "Game.Core.Tests/Security/SecurityAuditJsonlTests.cs",
+      "Game.Core.Tests/Security/ProcessAllowlistTests.cs"
     ],
     "acceptance": [
-      "No direct OS.execute calls remain in product code; use the guard adapter instead.",
-      "Default behavior is deny with an audit JSONL record.",
-      "A development-only allowlist path exists but is off by default (GD_SECURE_MODE=1)."
+      "产品代码中不存在任何直接调用 OS.execute 的用法；所有外部进程执行仅能通过单一 guard adapter 入口完成（符合 ADR-0005、ADR-0011、ADR-0019；CH02、CH07、CH10）。 Refs: Game.Core.Tests/Security/OsExecuteUsageTests.cs Game.Core.Tests/Security/ProcessPolicyTests.cs",
+      "guard adapter 在默认状态下必须 deny-by-default；每一次 deny 都必须向 logs/ci/<date>/security-audit.jsonl 追加一条 JSONL 审计记录（至少包含 decision=deny 与 target/command），并由 Game.Core.Tests/Security/ProcessPolicyTests.cs 在 SECURITY_TEST_MODE=1 下可验证。 Refs: Game.Core.Tests/Security/ProcessPolicyTests.cs Game.Core.Tests/Security/SecurityAuditJsonlTests.cs",
+      "存在仅开发态的显式命令 allowlist 机制，且在 GD_SECURE_MODE=1 时默认关闭；只有命中 allowlist 的命令才允许执行，并且每一次 allow 也必须向 logs/ci/<date>/security-audit.jsonl 追加一条 JSONL 审计记录（decision=allow）；相关契约与验收清单需在 docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md 与 docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md 中可查证。 Refs: Game.Core.Tests/Security/ProcessAllowlistTests.cs Game.Core.Tests/Security/ProcessPolicyTests.cs"
     ],
     "test_strategy": [
       "xUnit tests cover deny-by-default and allowlist behavior with SECURITY_TEST_MODE=1."
@@ -807,21 +853,23 @@
     "owner": "architecture",
     "test_refs": [
       "Tests.Godot/tests/Security/Hard/test_signal_contracts.gd",
-      "logs/e2e/<date>/security/signal-contracts.json"
+      "logs/e2e/<date>/security/signal-contracts.json",
+      "Tests.Godot/tests/Security/test_signal_contracts.gd",
+      "Game.Core.Tests/Ci/OverlaySignalContractBacklinksTests.cs"
     ],
     "acceptance": [
-      "当任意必需的安全敏感信号被删除、重命名，或其参数列表与既定契约不一致时（至少包含参数数量与顺序；如契约定义了形状/类型则也需一致），契约检查必须返回失败。",
-      "无头（headless）的安全测试套件必须在 `logs/e2e/<date>/security/signal-contracts.json` 生成可机读的 JSON 报告；报告必须对每个被检查的信号给出明确的 PASS/FAIL 结果，且不得以空文件或占位内容充数。",
-      "CI 必须执行该无头安全信号契约测试套件；当报告中出现任意 FAIL 结果时，CI 检查必须失败。",
-      "在相同提交与相同环境下重复运行无头套件，多次运行得到的 PASS/FAIL 结果必须一致（结果具备确定性）。",
-      "当刻意制造契约漂移（例如临时重命名某必需信号或修改其参数数量）时，套件必须失败，且报告必须指出是哪个信号以及违反了哪条契约规则。",
-      "`Tests.Godot/tests/Security/test_signal_contracts.gd` 必须在 headless 下可运行，并由该测试用例驱动生成 `logs/e2e/<date>/security/signal-contracts.json`（不得通过手工/外部脚本伪造报告来满足验收）。",
-      "对以下文件进行文本检索必须可验证回链与口径标识逐字出现：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-CloudEvent.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-CloudEvents-Core.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md` 中必须明确包含以下字符串：`ADR-0004`、`ADR-0005`、`ADR-0019`、`CH02`、`CH04`、`CH07`、`Tests.Godot/tests/Security/test_signal_contracts.gd`、`logs/e2e/<date>/security/signal-contracts.json`。",
-      "契约检查必须同时验证“信号名称”与“参数列表”匹配既定契约（至少包含名称精确匹配、参数数量与顺序；如契约定义了形状/类型则也需一致），且不得通过模糊匹配、前缀/子串匹配或默认放行来规避漂移检测。",
-      "当存在任何 FAIL（包括缺失必需信号、信号重命名导致不匹配、参数形状不匹配）时，headless 测试运行必须以可被 CI 判定失败的方式结束（例如非零退出码或等价的失败判定信号），从而确保“集成到 CI 检查”不是仅生成报告但不阻断流水线。",
-      "无头安全信号契约测试套件必须通过 GdUnit4（headless）执行（CI 与本地一致），不得使用其他测试框架或自定义 runner 替代。",
-      "上述 Overlay 文件（见本任务 acceptance 中列出的文件路径）中必须逐字包含 `ADR-0004`、`ADR-0019`、`ADR-0005`；CI 必须对这些文件执行文本检索，任一缺失则判定失败。",
-      "上述 Overlay 文件中必须逐字包含 `CH02`、`CH04`、`CH07`；CI 必须对这些文件执行文本检索，任一缺失则判定失败。"
+      "当任意必需的安全敏感信号被删除、重命名，或其参数列表与既定契约不一致时（至少包含参数数量与顺序；如契约定义了形状/类型则也需一致），契约检查必须返回失败。 Refs: Tests.Godot/tests/Security/test_signal_contracts.gd",
+      "无头（headless）的安全测试套件必须在 `logs/e2e/<date>/security/signal-contracts.json` 生成可机读的 JSON 报告；报告必须对每个被检查的信号给出明确的 PASS/FAIL 结果，且不得以空文件或占位内容充数。 Refs: Tests.Godot/tests/Security/test_signal_contracts.gd",
+      "CI 必须执行该无头安全信号契约测试套件；当报告中出现任意 FAIL 结果时，CI 检查必须失败。 Refs: Tests.Godot/tests/Security/test_signal_contracts.gd",
+      "在相同提交与相同环境下重复运行无头套件，多次运行得到的 PASS/FAIL 结果必须一致（结果具备确定性）。 Refs: Tests.Godot/tests/Security/test_signal_contracts.gd",
+      "当刻意制造契约漂移（例如临时重命名某必需信号或修改其参数数量）时，套件必须失败，且报告必须指出是哪个信号以及违反了哪条契约规则。 Refs: Tests.Godot/tests/Security/test_signal_contracts.gd",
+      "`Tests.Godot/tests/Security/test_signal_contracts.gd` 必须在 headless 下可运行，并由该测试用例驱动生成 `logs/e2e/<date>/security/signal-contracts.json`（不得通过手工/外部脚本伪造报告来满足验收）。 Refs: Tests.Godot/tests/Security/test_signal_contracts.gd",
+      "对以下文件进行文本检索必须可验证回链与口径标识逐字出现：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-CloudEvent.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-CloudEvents-Core.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md` 中必须明确包含以下字符串：`ADR-0004`、`ADR-0005`、`ADR-0019`、`CH02`、`CH04`、`CH07`、`Tests.Godot/tests/Security/test_signal_contracts.gd`、`logs/e2e/<date>/security/signal-contracts.json`。 Refs: Game.Core.Tests/Ci/OverlaySignalContractBacklinksTests.cs",
+      "契约检查必须同时验证“信号名称”与“参数列表”匹配既定契约（至少包含名称精确匹配、参数数量与顺序；如契约定义了形状/类型则也需一致），且不得通过模糊匹配、前缀/子串匹配或默认放行来规避漂移检测。 Refs: Tests.Godot/tests/Security/test_signal_contracts.gd",
+      "当存在任何 FAIL（包括缺失必需信号、信号重命名导致不匹配、参数形状不匹配）时，headless 测试运行必须以可被 CI 判定失败的方式结束（例如非零退出码或等价的失败判定信号），从而确保“集成到 CI 检查”不是仅生成报告但不阻断流水线。 Refs: Tests.Godot/tests/Security/test_signal_contracts.gd",
+      "无头安全信号契约测试套件必须通过 GdUnit4（headless）执行（CI 与本地一致），不得使用其他测试框架或自定义 runner 替代。 Refs: Tests.Godot/tests/Security/test_signal_contracts.gd",
+      "上述 Overlay 文件（见本任务 acceptance 中列出的文件路径）中必须逐字包含 `ADR-0004`、`ADR-0019`、`ADR-0005`；CI 必须对这些文件执行文本检索，任一缺失则判定失败。 Refs: Game.Core.Tests/Ci/OverlaySignalContractBacklinksTests.cs",
+      "上述 Overlay 文件中必须逐字包含 `CH02`、`CH04`、`CH07`；CI 必须对这些文件执行文本检索，任一缺失则判定失败。 Refs: Game.Core.Tests/Ci/OverlaySignalContractBacklinksTests.cs"
     ],
     "test_strategy": [
       "Run headless GdUnit4 suite and confirm contract checks report PASS/FAIL deterministically."
@@ -876,11 +924,14 @@
     "owner": "architecture",
     "test_refs": [
       "logs/perf/<date>/summary.json",
-      "logs/perf/<date>/report.json"
+      "logs/perf/<date>/report.json",
+      "Tests/CI/PerfReportJsonArtifactTests.cs",
+      "Tests/CI/PerfHistoryArtifactTests.cs",
+      "Tests/CI/LogsIgnoredByGitTests.cs"
     ],
     "acceptance": [
-      "在本地成功运行一次 perf suite 后，`logs/perf/<date>/summary.json` 与 `logs/perf/<date>/report.json`（不再用“等价物”规避命名）必须同时存在；两者均为可解析的有效 JSON。`report.json` 必须相较 `summary.json` 提供可供人工阅读与诊断/对比的更细信息（例如按场景/阶段/样本拆分或更完整统计字段）。为满足可追溯性，`report.json` 中必须包含可通过文本搜索直接命中的引用字符串：`ADR-0005`、`ADR-0015`、`CH07`、`CH09`、`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`。",
-      "在本地成功运行一次 perf suite 后，必须生成或更新一个最小历史工件（CSV 或 JSONL，且不位于 `logs/` 目录下）用于趋势追踪；该历史工件至少记录本次运行的时间戳（日期/时间）与 `summary.json` 的核心指标口径（可通过对照同一次运行的 `logs/perf/<date>/summary.json` 验证）。同时不得要求将 `logs/` 纳入版本控制：在干净工作区运行后，`git status --porcelain` 不应出现任何 `logs/` 路径条目（表示输出被忽略或不参与提交）。"
+      "在本地成功运行一次 perf suite 后，`logs/perf/<date>/summary.json` 与扩展报告文件（`logs/perf/<date>/report.json` 或等价物）必须同时存在；两者均为可解析的有效 JSON。扩展报告文件必须相较 `summary.json` 提供可供人工阅读与诊断/对比的更细信息（例如按场景/阶段/样本拆分或更完整统计字段）。为满足可追溯性，扩展报告文件中必须包含可通过文本搜索直接命中的引用字符串：`ADR-0005`、`ADR-0015`、`CH07`、`CH09`、`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`。 Refs: Tests/CI/PerfReportJsonArtifactTests.cs",
+      "在本地成功运行一次 perf suite 后，必须生成或更新一个最小历史工件（CSV 或 JSONL，且不位于 `logs/` 目录下）用于趋势追踪；该历史工件至少记录本次运行的时间戳（日期/时间）与 `summary.json` 的核心指标口径（可通过对照同一次运行的 `logs/perf/<date>/summary.json` 验证）。同时不得要求将 `logs/` 纳入版本控制：在干净工作区运行后，`git status --porcelain` 不应出现任何 `logs/` 路径条目（表示输出被忽略或不参与提交）。 Refs: Tests/CI/PerfHistoryArtifactTests.cs Tests/CI/LogsIgnoredByGitTests.cs"
     ],
     "test_strategy": [
       "Run perf suite locally and inspect the generated report files for completeness."
@@ -921,14 +972,16 @@
     ],
     "owner": "architecture",
     "test_refs": [
-      "logs/perf/<date>/summary.json"
+      "logs/perf/<date>/summary.json",
+      "Game.Core.Tests/Utilities/PerfGateWorkflowTests.cs",
+      "Game.Core.Tests/Utilities/PerfGateOverlayDocsTests.cs"
     ],
     "acceptance": [
-      "A dedicated CI workflow/job exists and can be triggered independently (e.g., manual trigger) to run only the headless performance gate (without running unrelated gates); the job result is marked failed when measured performance violates the configured budget, and the gate behavior supports a configurable soft vs hard mode for budget violations.",
-      "Each perf-only run uploads the performance outputs as CI artifacts for later analysis, and artifact upload occurs for both passing and failing runs (including failures caused by budget violations).",
-      "The uploaded CI artifacts include the generated performance summary file at logs/perf/<date>/summary.json from that run (in a date-stamped directory).",
-      "The workflow/job definition and/or its related documentation explicitly references ADR-0005, ADR-0011, ADR-0015, CH07, CH09, and CH10 (verifiable by text search).",
-      "The overlay docs docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md and docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md explicitly describe the perf-only workflow/job and the artifact path logs/perf/<date>/summary.json (verifiable by text search)."
+      "A dedicated CI workflow/job exists and can be triggered independently (e.g., manual trigger) to run only the headless performance gate (without running unrelated gates); the job result is marked failed when measured performance violates the configured budget, and the gate behavior supports a configurable soft vs hard mode for budget violations. Refs: Game.Core.Tests/Utilities/PerfGateWorkflowTests.cs",
+      "Each perf-only run uploads the performance outputs as CI artifacts for later analysis, and artifact upload occurs for both passing and failing runs (including failures caused by budget violations). Refs: Game.Core.Tests/Utilities/PerfGateWorkflowTests.cs",
+      "The uploaded CI artifacts include the generated performance summary file at logs/perf/<date>/summary.json from that run (in a date-stamped directory). Refs: Game.Core.Tests/Utilities/PerfGateWorkflowTests.cs",
+      "The workflow/job definition and/or its related documentation explicitly references ADR-0005, ADR-0011, ADR-0015, CH07, CH09, and CH10 (verifiable by text search). Refs: Game.Core.Tests/Utilities/PerfGateWorkflowTests.cs Game.Core.Tests/Utilities/PerfGateOverlayDocsTests.cs",
+      "The overlay docs docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md and docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md explicitly describe the perf-only workflow/job and the artifact path logs/perf/<date>/summary.json (verifiable by text search). Refs: Game.Core.Tests/Utilities/PerfGateOverlayDocsTests.cs"
     ],
     "test_strategy": [
       "Trigger the workflow manually and verify artifact upload and pass/fail behavior."
@@ -973,14 +1026,14 @@
       "Game.Core.Tests/Observability/StructuredLoggerTests.cs"
     ],
     "acceptance": [
-      "Game.Core 提供纯 C# 的日志 API；调用该 API 会产生一个可被测试用 sink 观察到的结构化日志事件，事件至少包含 level、message、以及结构化 properties/tags；并且 Game.Core 项目在编译时不引用任何 Godot APIs/assemblies。",
-      "对齐 ADR-0003/ADR-0019 的 PII 脱敏在每条结构化日志事件上统一执行，且在任何 sink 观察到该事件之前完成；单元测试证明代表性 PII 输入会被脱敏、代表性非 PII 字段保持不变。",
-      "可观测性客户端提供纯 C# 的 breadcrumb API；单元测试验证记录 breadcrumbs 会产生可被捕获的数据，并可供已注册 sink 转发/读取。",
-      "可观测性客户端允许通过纯 C# 接口注册 0 个或多个 sink（包含通过适配器对接 Sentry 这类可选 sink 的能力）；当注册多个 sink 并发出单条日志事件时，每个 sink 恰好被调用一次且调用顺序在同一输入下保持确定一致；单元测试验证该顺序。",
-      "可观测性客户端支持将 tags/context 传播到发出的事件上；单元测试验证传播的 tags 会出现在发出的事件上，并在 sink 交付过程中被保留。",
-      "单元测试集中在 `Game.Core.Tests/Observability/StructuredLoggerTests.cs`，并至少覆盖字段脱敏、tag 传播、以及多 sink 调用顺序（与 MasterTestStrategy 一致）。",
-      "实现与验收必须对齐 ADR-0003、ADR-0005、ADR-0019 的约束口径（可通过审阅 ADR 文档并对照单元测试结果核对）。",
-      "验收时需对照 CH02、CH03、CH07 以及 `docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` 进行核对，确认本实现满足其关于可观测性/安全/质量门禁的约束且无冲突。"
+      "Game.Core 提供纯 C# 的日志 API；调用该 API 会产生一个可被测试用 sink 观察到的结构化日志事件，事件至少包含 level、message、以及结构化 properties/tags；并且 Game.Core 项目在编译时不引用任何 Godot APIs/assemblies。 Refs: Game.Core.Tests/Observability/StructuredLoggerTests.cs",
+      "对齐 ADR-0003/ADR-0019 的 PII 脱敏在每条结构化日志事件上统一执行，且在任何 sink 观察到该事件之前完成；单元测试证明代表性 PII 输入会被脱敏、代表性非 PII 字段保持不变。 Refs: Game.Core.Tests/Observability/StructuredLoggerTests.cs",
+      "可观测性客户端提供纯 C# 的 breadcrumb API；单元测试验证记录 breadcrumbs 会产生可被捕获的数据，并可供已注册 sink 转发/读取。 Refs: Game.Core.Tests/Observability/StructuredLoggerTests.cs",
+      "可观测性客户端允许通过纯 C# 接口注册 0 个或多个 sink（包含通过适配器对接 Sentry 这类可选 sink 的能力）；当注册多个 sink 并发出单条日志事件时，每个 sink 恰好被调用一次且调用顺序在同一输入下保持确定一致；单元测试验证该顺序。 Refs: Game.Core.Tests/Observability/StructuredLoggerTests.cs",
+      "可观测性客户端支持将 tags/context 传播到发出的事件上；单元测试验证传播的 tags 会出现在发出的事件上，并在 sink 交付过程中被保留。 Refs: Game.Core.Tests/Observability/StructuredLoggerTests.cs",
+      "单元测试集中在 `Game.Core.Tests/Observability/StructuredLoggerTests.cs`，并至少覆盖字段脱敏、tag 传播、以及多 sink 调用顺序（与 MasterTestStrategy 一致）。 Refs: Game.Core.Tests/Observability/StructuredLoggerTests.cs",
+      "实现与验收必须对齐 ADR-0003、ADR-0005、ADR-0019 的约束口径（可通过审阅 ADR 文档并对照单元测试结果核对）。 Refs: Game.Core.Tests/Observability/StructuredLoggerTests.cs",
+      "验收时需对照 CH02、CH03、CH07 以及 `docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` 进行核对，确认本实现满足其关于可观测性/安全/质量门禁的约束且无冲突。 Refs: Game.Core.Tests/Observability/StructuredLoggerTests.cs"
     ],
     "test_strategy": [
       "Unit tests validate field scrubbing, tag propagation, and sink invocation ordering."
@@ -1039,14 +1092,19 @@
     ],
     "owner": "architecture",
     "test_refs": [
-      "logs/ci/<date>/export/summary.json"
+      "logs/ci/<date>/export/summary.json",
+      "Tests/CI/ReleaseWorkflowTriggersAndDeterministicArtifactsTests.cs",
+      "Tests/CI/ReleaseWorkflowSmokeGateAndLogsArtifactsTests.cs",
+      "Tests/CI/ExportProducesNonEmptyWindowsArtifactsTests.cs",
+      "Tests/CI/ReleaseWorkflowTraceabilityVerbatimRefsTests.cs",
+      "Tests/CI/ExportSummaryJsonUploadedAsArtifactTests.cs"
     ],
     "acceptance": [
-      "仓库中必须存在一个专用的 Windows Release GitHub Actions workflow；当由 tag push 或通过 workflow_dispatch 触发时，该 workflow 必须在 GitHub Actions 中完成并成功退出，同时发布 Windows 构建 artifacts；对同一 tag/同一 workflow_dispatch 输入参数，上传的 artifact 命名必须保持一致且可预测（可通过对比两次运行的 artifact 列表验证）。",
-      "该 workflow 必须执行 smoke 验证步骤，且 smoke 失败时该次 run 必须失败；同时把 `logs/ci` 输出作为可下载 artifacts 上传，并能从 workflow run summary 直接看到（可通过下载并检查目录内容验证）。",
-      "发布的构建 artifacts 必须包含由导出步骤生成的真实游戏导出输出（不得为空/占位文件）；在非受保护分支上通过 workflow_dispatch 进行 dry-run 时，下载 artifacts 后可以检查到至少一个非零大小的 Windows 导出结果（可执行文件/归档及其配套导出文件），从而证明确实发生了 export。",
-      "为满足可审计的追踪性要求，相关 workflow 的定义文件中必须包含对以下标识的字面引用（verbatim，可通过仓库文本搜索验证）：ADR-0005, ADR-0008, ADR-0011, ADR-0018, CH01, CH06, CH07, CH10, docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md。",
-      "每次成功的 export/release 运行必须生成并随 artifacts 一并上传 `logs/ci/<date>/export/summary.json`（路径字面一致，可通过下载 artifacts 后存在性校验），以支持 Test Strategy 中对上传产物的人工检查。"
+      "仓库中必须存在一个专用的 Windows Release GitHub Actions workflow；当由 tag push 或通过 workflow_dispatch 触发时，该 workflow 必须执行导出与 smoke 验证：smoke 通过则 run 成功退出并发布 Windows 构建 artifacts；smoke 失败则该次 run 必须失败（不得吞掉失败）。对同一 tag/同一 workflow_dispatch 输入参数，artifact 命名必须保持一致且可预测（可通过对比两次运行的 artifact 列表验证）。 Refs: Tests/CI/ReleaseWorkflowTriggersAndDeterministicArtifactsTests.cs",
+      "该 workflow 必须执行 smoke 验证步骤，且 smoke 失败时该次 run 必须失败；同时把 `logs/ci` 输出作为可下载 artifacts 上传，并能从 workflow run summary 直接看到（可通过下载并检查目录内容验证）。 Refs: Tests/CI/ReleaseWorkflowSmokeGateAndLogsArtifactsTests.cs",
+      "发布的构建 artifacts 必须包含由导出步骤生成的真实游戏导出输出（不得为空/占位文件）；在非受保护分支上通过 workflow_dispatch 进行 dry-run 时，下载 artifacts 后可以检查到至少一个非零大小的 Windows 导出结果（可执行文件/归档及其配套导出文件），从而证明确实发生了 export。 Refs: Tests/CI/ExportProducesNonEmptyWindowsArtifactsTests.cs",
+      "为满足可审计的追踪性要求，相关 workflow 的定义文件中必须包含对以下标识的字面引用（verbatim，可通过仓库文本搜索验证）：ADR-0005, ADR-0008, ADR-0011, ADR-0018, CH01, CH06, CH07, CH10, docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md, docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md。 Refs: Tests/CI/ReleaseWorkflowTraceabilityVerbatimRefsTests.cs",
+      "每次成功的 export/release 运行必须生成并随 artifacts 一并上传 `logs/ci/<date>/export/summary.json`（路径字面一致，可通过下载 artifacts 后存在性校验），以支持 Test Strategy 中对上传产物的人工检查。 Refs: Tests/CI/ExportSummaryJsonUploadedAsArtifactTests.cs"
     ],
     "test_strategy": [
       "Dry-run on a non-protected branch using workflow_dispatch and inspect uploaded artifacts."
@@ -1088,15 +1146,21 @@
     ],
     "owner": "architecture",
     "test_refs": [
-      "logs/ci/<date>/export/signing.log"
+      "logs/ci/<date>/export/signing.log",
+      "Tests/CI/Signing/SigningStepSkipsWhenEnvMissingTests.cs",
+      "Tests/CI/Signing/SigningStatusAndSigningLogRecordedTests.cs",
+      "Tests/CI/Signing/SkippedSigningDoesNotInvokeSignToolAndArtifactsRemainUnsignedTests.cs",
+      "Tests/CI/Signing/SigningFailureSetsFailedStatusAndWritesSigningLogTests.cs",
+      "Tests/CI/Security/NoSigningSecretsCommittedTests.cs",
+      "Tests/Docs/OverlaySigningDocsReferenceAdrAndChaptersTests.cs"
     ],
     "acceptance": [
-      "When all required signing environment variables are present and non-empty, the release export artifacts are code-signed using Windows SignTool; when any required variable is missing/empty, the signing step is skipped, the export run still succeeds, and the logs include a clear message indicating signing was skipped.",
-      "Every export run records an explicit signing status (signed|skipped|failed) in the export summary/logs; when signing executes, the SignTool output and final result are written to `logs/ci/<date>/export/signing.log`.",
-      "When signing is skipped due to missing/empty prerequisites, SignTool is not invoked, and the produced artifacts are not signed (e.g., signature verification does not report a valid signature on the artifacts).",
-      "When signing is configured to run (all required signing environment variables are present) but SignTool exits non-zero, the signing status is failed and the failure details are visible in both `logs/ci/<date>/export/signing.log` and the export summary/logs.",
-      "No signing material (certificate/key/password) is stored in git; signing inputs are provided only via environment variables and external secret storage at runtime.",
-      "The overlay docs `docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md` and `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` explicitly reference ADR-0008, ADR-0011, and ADR-0018, and explicitly cite CH01, CH06, CH07, and CH10 in the context of this optional SignTool-based signing step."
+      "When all required signing environment variables are present and non-empty, the release export artifacts are code-signed using Windows SignTool; when any required variable is missing/empty, the signing step is skipped, the export run still succeeds, and the logs include a clear message indicating signing was skipped. Refs: Tests/CI/Signing/SigningStepSkipsWhenEnvMissingTests.cs",
+      "Every export run records an explicit signing status (signed|skipped|failed) in the export summary/logs; when signing executes, the SignTool output and final result are written to `logs/ci/<date>/export/signing.log`. Refs: Tests/CI/Signing/SigningStatusAndSigningLogRecordedTests.cs",
+      "When signing is skipped due to missing/empty prerequisites, SignTool is not invoked, and the produced artifacts are not signed (e.g., signature verification does not report a valid signature on the artifacts). Refs: Tests/CI/Signing/SkippedSigningDoesNotInvokeSignToolAndArtifactsRemainUnsignedTests.cs",
+      "When signing is configured to run (all required signing environment variables are present) but SignTool exits non-zero, the signing status is failed and the failure details are visible in both `logs/ci/<date>/export/signing.log` and the export summary/logs. Refs: Tests/CI/Signing/SigningFailureSetsFailedStatusAndWritesSigningLogTests.cs",
+      "No signing material (certificate/key/password) is stored in git; signing inputs are provided only via environment variables and external secret storage at runtime. Refs: Tests/CI/Security/NoSigningSecretsCommittedTests.cs",
+      "The overlay docs `docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md` and `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` explicitly reference ADR-0008, ADR-0011, and ADR-0018, and explicitly cite CH01, CH06, CH07, and CH10 in the context of this optional SignTool-based signing step. Refs: Tests/Docs/OverlaySigningDocsReferenceAdrAndChaptersTests.cs"
     ],
     "test_strategy": [
       "Run in a local environment without secrets to confirm it safely skips."
@@ -1139,14 +1203,19 @@
     "owner": "architecture",
     "test_refs": [
       "export_presets.cfg",
-      "logs/ci/<date>/export/summary.json"
+      "logs/ci/<date>/export/summary.json",
+      "Tests/CI/ExportPresetSelectionTests.cs",
+      "Tests/CI/ExportSummaryJsonTests.cs",
+      "Tests/CI/ExportInvalidPresetTests.cs",
+      "Tests/CI/ExportArtifactsRunnableTests.cs",
+      "Tests/Docs/ExportPresetsTraceabilityTests.cs"
     ],
     "acceptance": [
-      "在 `export_presets.cfg` 中包含名称明确且可用的 `Debug`、`Release`、`Demo` 三个导出预设；CI 与本地导出脚本提供参数以选择其中任一预设，并在导出过程中实际使用所选预设完成导出（不得忽略参数而固定使用默认预设）。",
-      "每次导出都会生成导出摘要（例如 `logs/ci/<date>/export/summary.json`），其中必须明确记录本次使用的预设名，以及导出产物的可解析路径（至少包含可执行文件路径；若存在独立数据包/资源包等额外主要产物，也必须包含其路径）。",
-      "当传入不存在或不允许的预设名时，CI/本地导出脚本必须以非零退出码失败，并输出清晰错误信息（不得静默回退到其他预设或默认预设）。",
-      "分别以 `Debug`、`Release`、`Demo` 三个预设各执行一次导出后：摘要中记录的产物文件在磁盘上实际存在，且可执行文件可被自动化脚本启动并按脚本定义的“启动成功”判定为成功（不得以不运行可执行文件的方式绕过此验证）。",
-      "以下条目必须可通过文本搜索在交付物中被验证：ADRs `ADR-0008`、`ADR-0011`、`ADR-0018`；Chapters `CH01`、`CH06`、`CH07`、`CH10`；TestRefs `export_presets.cfg`、`logs/ci/<date>/export/summary.json`；OverlayDocs `docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`（两份文档必须明确记录预设选择方式与验收方式，且包含上述 ID/路径原文）。"
+      "在 `export_presets.cfg` 中包含名称明确且可用的 `Debug`、`Release`、`Demo` 三个导出预设；CI 与本地导出脚本提供参数以选择其中任一预设，并在导出过程中实际使用所选预设完成导出（不得忽略参数而固定使用默认预设）。 Refs: Tests/CI/ExportPresetSelectionTests.cs",
+      "每次导出都会生成导出摘要（例如 `logs/ci/<date>/export/summary.json`），其中必须明确记录本次使用的预设名，以及导出产物的可解析路径（至少包含可执行文件路径；若存在独立数据包/资源包等额外主要产物，也必须包含其路径）。 Refs: Tests/CI/ExportSummaryJsonTests.cs",
+      "当传入不存在或不允许的预设名时，CI/本地导出脚本必须以非零退出码失败，并输出清晰错误信息（不得静默回退到其他预设或默认预设）。 Refs: Tests/CI/ExportInvalidPresetTests.cs",
+      "分别以 `Debug`、`Release`、`Demo` 三个预设各执行一次导出后：摘要中记录的产物文件在磁盘上实际存在，且可执行文件可被自动化脚本启动并按脚本定义的“启动成功”判定为成功（不得以不运行可执行文件的方式绕过此验证）。 Refs: Tests/CI/ExportArtifactsRunnableTests.cs",
+      "以下条目必须可通过文本搜索在交付物中被验证：ADRs `ADR-0008`、`ADR-0011`、`ADR-0018`；Chapters `CH01`、`CH06`、`CH07`、`CH10`；TestRefs `export_presets.cfg`、`logs/ci/<date>/export/summary.json`；OverlayDocs `docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`（两份文档必须明确记录预设选择方式与验收方式，且包含上述 ID/路径原文）。 Refs: Tests/Docs/ExportPresetsTraceabilityTests.cs"
     ],
     "test_strategy": [
       "Run export for each preset and verify artifacts are produced and runnable."
