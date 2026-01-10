@@ -61,8 +61,6 @@ def _is_blocking_wait_hard_scope(rel: str) -> bool:
         return True
     if r.startswith("Game.Godot/") and "/Scripts/" in r and "/Examples/" not in r:
         return True
-    if r.startswith("Tests.Godot/Game.Godot/") and "/Scripts/" in r and "/Examples/" not in r:
-        return True
     return False
 
 

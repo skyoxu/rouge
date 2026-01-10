@@ -57,7 +57,7 @@ jobs:
       - name: Prepare test project link
         shell: pwsh
         run: |
-          ./scripts/ci/prepare_gd_tests.ps1 -ProjectPath 'Tests.Godot' -RuntimeDir 'Game.Godot'
+          py -3 scripts/python/ensure_tests_godot_runtime_link.py --tests-project Tests.Godot --runtime-dir Game.Godot --force-recreate
 
       - name: Run GdUnit4 tests
         shell: pwsh

@@ -17,6 +17,7 @@ import subprocess
 import json
 import re
 import time
+from pathlib import Path
 
 
 def run_cmd(args, cwd=None, timeout=600_000):
@@ -90,8 +91,30 @@ def main():
     ap.add_argument('--rd', dest='report_dir', default=None, help='Custom destination to copy reports into (defaults to logs/e2e/<date>/gdunit-reports)')
     args = ap.parse_args()
 
-    root = os.getcwd()
-    proj = os.path.abspath(args.project)
+    repo_root = Path(__file__).resolve().parents[2]
+    root = str(repo_root)
+    proj_path = Path(args.project)
+    if not proj_path.is_absolute():
+        proj_path = repo_root / proj_path
+    proj = str(proj_path.resolve())
+
+    # Ensure Tests.Godot exposes Game.Godot runtime as a junction (single source of truth).
+    if proj_path.name.lower() == 'tests.godot':
+        ensure_script = repo_root / 'scripts' / 'python' / 'ensure_tests_godot_runtime_link.py'
+        if ensure_script.is_file():
+            rc_link, out_link = run_cmd(
+                ['py', '-3', str(ensure_script), '--tests-project', str(proj_path.relative_to(repo_root)), '--runtime-dir', 'Game.Godot'],
+                cwd=repo_root,
+                timeout=60_000,
+            )
+            if rc_link != 0:
+                date = dt.date.today().strftime('%Y-%m-%d')
+                out_dir = os.path.join(root, 'logs', 'ci', date, 'gd-tests-junction')
+                write_text(os.path.join(out_dir, 'ensure-junction.runner.txt'), out_link)
+                print(f'GDUNIT_ABORT: runtime junction not ready (rc={rc_link}) out={out_dir}')
+                return rc_link
+        else:
+            print(f'GDUNIT_WARN: missing ensure script: {ensure_script}')
     date = dt.date.today().strftime('%Y-%m-%d')
     out_dir = os.path.join(root, 'logs', 'e2e', date)
     os.makedirs(out_dir, exist_ok=True)

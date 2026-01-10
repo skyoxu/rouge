@@ -45,6 +45,8 @@ TestResults/
 
 # Vendored demo content (not meant for VCS)
 demo/
+# Tests project runtime link (must be a junction to ../Game.Godot; never commit mirrors)
+Tests.Godot/Game.Godot/
 # Keep GdUnit4 CLI runner scripts inside plugin bin
 !Tests.Godot/addons/gdUnit4/bin/
 !Tests.Godot/addons/gdUnit4/bin/**
