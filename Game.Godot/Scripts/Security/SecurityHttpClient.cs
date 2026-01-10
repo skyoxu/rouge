@@ -15,7 +15,14 @@ public partial class SecurityHttpClient : Node
     [Export] public bool EnforceHttps { get; set; } = true;
     [Export] public int MaxBodyBytes { get; set; } = 10_000_000; // 10 MB
 
-    public bool Validate(string method, string url, string? contentType = null, int bodyBytes = 0)
+    // NOTE:
+    // GDScript does not reliably honor C# optional parameters when calling methods by name/arity.
+    // Provide explicit overloads so GdUnit tests can call Validate(method, url) deterministically.
+    public bool Validate(string method, string url) => Validate(method, url, string.Empty, 0);
+
+    public bool Validate(string method, string url, string contentType) => Validate(method, url, contentType, 0);
+
+    public bool Validate(string method, string url, string contentType, int bodyBytes)
     {
         method = (method ?? "").Trim().ToUpperInvariant();
         if (!AllowedMethods.Contains(method))
