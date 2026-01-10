@@ -399,8 +399,8 @@
         "id": "7",
         "title": "创建战斗状态机 (BattleManager)",
         "description": "实现回合制战斗核心状态机,管理阶段推进与胜负判定",
-        "details": "创建 Game.Core/Services/BattleManager.cs:\n- 战斗阶段枚举:\n  - core.rouge.battle.started → core.rouge.turn.player.started → PlayerMain → core.rouge.turn.player.ended → EnemyTurn → (循环或胜负)\n- 核心方法:\n  - StartBattle(heroes, enemies): 初始化战斗,清空临时状态,生成敌人初始意图\n  - StartPlayerTurn(): 刷新能量、抽牌、结算 turn_start_settlement 状态\n  - PlayCard(heroId, cardId, targetId): 校验能量/目标,执行卡牌 EffectCommands,扣能量,移牌\n  - EndPlayerTurn(): 弃手牌,结算 turn_end_settlement 状态(护盾清零),刷新敌人意图\n  - ExecuteEnemyTurn(): 遍历敌人执行意图(复用 EffectResolver)\n  - CheckVictory(): 敌方全灭 → core.rouge.battle.won\n  - CheckDefeat(): 我方全灭 → core.rouge.battle.lost\n- 任意单位 HP ≤ 0 时立即触发死亡处理与胜负检查。\n发布事件: BattleStarted/PlayerTurnStarted/CardPlayed/core.rouge.combat.damage.applied/UnitDied/core.rouge.battle.won/core.rouge.battle.lost。\n\nOverlays: docs/architecture/overlays/PRD-rouge-manager/08/_index.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md; docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md\n",
-        "testStrategy": "xUnit 单元测试:\n- BattleManagerTests: 验证状态机推进顺序、回合能量刷新、抽牌数量\n- PlayCard 测试: 能量不足拒绝、目标非法拒绝、成功出牌后能量扣除\n- 胜负判定: 敌方全灭触发 core.rouge.battle.won、我方全灭触发 core.rouge.battle.lost\n- 状态结算: turn_start_settlement 中毒结算、turn_end_settlement 护盾清零\n使用 Mock StatusManager 和 EffectResolver 隔离依赖",
+        "details": "创建 Game.Core/Services/BattleManager.cs:\n- 战斗阶段枚举:\n  - core.battle.started → core.battle.turn.player.started → PlayerMain → core.battle.turn.enemy.started → EnemyTurn → (循环或胜负)\n- 核心方法:\n  - StartBattle(heroes, enemies): 初始化战斗,清空临时状态,生成敌人初始意图\n  - StartPlayerTurn(): 刷新能量、抽牌、结算 turn_start_settlement 状态\n  - PlayCard(heroId, cardId, targetId): 校验能量/目标,执行卡牌 EffectCommands,扣能量,移牌\n  - EndPlayerTurn(): 弃手牌,结算 turn_end_settlement 状态(护盾清零),刷新敌人意图\n  - ExecuteEnemyTurn(): 遍历敌人执行意图(复用 EffectResolver)\n  - CheckVictory(): 敌方全灭 → core.battle.ended\n  - CheckDefeat(): 我方全灭 → core.battle.ended\n- 任意单位 HP ≤ 0 时立即触发死亡处理与胜负检查。\n发布事件: BattleStarted/PlayerTurnStarted/CardPlayed/core.effect.resolved/UnitDied/core.battle.ended/core.battle.ended。\n\nOverlays: docs/architecture/overlays/PRD-rouge-manager/08/_index.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md; docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md\n",
+        "testStrategy": "xUnit 单元测试:\n- BattleManagerTests: 验证状态机推进顺序、回合能量刷新、抽牌数量\n- PlayCard 测试: 能量不足拒绝、目标非法拒绝、成功出牌后能量扣除\n- 胜负判定: 敌方全灭触发 core.battle.ended、我方全灭触发 core.battle.ended\n- 状态结算: turn_start_settlement 中毒结算、turn_end_settlement 护盾清零\n使用 Mock StatusManager 和 EffectResolver 隔离依赖",
         "priority": "high",
         "dependencies": [
           "5",
@@ -414,7 +414,7 @@
             "title": "实现战斗初始化与阶段状态机",
             "description": "创建 BattleManager 类的核心框架，实现战斗阶段枚举、初始化逻辑和状态机推进机制，确保回合顺序正确流转。",
             "dependencies": [],
-            "details": "在 Game.Core/Services/BattleManager.cs 中：\n1. 定义 BattlePhase 枚举（core.rouge.battle.started、core.rouge.turn.player.started、PlayerMain、core.rouge.turn.player.ended、EnemyTurn、core.rouge.battle.won、core.rouge.battle.lost）\n2. 创建 BattleManager 类，持有当前阶段状态、英雄列表、敌人列表\n3. 实现 StartBattle(heroes, enemies) 方法：初始化单位、清空临时状态、生成敌人初始意图、发布 BattleStarted 事件\n4. 实现 StartPlayerTurn() 方法：刷新能量、抽牌、结算 turn_start_settlement 状态\n5. 编写状态机推进逻辑，确保相邻阶段正确过渡\n6. 使用 xUnit 验证状态机推进顺序、初始化后能量/手牌正确性",
+            "details": "在 Game.Core/Services/BattleManager.cs 中：\n1. 定义 BattlePhase 枚举（core.battle.started、core.battle.turn.player.started、PlayerMain、core.battle.turn.enemy.started、EnemyTurn、core.battle.ended、core.battle.ended）\n2. 创建 BattleManager 类，持有当前阶段状态、英雄列表、敌人列表\n3. 实现 StartBattle(heroes, enemies) 方法：初始化单位、清空临时状态、生成敌人初始意图、发布 BattleStarted 事件\n4. 实现 StartPlayerTurn() 方法：刷新能量、抽牌、结算 turn_start_settlement 状态\n5. 编写状态机推进逻辑，确保相邻阶段正确过渡\n6. 使用 xUnit 验证状态机推进顺序、初始化后能量/手牌正确性",
             "status": "pending",
             "testStrategy": "xUnit 单元测试验证：StartBattle 初始化英雄/敌人、能量回满、抽卡数量正确；StartPlayerTurn 能量值变化；状态机顺序推进"
           },
@@ -450,9 +450,9 @@
               "2",
               "3"
             ],
-            "details": "在 Game.Core/Services/BattleManager.cs 中：\n1. 实现 CheckVictory() 方法：\n   - 检查是否所有敌人 HP ≤ 0\n   - 若满足，转移至 core.rouge.battle.won 阶段、发布 core.rouge.battle.won 事件、返回 true\n2. 实现 CheckDefeat() 方法：\n   - 检查是否所有英雄 HP ≤ 0\n   - 若满足，转移至 core.rouge.battle.lost 阶段、发布 core.rouge.battle.lost 事件、返回 true\n3. 在 EffectResolver 执行伤害后调用死亡判定：\n   - 若任意单位 HP ≤ 0，触发 OnUnitDied 事件、移除该单位、立即检查胜负\n4. 实现战斗清理逻辑：\n   - 清空临时状态（意图、能量临时修正等）\n   - 保留永久状态（等级、金币等）用于后续奖励结算\n5. 编写 xUnit 测试验证胜利/失败条件、死亡处理、事件发布顺序",
+            "details": "在 Game.Core/Services/BattleManager.cs 中：\n1. 实现 CheckVictory() 方法：\n   - 检查是否所有敌人 HP ≤ 0\n   - 若满足，转移至 core.battle.ended 阶段、发布 core.battle.ended 事件、返回 true\n2. 实现 CheckDefeat() 方法：\n   - 检查是否所有英雄 HP ≤ 0\n   - 若满足，转移至 core.battle.ended 阶段、发布 core.battle.ended 事件、返回 true\n3. 在 EffectResolver 执行伤害后调用死亡判定：\n   - 若任意单位 HP ≤ 0，触发 OnUnitDied 事件、移除该单位、立即检查胜负\n4. 实现战斗清理逻辑：\n   - 清空临时状态（意图、能量临时修正等）\n   - 保留永久状态（等级、金币等）用于后续奖励结算\n5. 编写 xUnit 测试验证胜利/失败条件、死亡处理、事件发布顺序",
             "status": "pending",
-            "testStrategy": "xUnit 单元测试：敌方全灭触发 core.rouge.battle.won、我方全灭触发 core.rouge.battle.lost、单位 HP ≤ 0 立即死亡、胜负检查优先级正确、事件发布顺序"
+            "testStrategy": "xUnit 单元测试：敌方全灭触发 core.battle.ended、我方全灭触发 core.battle.ended、单位 HP ≤ 0 立即死亡、胜负检查优先级正确、事件发布顺序"
           }
         ],
         "adrRefs": [
@@ -871,11 +871,11 @@
           {
             "id": "5",
             "title": "集成 RewardManager 至事件系统与验证可玩",
-            "description": "将 RewardManager 注册到 DI 容器,确保与 core.rouge.battle.won 事件系统集成,编写冒烟测试验证战斗胜利后奖励生成工作流正常,为 Task 22 (RewardPanel) 做准备。",
+            "description": "将 RewardManager 注册到 DI 容器,确保与 core.battle.ended 事件系统集成,编写冒烟测试验证战斗胜利后奖励生成工作流正常,为 Task 22 (RewardPanel) 做准备。",
             "dependencies": [
               "4"
             ],
-            "details": "1. 在 DI 容器中注册 RewardManager(Game.Godot/Adapters/DependencyInjection.cs 或对应位置)\n2. 验证 RewardManager 可通过 DI 获取并调用\n3. 编写集成测试:模拟 core.rouge.battle.won 事件触发,验证 RewardManager.GenerateCardRewards 与 GenerateGoldReward 被正确调用\n4. 可选:编写 GdUnit4 冒烟场景测试,验证战斗胜利 → 调用 RewardManager → 返回候选卡与金币的完整链路\n5. 记录输出奖励数据(候选卡 ID、金币数)用于 UI 展示(Task 22)\n6. 确保 Seed 可配置,便于重现特定奖励用于调试",
+            "details": "1. 在 DI 容器中注册 RewardManager(Game.Godot/Adapters/DependencyInjection.cs 或对应位置)\n2. 验证 RewardManager 可通过 DI 获取并调用\n3. 编写集成测试:模拟 core.battle.ended 事件触发,验证 RewardManager.GenerateCardRewards 与 GenerateGoldReward 被正确调用\n4. 可选:编写 GdUnit4 冒烟场景测试,验证战斗胜利 → 调用 RewardManager → 返回候选卡与金币的完整链路\n5. 记录输出奖励数据(候选卡 ID、金币数)用于 UI 展示(Task 22)\n6. 确保 Seed 可配置,便于重现特定奖励用于调试",
             "status": "pending",
             "testStrategy": "xUnit: DI 注册与调用正确; GdUnit4 (可选): 战斗胜利事件 → RewardManager 调用完整链路"
           }
@@ -1163,7 +1163,7 @@
         "id": "16",
         "title": "创建一局流程控制器 (RunManager)",
         "description": "管理一局冒险的生命周期:开局→选路→节点内容→结算→重开",
-        "details": "创建 Game.Core/Services/RunManager.cs:\n- 方法:\n  - StartNewRun(seed): 生成 RunSeed、初始化 Party(2 英雄 + 初始牌组)、生成地图、定位起点\n  - EnterNode(nodeId): 根据节点类型进入对应内容(Combat/Event/Rest/Shop/Boss)\n  - CompleteNode(nodeId): 标记节点完成,返回地图\n  - EndRun(result): 章节完成或全灭时触发结算\n- 节点内容调度:\n  - Combat → 调用 BattleManager.StartBattle → 胜利触发奖励 → 回地图\n  - Event → 调用 EventManager.SelectOption → 回地图\n  - Rest/Shop → 调用对应 Service → 回地图\n  - Boss → 战斗 → 胜利触发章节结算 → 可重开\n- 发布事件: RunStarted/core.rouge.run.node.entered/NodeCompleted/RunEnded。\nOverlays: docs/architecture/overlays/PRD-rouge-manager/08/_index.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md; docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md",
+        "details": "创建 Game.Core/Services/RunManager.cs:\n- 方法:\n  - StartNewRun(seed): 生成 RunSeed、初始化 Party(2 英雄 + 初始牌组)、生成地图、定位起点\n  - EnterNode(nodeId): 根据节点类型进入对应内容(Combat/Event/Rest/Shop/Boss)\n  - CompleteNode(nodeId): 标记节点完成,返回地图\n  - EndRun(result): 章节完成或全灭时触发结算\n- 节点内容调度:\n  - Combat → 调用 BattleManager.StartBattle → 胜利触发奖励 → 回地图\n  - Event → 调用 EventManager.SelectOption → 回地图\n  - Rest/Shop → 调用对应 Service → 回地图\n  - Boss → 战斗 → 胜利触发章节结算 → 可重开\n- 发布事件: RunStarted/core.map.node.selected/NodeCompleted/RunEnded。\nOverlays: docs/architecture/overlays/PRD-rouge-manager/08/_index.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md; docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md",
         "testStrategy": "xUnit 单元测试:\n- RunManagerTests: 验证 StartNewRun 初始化正确(Party/Map/Seed)\n- EnterNode 测试: 不同节点类型调用正确 Service\n- CompleteNode 测试: 节点完成后 GetAvailableNodes 返回下一层\n- EndRun 测试: Boss 胜利触发 RunEnded(Victory),全灭触发 RunEnded(Defeat)\n使用 Mock BattleManager/EventManager 等依赖",
         "priority": "high",
         "dependencies": [
@@ -1211,9 +1211,9 @@
               "14",
               "15"
             ],
-            "details": "在 RunManager 中实现 EnterNode(nodeId) 方法，检查节点类型并调用对应 Service（如 Combat → BattleManager.StartBattle，Event → EventManager.SelectOption）。发布 core.rouge.run.node.entered 事件。处理节点执行完成后的回调机制，确保执行完成后自动触发 CompleteNode。",
+            "details": "在 RunManager 中实现 EnterNode(nodeId) 方法，检查节点类型并调用对应 Service（如 Combat → BattleManager.StartBattle，Event → EventManager.SelectOption）。发布 core.map.node.selected 事件。处理节点执行完成后的回调机制，确保执行完成后自动触发 CompleteNode。",
             "status": "pending",
-            "testStrategy": "xUnit 单元测试：验证不同节点类型调用正确的 Service；验证 core.rouge.run.node.entered 事件发布；使用 Mock 各 Service 验证调用参数正确。测试边界情况如无效节点 ID。"
+            "testStrategy": "xUnit 单元测试：验证不同节点类型调用正确的 Service；验证 core.map.node.selected 事件发布；使用 Mock 各 Service 验证调用参数正确。测试边界情况如无效节点 ID。"
           },
           {
             "id": "4",
@@ -1226,7 +1226,7 @@
             ],
             "details": "实现 EndRun(result) 方法，根据 result（Victory/Defeat）发布相应 RunEnded 事件，触发奖励结算或失败处理。编写 RunManagerIntegrationTests，模拟完整一局流程：StartNewRun → 多次 EnterNode(Combat) → CompleteNode → 进入 Shop → 再次 Combat → Boss 胜利 → EndRun(Victory)。使用 Mock 依赖和虚假数据。",
             "status": "pending",
-            "testStrategy": "xUnit 集成测试：验证完整一局流程各阶段的状态转移正确；验证 Boss 战胜利触发 RunEnded(Victory)、全灭触发 RunEnded(Defeat)；验证各关键事件（RunStarted/core.rouge.run.node.entered/NodeCompleted/RunEnded）的发布时机；覆盖多条路径如不进商店直接 Boss 等分支。"
+            "testStrategy": "xUnit 集成测试：验证完整一局流程各阶段的状态转移正确；验证 Boss 战胜利触发 RunEnded(Victory)、全灭触发 RunEnded(Defeat)；验证各关键事件（RunStarted/core.map.node.selected/NodeCompleted/RunEnded）的发布时机；覆盖多条路径如不进商店直接 Boss 等分支。"
           }
         ],
         "adrRefs": [
@@ -1477,7 +1477,7 @@
         "id": "20",
         "title": "实现战斗 UI (BattleScreen)",
         "description": "Godot 场景实现战斗界面:手牌/能量/状态/敌人意图/目标选择",
-        "details": "创建 Game.Godot/Scenes/Battle/BattleScreen.tscn:\n- 布局:\n  - 左侧: 英雄列表(HP/护盾/状态图标)\n  - 右侧: 敌人列表(HP/护盾/意图预告)\n  - 底部: 手牌区(CardView 组件)、能量显示、结束回合按钮\n- CardView 组件:\n  - 显示卡牌名称/消耗/描述/类型图标\n  - 可拖拽或点击选择,选中后进入目标选择模式\n- 目标选择:\n  - 根据卡牌 TargetRule 高亮可选目标\n  - 点击目标触发 PlayCard 用例\n- 订阅 Core 事件刷新 UI:\n  - CardPlayed → 更新手牌\n  - core.rouge.combat.damage.applied → 播放受击动画与血条更新\n  - core.rouge.status.applied → 刷新状态图标\n  - core.rouge.battle.won/core.rouge.battle.lost → 切换到奖励/结算界面\n脚本: Game.Godot/Scripts/Battle/BattleScreenController.cs(调用 BattleManager 用例)。\n\nOverlays: docs/architecture/overlays/PRD-rouge-manager/08/_index.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md; docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md\n",
+        "details": "创建 Game.Godot/Scenes/Battle/BattleScreen.tscn:\n- 布局:\n  - 左侧: 英雄列表(HP/护盾/状态图标)\n  - 右侧: 敌人列表(HP/护盾/意图预告)\n  - 底部: 手牌区(CardView 组件)、能量显示、结束回合按钮\n- CardView 组件:\n  - 显示卡牌名称/消耗/描述/类型图标\n  - 可拖拽或点击选择,选中后进入目标选择模式\n- 目标选择:\n  - 根据卡牌 TargetRule 高亮可选目标\n  - 点击目标触发 PlayCard 用例\n- 订阅 Core 事件刷新 UI:\n  - CardPlayed → 更新手牌\n  - core.effect.resolved → 播放受击动画与血条更新\n  - core.effect.resolved → 刷新状态图标\n  - core.battle.ended/core.battle.ended → 切换到奖励/结算界面\n脚本: Game.Godot/Scripts/Battle/BattleScreenController.cs(调用 BattleManager 用例)。\n\nOverlays: docs/architecture/overlays/PRD-rouge-manager/08/_index.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md; docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md\n",
         "testStrategy": "GdUnit4 场景测试:\n- 验证场景可正常加载\n- 模拟 CardPlayed 事件触发 UI 刷新\n- 验证结束回合按钮可点击并调用 BattleManager.EndPlayerTurn\n手动冒烟: 出牌 → 目标选择 → 伤害数字 → 敌人死亡 → 胜利",
         "priority": "high",
         "dependencies": [
@@ -1507,15 +1507,15 @@
           },
           {
             "id": "3",
-            "title": "事件订阅与 UI 自动刷新(CardPlayed/core.rouge.combat.damage.applied/core.rouge.status.applied/core.rouge.battle.won)",
+            "title": "事件订阅与 UI 自动刷新(CardPlayed/core.effect.resolved/core.effect.resolved/core.battle.ended)",
             "description": "在 BattleScreenController 中订阅 Core 事件,实现手牌更新、伤害动画、状态图标刷新、战斗结束切换等 UI 响应逻辑",
             "dependencies": [
               "1",
               "2"
             ],
-            "details": "在 BattleScreenController.cs 中注册事件监听器:订阅 BattleManager.CardPlayed 事件更新手牌显示(移除已出卡牌、重新排列剩余卡牌);订阅 BattleManager.core.rouge.combat.damage.applied 事件播放受击动画(目标单位闪烁或缩放动画,使用 Tween)与更新 HP 条;订阅 BattleManager.core.rouge.status.applied 事件刷新对应单位的状态图标列表;订阅 BattleManager.core.rouge.battle.won/core.rouge.battle.lost 事件切换到 RewardPanel/GameOverPanel(隐藏 BattleScreen,显示奖励/结算界面)。确保事件解绑在 _ExitTree() 中正确执行以避免内存泄漏。通过 GdUnit4 验证事件刷新逻辑正确触发。",
+            "details": "在 BattleScreenController.cs 中注册事件监听器:订阅 BattleManager.CardPlayed 事件更新手牌显示(移除已出卡牌、重新排列剩余卡牌);订阅 BattleManager.core.effect.resolved 事件播放受击动画(目标单位闪烁或缩放动画,使用 Tween)与更新 HP 条;订阅 BattleManager.core.effect.resolved 事件刷新对应单位的状态图标列表;订阅 BattleManager.core.battle.ended/core.battle.ended 事件切换到 RewardPanel/GameOverPanel(隐藏 BattleScreen,显示奖励/结算界面)。确保事件解绑在 _ExitTree() 中正确执行以避免内存泄漏。通过 GdUnit4 验证事件刷新逻辑正确触发。",
             "status": "pending",
-            "testStrategy": "GdUnit4 场景测试:加载 BattleScreen 场景;模拟 CardPlayed 事件,验证手牌容器中对应卡牌被移除并 UI 重新布局;模拟 core.rouge.combat.damage.applied 事件,验证受击单位 HP 条数值更新且播放动画(Tween active);模拟 core.rouge.status.applied 事件,验证对应单位状态图标容器新增状态图标;模拟 core.rouge.battle.won 事件,验证 RewardPanel 显示且 BattleScreen 隐藏;验证事件解绑后事件不再触发 UI 刷新。"
+            "testStrategy": "GdUnit4 场景测试:加载 BattleScreen 场景;模拟 CardPlayed 事件,验证手牌容器中对应卡牌被移除并 UI 重新布局;模拟 core.effect.resolved 事件,验证受击单位 HP 条数值更新且播放动画(Tween active);模拟 core.effect.resolved 事件,验证对应单位状态图标容器新增状态图标;模拟 core.battle.ended 事件,验证 RewardPanel 显示且 BattleScreen 隐藏;验证事件解绑后事件不再触发 UI 刷新。"
           }
         ],
         "adrRefs": [
@@ -1602,7 +1602,7 @@
         "id": "22",
         "title": "实现奖励选择 UI (RewardPanel)",
         "description": "战后奖励界面:选卡加入牌组/金币展示",
-        "details": "创建 Game.Godot/Scenes/Reward/RewardPanel.tscn:\n- 布局:\n  - 顶部: \"战斗胜利!\" 标题\n  - 中央: 3 张候选卡牌(CardView 组件)\n  - 底部: 金币奖励文本、\"跳过\" 按钮\n- 交互:\n  - 点击卡牌 → 调用 Party.GetHero(heroId).Deck.AddCard(cardDef)\n  - 点击跳过或选择卡牌后 → 关闭面板,回到地图\n- 订阅 core.rouge.battle.won 事件打开面板:\n  - 从 RewardManager 获取候选卡与金币\n脚本: Game.Godot/Scripts/Reward/RewardPanelController.cs。\nOverlays: docs/architecture/overlays/PRD-rouge-manager/08/_index.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md; docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md",
+        "details": "创建 Game.Godot/Scenes/Reward/RewardPanel.tscn:\n- 布局:\n  - 顶部: \"战斗胜利!\" 标题\n  - 中央: 3 张候选卡牌(CardView 组件)\n  - 底部: 金币奖励文本、\"跳过\" 按钮\n- 交互:\n  - 点击卡牌 → 调用 Party.GetHero(heroId).Deck.AddCard(cardDef)\n  - 点击跳过或选择卡牌后 → 关闭面板,回到地图\n- 订阅 core.battle.ended 事件打开面板:\n  - 从 RewardManager 获取候选卡与金币\n脚本: Game.Godot/Scripts/Reward/RewardPanelController.cs。\nOverlays: docs/architecture/overlays/PRD-rouge-manager/08/_index.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md; docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md",
         "testStrategy": "GdUnit4 场景测试:\n- 验证面板显示候选卡\n- 模拟点击卡牌触发 AddCard 事件\n手动冒烟: 战斗胜利 → 奖励面板弹出 → 选卡 → 牌组中新增卡牌",
         "priority": "medium",
         "dependencies": [
@@ -1644,15 +1644,15 @@
           },
           {
             "id": "4",
-            "title": "订阅 core.rouge.battle.won 事件并集成 RewardManager",
-            "description": "连接 core.rouge.battle.won 事件，从 RewardManager 获取奖励数据，将候选卡牌和金币填充到 UI",
+            "title": "订阅 core.battle.ended 事件并集成 RewardManager",
+            "description": "连接 core.battle.ended 事件，从 RewardManager 获取奖励数据，将候选卡牌和金币填充到 UI",
             "dependencies": [
               "1",
               "3"
             ],
-            "details": "在 RewardPanelController 中注册 core.rouge.battle.won 事件监听（可使用全局事件总线或 Autoload）。事件触发时调用 RewardManager.GenerateCardRewards(heroClassId, 3) 获取候选卡牌和 GenerateGoldReward(nodeType) 获取金币数量。将候选卡牌分配给 3 个 CardView 组件，更新底部金币显示文本。打开/显示面板。",
+            "details": "在 RewardPanelController 中注册 core.battle.ended 事件监听（可使用全局事件总线或 Autoload）。事件触发时调用 RewardManager.GenerateCardRewards(heroClassId, 3) 获取候选卡牌和 GenerateGoldReward(nodeType) 获取金币数量。将候选卡牌分配给 3 个 CardView 组件，更新底部金币显示文本。打开/显示面板。",
             "status": "pending",
-            "testStrategy": "GdUnit4 场景测试：模拟发送 core.rouge.battle.won 事件，验证面板显示、候选卡牌加载、金币数值正确显示"
+            "testStrategy": "GdUnit4 场景测试：模拟发送 core.battle.ended 事件，验证面板显示、候选卡牌加载、金币数值正确显示"
           },
           {
             "id": "5",
@@ -1663,7 +1663,7 @@
               "3",
               "4"
             ],
-            "details": "创建 Tests/Scenes/Reward/test_reward_panel.gd GdUnit4 测试文件，测试场景包括：1) 面板加载与初始状态；2) 三张卡牌正确显示；3) 点击卡牌触发 AddCard 并关闭面板；4) 点击跳过直接关闭面板；5) core.rouge.battle.won 事件触发面板打开并填充数据。手动冒烟步骤：启动游戏 → 进行战斗 → 战斗胜利 → 奖励面板弹出 → 验证卡牌显示与金币数值 → 选择或跳过 → 返回地图。记录截图和结果。",
+            "details": "创建 Tests/Scenes/Reward/test_reward_panel.gd GdUnit4 测试文件，测试场景包括：1) 面板加载与初始状态；2) 三张卡牌正确显示；3) 点击卡牌触发 AddCard 并关闭面板；4) 点击跳过直接关闭面板；5) core.battle.ended 事件触发面板打开并填充数据。手动冒烟步骤：启动游戏 → 进行战斗 → 战斗胜利 → 奖励面板弹出 → 验证卡牌显示与金币数值 → 选择或跳过 → 返回地图。记录截图和结果。",
             "status": "pending",
             "testStrategy": "GdUnit4 多场景集成测试与手动 E2E 冒烟；验证面板显示、交互响应、状态管理、返回流程"
           }
@@ -1991,7 +1991,7 @@
         "id": "29",
         "title": "编写 E2E 可玩闭环冒烟测试",
         "description": "自动化或手动验证完整流程:开局→选路→战斗→奖励→Boss→结算→重开",
-        "details": "创建 GdUnit4 E2E 测试套件 tests/e2e/test_mvp_run.gd:\n- 测试流程:\n  1. 模拟点击主菜单 \"开始新局\" → 验证进入 MapScreen\n  2. 模拟点击战斗节点 → 验证进入 BattleScreen\n  3. 模拟出牌 → 验证敌人 HP 下降、手牌移动\n  4. 模拟结束回合 → 验证敌方回合执行意图\n  5. 模拟敌人全灭 → 验证 core.rouge.battle.won 事件触发、RewardPanel 打开\n  6. 模拟选择卡牌奖励 → 验证牌组新增卡牌\n  7. 回到地图 → 验证当前节点标记完成、下一层节点可点击\n  8. 重复步骤 2–7 直到 Boss 节点\n  9. 模拟 Boss 战胜利 → 验证 RunEndScreen 显示胜利\n  10. 模拟点击 \"重新开始\" → 验证回到地图且地图重新生成\n- 或编写手动冒烟测试清单(docs/testing/mvp-smoke-test.md)供 QA 执行。\nOverlays: docs/architecture/overlays/PRD-rouge-manager/08/_index.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md; docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md",
+        "details": "创建 GdUnit4 E2E 测试套件 tests/e2e/test_mvp_run.gd:\n- 测试流程:\n  1. 模拟点击主菜单 \"开始新局\" → 验证进入 MapScreen\n  2. 模拟点击战斗节点 → 验证进入 BattleScreen\n  3. 模拟出牌 → 验证敌人 HP 下降、手牌移动\n  4. 模拟结束回合 → 验证敌方回合执行意图\n  5. 模拟敌人全灭 → 验证 core.battle.ended 事件触发、RewardPanel 打开\n  6. 模拟选择卡牌奖励 → 验证牌组新增卡牌\n  7. 回到地图 → 验证当前节点标记完成、下一层节点可点击\n  8. 重复步骤 2–7 直到 Boss 节点\n  9. 模拟 Boss 战胜利 → 验证 RunEndScreen 显示胜利\n  10. 模拟点击 \"重新开始\" → 验证回到地图且地图重新生成\n- 或编写手动冒烟测试清单(docs/testing/mvp-smoke-test.md)供 QA 执行。\nOverlays: docs/architecture/overlays/PRD-rouge-manager/08/_index.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md; docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md; docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md",
         "testStrategy": "GdUnit4 场景集成测试:\n- test_mvp_run.gd: 完整流程自动化测试\n手动冒烟:\n- 执行完整流程并记录通过/失败\n通过标准: 无崩溃、无卡死、所有节点类型可正常完成、Boss 胜利后可重开",
         "priority": "high",
         "dependencies": [
@@ -2031,7 +2031,7 @@
             "dependencies": [
               "2"
             ],
-            "details": "在 test_mvp_run.gd 中实现 test_battle_complete_flow()：(1) 进入 MapScreen，点击第 1 个可点击节点进入 BattleScreen；(2) 验证 BattleScreen 初始化：玩家/敌人 HP、初始手牌、敌人意图显示正确；(3) 模拟玩家操作：从手牌选择 1 张攻击卡→点击敌人→验证敌人 HP 下降、手牌从 Hand 移至 Discard；(4) 模拟点击 '结束回合'→验证敌方回合执行（敌人放大招、玩家 HP 下降或扣 Block）；(5) 重复出牌直到敌人全灭→验证 core.rouge.battle.won 事件触发、RewardPanel 打开；(6) 在 RewardPanel 选择卡牌奖励→验证牌组成功新增卡牌。输出：test_battle_complete_flow() 通过，战斗系统与奖励系统正常运作。",
+            "details": "在 test_mvp_run.gd 中实现 test_battle_complete_flow()：(1) 进入 MapScreen，点击第 1 个可点击节点进入 BattleScreen；(2) 验证 BattleScreen 初始化：玩家/敌人 HP、初始手牌、敌人意图显示正确；(3) 模拟玩家操作：从手牌选择 1 张攻击卡→点击敌人→验证敌人 HP 下降、手牌从 Hand 移至 Discard；(4) 模拟点击 '结束回合'→验证敌方回合执行（敌人放大招、玩家 HP 下降或扣 Block）；(5) 重复出牌直到敌人全灭→验证 core.battle.ended 事件触发、RewardPanel 打开；(6) 在 RewardPanel 选择卡牌奖励→验证牌组成功新增卡牌。输出：test_battle_complete_flow() 通过，战斗系统与奖励系统正常运作。",
             "status": "pending",
             "testStrategy": "GdUnit4：模拟多轮出牌与敌方 AI 交互；验证 HP 值变化、手牌移动、事件发布、奖励界面正确打开；使用固定敌人与确定性 RNG"
           },
@@ -2042,7 +2042,7 @@
             "dependencies": [
               "3"
             ],
-            "details": "在 test_mvp_run.gd 中实现 test_map_progression_and_boss()：(1) 奖励选择完成后，验证回到 MapScreen；(2) 验证刚完成的节点状态变为 Completed（显示勾、禁用点击），下一层第 1 个节点变为 Accessible；(3) 循环执行 3-4 次完整战斗流程，每次确认节点推进、牌组增长；(4) 当到达 Boss 层时，验证该节点为 Boss 类型；(5) 模拟 Boss 战斗与胜利→验证 core.rouge.battle.won 触发、Boss 战胜利后直接进入 RunEndScreen（而非 RewardPanel）；(6) 在 RunEndScreen 验证：显示最终统计（累积伤害、卡牌数量、运行时间）、'重新开始' 按钮可点击。输出：完整单局游戏闭环通过，从开局到结算。",
+            "details": "在 test_mvp_run.gd 中实现 test_map_progression_and_boss()：(1) 奖励选择完成后，验证回到 MapScreen；(2) 验证刚完成的节点状态变为 Completed（显示勾、禁用点击），下一层第 1 个节点变为 Accessible；(3) 循环执行 3-4 次完整战斗流程，每次确认节点推进、牌组增长；(4) 当到达 Boss 层时，验证该节点为 Boss 类型；(5) 模拟 Boss 战斗与胜利→验证 core.battle.ended 触发、Boss 战胜利后直接进入 RunEndScreen（而非 RewardPanel）；(6) 在 RunEndScreen 验证：显示最终统计（累积伤害、卡牌数量、运行时间）、'重新开始' 按钮可点击。输出：完整单局游戏闭环通过，从开局到结算。",
             "status": "pending",
             "testStrategy": "GdUnit4：验证地图节点状态转换序列、多轮战斗稳定性、Boss 节点特殊处理、结算界面正确渲染；检查无死循环、无状态不一致"
           },
