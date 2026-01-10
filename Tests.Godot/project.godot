@@ -14,5 +14,5 @@ enabled=PackedStringArray("gdUnit4")
 
 [dotnet]
 
-project/assembly_name="Rouge"
-project/project_path="res://Rouge.csproj"
+project/assembly_name="Tests.Godot"
+project/project_path="res://Tests.Godot.csproj"
