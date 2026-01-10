@@ -15,6 +15,7 @@
 - 本地：建议总是显式传 `--task-id <id>`。
 - CI：若没有显式指定，工作流会从 `.taskmaster/tasks/tasks.json` 中选择第一个 `status=in-progress` 的任务来运行验收门禁。
 - （可选）提交绑定：如果你希望把提交历史与任务绑定，建议在 commit message 中包含 `Task [<id>]`（供部分工具做“锁定提交”）。
+- （建议）语义三件套硬校验：在 CI 或本地验收阶段建议启用 `--task-context-required require`，强制执行 `sc-analyze` 并校验 triplet 必需字段齐全，避免“验收过了但任务语义字段缺失”的假阳性。
 
 ## 1. 为什么会出现“done 不真实”
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -107,6 +108,152 @@ def step_sc_internal_imports(out_dir: Path) -> StepResult:
     out_json = out_dir / "sc-internal-imports.json"
     cmd = ["py", "-3", "scripts/python/check_sc_internal_imports.py", "--out", str(out_json)]
     return run_and_capture(out_dir, "sc-internal-imports", cmd, 60)
+
+
+def step_sc_analyze_task_context(
+    out_dir: Path,
+    *,
+    task_id: str,
+    mode: str,
+    focus: str = "all",
+    depth: str = "quick",
+    timeout_sec: int = 900,
+) -> StepResult:
+    """
+    Produces sc-analyze artifacts under logs/ci/<date>/sc-analyze and also writes a per-task copy into out_dir.
+
+    mode:
+      - require: fail on error
+      - warn: do not fail (record rc in details)
+      - skip: do not run
+    """
+    mode_n = str(mode or "require").strip().lower()
+    cmd = [
+        "py",
+        "-3",
+        "scripts/sc/analyze.py",
+        "--task-id",
+        str(task_id),
+        "--focus",
+        str(focus),
+        "--depth",
+        str(depth),
+        "--format",
+        "json",
+    ]
+    if mode_n == "skip":
+        return StepResult(name="sc-analyze", status="skipped", rc=0, cmd=cmd, details={"mode": "skip"})
+
+    rc, out = run_cmd(cmd, cwd=repo_root(), timeout_sec=int(timeout_sec))
+    log_path = out_dir / "sc-analyze.log"
+    write_text(log_path, out)
+
+    sc_dir = repo_root() / "logs" / "ci" / today_str() / "sc-analyze"
+    ctx_src = sc_dir / "task_context.json"
+    ctx_dst_sc = sc_dir / f"task_context.{task_id}.json"
+    ctx_dst_local = out_dir / f"task_context.{task_id}.json"
+
+    details: dict[str, Any] = {
+        "mode": mode_n,
+        "task_id": str(task_id),
+        "sc_analyze_dir": str(sc_dir.relative_to(repo_root())).replace("\\", "/"),
+        "task_context": str(ctx_src.relative_to(repo_root())).replace("\\", "/") if ctx_src.exists() else None,
+    }
+
+    effective_rc = rc
+    if rc == 0 and not ctx_src.exists():
+        details["error"] = "missing_task_context_json"
+        effective_rc = 2
+
+    if rc == 0 and ctx_src.exists():
+        try:
+            shutil.copyfile(ctx_src, ctx_dst_sc)
+            shutil.copyfile(ctx_src, ctx_dst_local)
+            details["task_context_per_task"] = str(ctx_dst_sc.relative_to(repo_root())).replace("\\", "/")
+            details["task_context_local"] = str(ctx_dst_local.relative_to(repo_root())).replace("\\", "/")
+        except Exception as exc:  # noqa: BLE001
+            details["error"] = f"copy_failed:{exc}"
+            effective_rc = 3
+
+    if mode_n == "warn" and effective_rc != 0:
+        details["rc"] = effective_rc
+        return StepResult(name="sc-analyze", status="ok", rc=0, cmd=cmd, log=str(log_path), details=details)
+
+    return StepResult(
+        name="sc-analyze",
+        status="ok" if effective_rc == 0 else "fail",
+        rc=0 if effective_rc == 0 else 1,
+        cmd=cmd,
+        log=str(log_path),
+        details=details,
+    )
+
+
+def step_task_context_required_fields(
+    out_dir: Path,
+    *,
+    task_id: str,
+    mode: str,
+    stage: str = "refactor",
+    context_path: Path | None = None,
+    timeout_sec: int = 120,
+) -> StepResult:
+    """
+    Validates that the deterministic sc-analyze task_context.json includes all required fields for the given stage.
+
+    mode:
+      - require: fail on error
+      - warn: do not fail (record rc in details)
+      - skip: do not run
+    """
+    mode_n = str(mode or "require").strip().lower()
+    ctx = context_path or (repo_root() / "logs" / "ci" / today_str() / "sc-analyze" / f"task_context.{task_id}.json")
+    out_json = out_dir / "task-context-required.json"
+    cmd = [
+        "py",
+        "-3",
+        "scripts/python/validate_task_context_required_fields.py",
+        "--task-id",
+        str(task_id),
+        "--stage",
+        str(stage),
+        "--context",
+        str(ctx),
+        "--out",
+        str(out_json),
+    ]
+    if mode_n == "skip":
+        return StepResult(name="task-context-required", status="skipped", rc=0, cmd=cmd, details={"mode": "skip"})
+
+    details: dict[str, Any] = {
+        "mode": mode_n,
+        "task_id": str(task_id),
+        "stage": str(stage),
+        "context": str(ctx.relative_to(repo_root())).replace("\\", "/") if ctx.exists() else str(ctx),
+        "out": str(out_json.relative_to(repo_root())).replace("\\", "/"),
+    }
+
+    if not ctx.exists():
+        details["error"] = "missing_context_json"
+        if mode_n == "warn":
+            return StepResult(name="task-context-required", status="ok", rc=0, cmd=cmd, details={**details, "rc": 2})
+        return StepResult(name="task-context-required", status="fail", rc=1, cmd=cmd, details=details)
+
+    rc, out = run_cmd(cmd, cwd=repo_root(), timeout_sec=int(timeout_sec))
+    log_path = out_dir / "task-context-required.log"
+    write_text(log_path, out)
+
+    if mode_n == "warn" and rc != 0:
+        return StepResult(name="task-context-required", status="ok", rc=0, cmd=cmd, log=str(log_path), details={**details, "rc": rc})
+
+    return StepResult(
+        name="task-context-required",
+        status="ok" if rc == 0 else "fail",
+        rc=0 if rc == 0 else 1,
+        cmd=cmd,
+        log=str(log_path),
+        details=details,
+    )
 
 
 def step_task_test_refs_validate(out_dir: Path, *, task_id: str, require_non_empty: bool) -> StepResult:

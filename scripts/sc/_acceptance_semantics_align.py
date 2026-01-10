@@ -62,6 +62,37 @@ def normalize_acceptance_lines(lines: list[Any]) -> list[str]:
     return out
 
 
+def extract_master_meta(details: str) -> dict[str, list[str]]:
+    text = str(details or "")
+
+    def first_value(label: str) -> str:
+        want = (label.strip().rstrip(":") + ":").lower()
+        for raw in text.splitlines():
+            line = raw.strip()
+            if line and line.lower().startswith(want):
+                return line.split(":", 1)[1].strip()
+        return ""
+
+    def split_list(blob: str) -> list[str]:
+        return [s for s in (p.strip() for p in re.split(r"[;,]", str(blob or ""))) if s]
+
+    def overlay_key(p: str) -> tuple[int, str]:
+        path = str(p or "").strip()
+        low = path.lower().replace("\\", "/")
+        if low.endswith("acceptance_checklist.md"):
+            return (0, path)
+        if low.endswith("08-contracts-quality-metrics.md"):
+            return (1, path)
+        return (2, path)
+
+    adrs = sorted(set(re.findall(r"\bADR-\d{4}\b", text)))
+    chapters = sorted(set(re.findall(r"\bCH\d{2}\b", text)))
+    test_refs = split_list(first_value("Test Refs"))[:12]
+    overlays = sorted(set(split_list(first_value("Overlays"))), key=overlay_key)[:12]
+
+    return {"adrs": adrs, "chapters": chapters, "test_refs": test_refs, "overlays": overlays}
+
+
 def load_master_index(scope: str) -> dict[int, MasterTaskInput]:
     tasks_json_path, _, _ = default_paths()
     tasks_json = load_json(tasks_json_path)
@@ -135,6 +166,20 @@ def render_task_context(
     lines.append(f"MasterDescription: {master.description}")
     lines.append("MasterDetails:")
     lines.append(master.details)
+
+    meta = extract_master_meta(master.details)
+    if any(meta.values()):
+        lines.append("")
+        lines.append("ExtractedMeta:")
+        if meta["adrs"]:
+            lines.append(f"- ADRs: {', '.join(meta['adrs'])}")
+        if meta["chapters"]:
+            lines.append(f"- Chapters: {', '.join(meta['chapters'])}")
+        if meta["test_refs"]:
+            lines.append(f"- TestRefs: {', '.join(meta['test_refs'])}")
+        if meta["overlays"]:
+            lines.append(f"- OverlayDocs: {', '.join(meta['overlays'])}")
+
     if master.test_strategy:
         lines.append("")
         lines.append("MasterTestStrategy:")
@@ -162,6 +207,7 @@ def render_task_context(
     lines.append("- Prefer wording that is observable/testable (state/event/output), avoid binding to implementation internals.")
     lines.append("- Avoid no-op loopholes: acceptance should be falsifiable; if applicable, include an explicit refusal/unchanged-state clause.")
     lines.append("- Do not introduce new obligations unrelated to the master description/details.")
+    lines.append("- If ExtractedMeta is present, acceptance MUST explicitly mention the listed IDs/paths verbatim (audit by text search).")
     lines.append(f"- Mode: {mode}")
     lines.append(f"- Align view descriptions to master: {bool(align_view_descriptions)}")
     if semantic_hint:
@@ -195,6 +241,7 @@ def build_prompt(task_context: str) -> str:
     blocks.append("- Do NOT add new Refs: tokens in this step (acceptance-only phase).")
     blocks.append("- If the task contains subtasks, acceptance must cover those obligations; if mode prevents it, explain in notes.")
     blocks.append("- Prefer falsifiable statements: avoid wording that can be satisfied by doing nothing.")
+    blocks.append("- If Task context contains ExtractedMeta, acceptance MUST explicitly include those IDs/paths as verifiable requirements.")
     blocks.append("")
     blocks.append("Mode rules:")
     blocks.append('- rewrite-only: for each view, output acceptance array with EXACT SAME LENGTH as input and do NOT reorder items.')

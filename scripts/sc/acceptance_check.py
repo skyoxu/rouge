@@ -25,6 +25,7 @@ from _acceptance_steps import (
     step_contracts_validate,
     step_headless_e2e_evidence,
     step_overlay_validate,
+    step_sc_analyze_task_context,
     step_perf_budget,
     step_quality_rules,
     step_security_audit_evidence,
@@ -32,6 +33,7 @@ from _acceptance_steps import (
     step_security_soft,
     step_sc_internal_imports,
     step_subtasks_coverage_llm,
+    step_task_context_required_fields,
     step_task_links_validate,
     step_task_test_refs_validate,
     step_test_quality_soft,
@@ -64,6 +66,7 @@ def main() -> int:
     ap.add_argument("--strict-quality-rules", action="store_true", help="fail if deterministic quality rules report verdict=Needs Fix")
     ap.add_argument("--require-task-test-refs", action="store_true", help="fail if tasks_back/tasks_gameplay test_refs is empty for the resolved task id")
     ap.add_argument("--require-executed-refs", action="store_true", help="fail if acceptance anchors cannot be proven executed in this run (TRX/JUnit evidence)")
+    ap.add_argument("--task-context-required", default="skip", choices=["skip", "warn", "require"], help="run sc-analyze + validate required task context fields (triplet semantics)")
     ap.add_argument("--security-path-gate", default="require", choices=["skip", "warn", "require"])
     ap.add_argument("--security-sql-gate", default="require", choices=["skip", "warn", "require"])
     ap.add_argument("--security-audit-schema-gate", default="require", choices=["skip", "warn", "require"])
@@ -95,17 +98,29 @@ def main() -> int:
     require_executed = bool(args.require_executed_refs)
     subtasks_mode = str(args.subtasks_coverage or "skip").strip().lower()
     audit_mode = str(args.security_audit_evidence or "skip").strip().lower()
+    ctx_mode = str(args.task_context_required or "skip").strip().lower()
     run_id = uuid.uuid4().hex
     write_text(out_dir / "run_id.txt", run_id + "\n")
 
     if enabled("adr"):
         steps.append(step_adr_compliance(out_dir, triplet, strict_status=bool(args.strict_adr_status)))
     if enabled("links"):
+        steps.append(step_sc_analyze_task_context(out_dir, task_id=str(triplet.task_id), mode=ctx_mode))
+        steps.append(step_task_context_required_fields(out_dir, task_id=str(triplet.task_id), mode=ctx_mode, stage="refactor"))
         steps.append(step_sc_internal_imports(out_dir))
         steps.append(step_task_links_validate(out_dir))
         steps.append(step_task_test_refs_validate(out_dir, task_id=str(triplet.task_id), require_non_empty=bool(args.require_task_test_refs)))
         steps.append(step_acceptance_refs_validate(out_dir, task_id=str(triplet.task_id)))
         steps.append(step_acceptance_anchors_validate(out_dir, task_id=str(triplet.task_id)))
+    elif ctx_mode in ("warn", "require"):
+        steps.append(
+            StepResult(
+                name="task-context-required",
+                status="fail" if ctx_mode == "require" else "skipped",
+                rc=1 if ctx_mode == "require" else 0,
+                details={"error": "links_step_disabled", "hint": "include 'links' in --only (or omit --only) when using --task-context-required warn|require"},
+            )
+        )
     if enabled("subtasks"):
         if subtasks_mode == "skip":
             steps.append(StepResult(name="subtasks-coverage", status="skipped", rc=0, details={"reason": "subtasks_coverage_skip"}))
