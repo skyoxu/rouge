@@ -668,7 +668,8 @@
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-State.md"
     ],
     "labels": [
       "gameplay",
@@ -677,7 +678,8 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/State/RunGameStateTests.cs"
+      "Game.Core.Tests/State/RunGameStateTests.cs",
+      "Game.Core.Tests/Contracts/RougeRunGameStateSnapshotContractsTests.cs"
     ],
     "acceptance": [
       "在 `Game.Core/State/RunGameState.cs` 中实现可序列化的跑局存档快照类型（位于 Game.Core 且不依赖 Godot API），并包含可通过编译与反射/序列化验证的最小字段集合：`Version:int`、`RunSeed:int`、`CurrentAct:int`、`Map:AdventureMap`、`Party:Party`、`CompletedNodes:HashSet<NodeId>`、`Statistics:RunStatistics`（可选字段也必须可序列化且有明确默认/缺省语义）；字段/类型引用需与现有 `State/SaveData.cs` 的扩展或并存关系一致且不会引入循环依赖。 Refs: Game.Core.Tests/State/RunGameStateTests.cs",
@@ -761,11 +763,11 @@
     ],
     "taskmaster_id": 12,
     "taskmaster_exported": true,
-  "contractRefs": [
-    "core.reward.offered",
-    "core.reward.selected",
-    "core.battle.ended"
-  ]
+    "contractRefs": [
+      "core.reward.offered",
+      "core.reward.selected",
+      "core.battle.ended"
+    ]
   },
   {
     "id": "GM-0113",
@@ -1783,7 +1785,8 @@
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md",
       "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md",
-      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md"
+      "docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md",
+      "docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-State.md"
     ],
     "labels": [
       "gameplay",
@@ -1800,7 +1803,8 @@
       "Tests.Godot/tests/ui/test_main_menu_continue_load_save.gd",
       "标记）。",
       "Tests.Godot/tests/Tasks/test_task28_acceptance.gd",
-      "Game.Core.Tests/Tasks/Task28AcceptanceTests.cs"
+      "Game.Core.Tests/Tasks/Task28AcceptanceTests.cs",
+      "Game.Core.Tests/Contracts/RougeRunGameStateSnapshotContractsTests.cs"
     ],
     "acceptance": [
       "通过 `Game.Godot/Adapters/DataStoreAdapter.cs` 提供可调用的 `SaveRun(RunGameState)`/`LoadRun()`/`HasSave()`/`VerifyVersion()` 能力：保存时将 `RunGameState` 序列化为 JSON 并写入 `user://saves/current_run.json` 且包含可校验的 `Version` 字段；加载时可从同一路径反序列化还原完整状态；核心序列化/版本校验逻辑在 `Game.Core` 保持纯 C#（不依赖 Godot API）并有 xUnit 用例可验证无损往返与版本不匹配行为；同时本任务相关说明在 `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md` 与 `docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md` 中可被文本检索到并与实现一致。 Refs: Game.Core.Tests/DataStore/RunGameStateSerializationTests.cs",
