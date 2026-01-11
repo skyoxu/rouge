@@ -286,6 +286,11 @@ def main() -> int:
         help="Auto-select the latest commit referencing the task id (looks for 'Task [<id>]' in commit messages). Requires --task-id.",
     )
     ap.add_argument(
+        "--template-file",
+        default=None,
+        help="Optional review template text file to inject into every LLM prompt (UTF-8).",
+    )
+    ap.add_argument(
         "--timeout-sec",
         type=int,
         default=900,
@@ -389,6 +394,31 @@ def main() -> int:
     if triplet:
         acceptance_ctx, acceptance_meta = build_acceptance_evidence(task_id=triplet.task_id)
     diff_ctx = _build_diff_context(args)
+    template_ctx = ""
+    template_file = str(args.template_file or "").strip()
+    if template_file:
+        template_path = Path(template_file)
+        if not template_path.is_file():
+            template_path = repo_root() / template_file
+        if template_path.is_file():
+            try:
+                template_path = template_path.resolve()
+            except Exception:
+                pass
+            raw = _read_text(template_path).strip()
+            if raw:
+                try:
+                    template_rel = str(template_path.relative_to(repo_root())).replace("\\", "/")
+                except Exception:
+                    template_rel = str(template_path).replace("\\", "/")
+                template_ctx = "\n".join(
+                    [
+                        "Review Template (follow this structure):",
+                        f"- template_file: {template_rel}",
+                        "",
+                        raw,
+                    ]
+                ).strip()
 
     results: list[ReviewResult] = []
     hard_fail = False
@@ -448,6 +478,8 @@ def main() -> int:
 
         agent_prompt, prompt_meta = _agent_prompt(agent, claude_agents_root=claude_agents_root)
         blocks = [agent_prompt]
+        if template_ctx:
+            blocks.append(template_ctx)
         if ctx:
             blocks.append(ctx)
         if threat_ctx:
@@ -504,6 +536,7 @@ def main() -> int:
         "strict": bool(args.strict),
         "threat_model": threat_model,
         "acceptance_meta": acceptance_meta,
+        "template_file": template_file or None,
         "status": "fail" if hard_fail else ("warn" if had_warnings else "ok"),
         "results": [r.__dict__ for r in results],
         "out_dir": str(out_dir),

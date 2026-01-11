@@ -16,7 +16,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from _util import ci_dir, repo_root, run_cmd, write_json, write_text
+from _util import ci_dir, repo_root, resolve_dotnet_exe, run_cmd, write_json, write_text
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -62,8 +62,9 @@ def main() -> int:
     }
 
     logs = []
+    dotnet = resolve_dotnet_exe()
     if args.clean:
-        cmd = ["dotnet", "clean", str(target), "-c", config]
+        cmd = [dotnet, "clean", str(target), "-c", config]
         rc, out = run_cmd(cmd, cwd=repo_root(), timeout_sec=900)
         log_path = out_dir / "dotnet-clean.log"
         write_text(log_path, out)
@@ -74,7 +75,7 @@ def main() -> int:
             print(f"SC_BUILD status=fail out={out_dir}")
             return rc
 
-    cmd = ["dotnet", "build", str(target), "-c", config, "-warnaserror"]
+    cmd = [dotnet, "build", str(target), "-c", config, "-warnaserror"]
     if args.verbose:
         cmd += ["-v", "normal"]
 

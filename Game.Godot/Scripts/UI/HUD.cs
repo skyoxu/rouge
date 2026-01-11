@@ -8,16 +8,43 @@ public partial class HUD : Control
 {
     private Label _score = default!;
     private Label _health = default!;
+    private EventBusAdapter? _bus;
+    private Callable _domainEventCallable;
+    private bool _connected;
+
+    private static readonly JsonDocumentOptions JsonOptions = new()
+    {
+        MaxDepth = 32,
+        AllowTrailingCommas = false,
+        CommentHandling = JsonCommentHandling.Disallow,
+    };
 
     public override void _Ready()
     {
         _score = GetNode<Label>("TopBar/HBox/ScoreLabel");
         _health = GetNode<Label>("TopBar/HBox/HealthLabel");
 
-        var bus = GetNodeOrNull<EventBusAdapter>("/root/EventBus");
-        if (bus != null)
+        _bus = GetNodeOrNull<EventBusAdapter>("/root/EventBus");
+        if (_bus != null)
         {
-            bus.Connect(EventBusAdapter.SignalName.DomainEventEmitted, new Callable(this, nameof(OnDomainEventEmitted)));
+            _domainEventCallable = new Callable(this, nameof(OnDomainEventEmitted));
+            _bus.Connect(EventBusAdapter.SignalName.DomainEventEmitted, _domainEventCallable);
+            _connected = true;
+        }
+    }
+
+    public override void _ExitTree()
+    {
+        if (_connected && _bus != null)
+        {
+            try
+            {
+                _bus.Disconnect(EventBusAdapter.SignalName.DomainEventEmitted, _domainEventCallable);
+            }
+            catch
+            {
+                // ignore disconnect failures on teardown
+            }
         }
     }
 
@@ -27,7 +54,7 @@ public partial class HUD : Control
         {
             try
             {
-                var doc = JsonDocument.Parse(dataJson);
+                using var doc = JsonDocument.Parse(dataJson, JsonOptions);
                 int v = 0;
                 if (doc.RootElement.TryGetProperty("value", out var val)) v = val.GetInt32();
                 else if (doc.RootElement.TryGetProperty("score", out var sc)) v = sc.GetInt32();
@@ -39,7 +66,7 @@ public partial class HUD : Control
         {
             try
             {
-                var doc = JsonDocument.Parse(dataJson);
+                using var doc = JsonDocument.Parse(dataJson, JsonOptions);
                 int v = 0;
                 if (doc.RootElement.TryGetProperty("value", out var val)) v = val.GetInt32();
                 else if (doc.RootElement.TryGetProperty("health", out var hp)) v = hp.GetInt32();

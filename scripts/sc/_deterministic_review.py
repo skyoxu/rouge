@@ -111,8 +111,15 @@ def _render_adr_report(*, task_id: str | None, acceptance_dir: Path) -> tuple[st
     lines.append("## Evidence")
     adr_status = data.get("adrStatus") or {}
     for adr_id in sorted(adr_status.keys()):
-        st = adr_status.get(adr_id) or {}
-        lines.append(f"- {adr_id}: status={st.get('status')} path={st.get('path')}")
+        raw = adr_status.get(adr_id)
+        if isinstance(raw, dict):
+            st = str(raw.get("status") or raw.get("state") or "")
+            p = raw.get("path")
+            p = str(p) if p else None
+        else:
+            st = str(raw or "")
+            p = None
+        lines.append(f"- {adr_id}: status={st or '(unknown)'} path={p or '(unknown)'}")
     overlay = data.get("overlay")
     if overlay:
         lines.append(f"- overlay: `{overlay}`")
