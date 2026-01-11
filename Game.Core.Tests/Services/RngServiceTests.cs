@@ -8,8 +8,8 @@ namespace Game.Core.Tests.Services;
 
 public class RngServiceTests
 {
-    [Fact]
     // ACC:T10.2
+    [Fact]
     public void RngService_has_expected_contract_and_field_layout()
     {
         var rngServiceType = GetGameCoreType("Game.Core.Services.RngService");

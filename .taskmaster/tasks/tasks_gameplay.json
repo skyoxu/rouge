@@ -615,7 +615,6 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Domain/RngServiceTests.cs",
       "Game.Core.Tests/Tasks/Task10AcceptanceTests.cs",
       "Game.Core.Tests/Services/RngServiceTests.cs",
       "Game.Core.Tests/State/GameStateRunSeedTests.cs"

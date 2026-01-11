@@ -11,8 +11,8 @@ public sealed class GameStateRunSeedTests
 {
     // References: ADR-0021-csharp-domain-layer-architecture, ADR-0024-godot-test-strategy
 
-    [Fact]
     // ACC:T10.2
+    [Fact]
     public void GameState_exposes_RunSeed_as_int_and_in_primary_constructor()
     {
         var gameStateType = GetGameCoreType("Game.Core.Domain.GameState");
