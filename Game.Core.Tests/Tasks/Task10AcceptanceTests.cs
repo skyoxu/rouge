@@ -31,10 +31,10 @@ public class Task10AcceptanceTests
         Assert.Equal(typeof(Random), field!.FieldType);
     }
 
+    // ACC:T10.1
     [Fact]
     public void SetSeed_makes_sequences_repeatable_across_rng_operations()
     {
-        // ACC:T10.1 ACC:T10.3
         var svc = CreateRngService();
 
         InvokeVoid(svc, "SetSeed", 123);
@@ -52,6 +52,7 @@ public class Task10AcceptanceTests
         Assert.Equal(expectedElements, run1.Shuffled.OrderBy(x => x).ToArray());
     }
 
+    // ACC:T10.3
     [Fact]
     public void RngService_throws_on_invalid_arguments()
     {
