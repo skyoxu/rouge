@@ -584,7 +584,7 @@
     "story_id": "PRD-ROUGE-T2-VS-0001",
     "title": "创建随机数服务 (RngService)",
     "description": "统一管理随机源,支持 Seed 固定以保证可复现\n\n创建 Game.Core/Services/RngService.cs:\n- 字段: System.Random _rng\n- 方法:\n  - SetSeed(seed): 固定种子(用于调试/回放/测试)\n  - NextInt(min, max): 返回 [min, max) 随机整数\n  - NextFloat(): 返回 [0, 1) 随机浮点数\n  - Shuffle<T>(List<T>): Fisher-Yates 洗牌算法\n  - PickRandom<T>(List<T>): 随机选择一个元素\n- 设计为接口 IRngService,便于测试时 Mock。\n- 在 GameState 中记录 RunSeed,启动时调用 SetSeed(RunSeed)。",
-    "status": "pending",
+    "status": "done",
     "priority": "P1",
     "layer": "core",
     "depends_on": [],

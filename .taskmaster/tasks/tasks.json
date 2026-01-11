@@ -650,7 +650,7 @@
         "testStrategy": "xUnit 单元测试:\n- RngServiceTests: 固定 Seed 验证可复现性(多次调用返回相同序列)\n- Shuffle 测试: 固定 Seed 洗牌结果一致\n- 边界测试: min >= max 抛异常、空列表 PickRandom 抛异常",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": "1",
@@ -658,7 +658,7 @@
             "description": "在 Game.Core/Contracts 中定义 IRngService 接口,明确所有方法签名和契约",
             "dependencies": [],
             "details": "定义接口包含 SetSeed(int seed)、NextInt(int min, int max)、NextFloat()、Shuffle<T>(List<T>)、PickRandom<T>(List<T>) 五个方法。使用 XML 注释说明参数范围([min, max)、[0, 1))和异常条件(min >= max、空列表)。确保接口名称、参数命名规范,便于后续 Mock 和适配器注入。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": null
           },
           {
@@ -669,7 +669,7 @@
               "1"
             ],
             "details": "创建 RngService 类,包含 System.Random _rng 私有字段。实现 SetSeed(int seed) 重新初始化 _rng。实现 NextInt(int min, int max) 返回 [min, max) 整数,边界检查 min < max。实现 NextFloat() 返回 [0, 1) 浮点数。所有方法使用标准库 Random 的 Next()、NextDouble() 调用,无需自定义算法。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "xUnit 单元测试:验证 SetSeed 后 NextInt/NextFloat 返回序列可复现性(多次 SetSeed 相同值应返回相同序列);边界测试(min >= max 抛 ArgumentException)"
           },
           {
@@ -680,7 +680,7 @@
               "2"
             ],
             "details": "实现 Shuffle<T>(List<T> list) 方法,采用标准 Fisher-Yates 算法:从列表末尾向前遍历,每次从 [0, i] 范围内随机选择一个位置进行交换。使用 NextInt(0, i+1) 生成随机索引。修改入参列表的元素顺序(in-place)。边界处理:空列表无操作,单元素列表无操作。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "xUnit 单元测试:固定 Seed 下多次洗牌结果一致;验证洗牌不改变元素个数和内容;空列表和单元素列表不抛异常"
           },
           {
@@ -691,7 +691,7 @@
               "2"
             ],
             "details": "实现 PickRandom<T>(List<T> list) 方法,返回列表中随机一个元素。使用 NextInt(0, list.Count) 生成随机索引。边界处理:空列表抛 ArgumentException(提示消息:'列表为空,无法选择')。确保多次调用固定 Seed 下返回相同元素序列。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "xUnit 单元测试:固定 Seed 下多次 PickRandom 返回相同元素;空列表抛 ArgumentException;验证返回元素在列表中存在"
           },
           {
@@ -704,7 +704,7 @@
               "4"
             ],
             "details": "创建 Game.Core.Tests/Services/RngServiceTests.cs。测试用例包括:(1)固定 Seed 的可复现性:SetSeed(42) 后 NextInt/NextFloat 调用 10 次,记录结果;再次 SetSeed(42) 应得到相同序列。(2)Shuffle 一致性:固定 Seed 洗牌 List<int> {1,2,3,4,5} 两次应结果相同。(3)PickRandom 一致性:固定 Seed 从 List<string> 中选择 5 次应返回相同序列。(4)边界测试:min >= max 抛异常、空列表 PickRandom 抛异常、单元素洗牌无报错。使用 FluentAssertions 断言。覆盖率目标:lines ≥90%, branches ≥85%。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "xUnit + FluentAssertions;使用 Theory 或多个 Fact 测试多个 Seed 值;不依赖外部资源,所有测试确定性通过"
           }
         ],
