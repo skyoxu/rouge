@@ -761,10 +761,11 @@
     ],
     "taskmaster_id": 12,
     "taskmaster_exported": true,
-    "contractRefs": [
-      "core.reward.offered",
-      "core.reward.selected"
-    ]
+  "contractRefs": [
+    "core.reward.offered",
+    "core.reward.selected",
+    "core.battle.ended"
+  ]
   },
   {
     "id": "GM-0113",
@@ -1434,7 +1435,8 @@
     "taskmaster_exported": true,
     "contractRefs": [
       "core.reward.offered",
-      "core.reward.selected"
+      "core.reward.selected",
+      "core.battle.ended"
     ]
   },
   {

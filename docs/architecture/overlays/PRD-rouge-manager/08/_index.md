@@ -13,6 +13,7 @@ Arch-Refs:
 - 外链白名单（AllowedDomains / ALLOWED_EXTERNAL_HOSTS）— 见 `08-Contracts-Allowed-External-Hosts.md`
 - CloudEvent 契约 — 见 `08-Contracts-CloudEvent.md`
 - CloudEvents Core 契约 — 见 `08-Contracts-CloudEvents-Core.md`
+- Rouge 跑局存档 DTO 契约 — 见 `08-Contracts-Rouge-Run-State.md`
 - Rouge Run 事件契约 — 见 `08-Contracts-Rouge-Run-Events.md`
 - Rouge DTO：Shop Inventory & Pricing（商店库存与定价）— 见 `08-Contracts-Rouge-Shop-DTOs.md`
 - 质量指标（Quality Metrics）— 见 `08-Contracts-Quality-Metrics.md`
