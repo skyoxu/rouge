@@ -43,5 +43,25 @@ public class ScoreServiceTests
         svc.Reset();
         Assert.Equal(0, svc.Score);
     }
+
+    [Fact]
+    public void ComputeAddedScore_clamps_negative_points_and_handles_easy_and_unknown_difficulty()
+    {
+        var svc = new ScoreService();
+
+        var cfg = new GameConfig(
+            MaxLevel: 50,
+            InitialHealth: 100,
+            ScoreMultiplier: 1.0,
+            AutoSave: false,
+            Difficulty: Difficulty.Easy
+        );
+
+        Assert.Equal(0, svc.ComputeAddedScore(-10, cfg));
+        Assert.Equal(9, svc.ComputeAddedScore(10, cfg)); // 10 * 1.0 * 0.9
+
+        cfg = cfg with { Difficulty = (Difficulty)999 };
+        Assert.Equal(10, svc.ComputeAddedScore(10, cfg)); // default branch => 1.0
+    }
 }
 

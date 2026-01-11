@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace Game.Core.Tests.Services;
 
+[Collection("EnvironmentVariableSensitive")]
 public class EventBusTests
 {
     [Fact]
@@ -94,6 +95,133 @@ public class EventBusTests
         }
 
         Assert.True(found, "Expected audit entry action=eventbus.handler.exception not found.");
+    }
+
+    [Fact]
+    public async Task Unsubscribe_dispose_is_idempotent()
+    {
+        var bus = new InMemoryEventBus();
+        int called = 0;
+        var sub = bus.Subscribe(_ => { called++; return Task.CompletedTask; });
+
+        sub.Dispose();
+        sub.Dispose();
+
+        await bus.PublishAsync(new DomainEvent(
+            Type: "evt",
+            Source: nameof(EventBusTests),
+            DataJson: "null",
+            Timestamp: DateTimeOffset.UtcNow,
+            Id: Guid.NewGuid().ToString()
+        ));
+
+        Assert.Equal(0, called);
+    }
+
+    [Fact]
+    public async Task Audit_root_can_be_set_via_env_var_relative_path()
+    {
+        var repoRoot = FindRepoRoot();
+        var date = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var auditRoot = Path.Combine("logs", "unit", date, "unit-eventbus-env-relative", Guid.NewGuid().ToString("N"));
+        var prev = Environment.GetEnvironmentVariable("AUDIT_LOG_ROOT");
+
+        try
+        {
+            Environment.SetEnvironmentVariable("AUDIT_LOG_ROOT", auditRoot);
+
+            var bus = new InMemoryEventBus();
+            var evtType = "evt.env.relative." + Guid.NewGuid().ToString("N");
+            bus.Subscribe(_ => throw new InvalidOperationException(""));
+            await bus.PublishAsync(new DomainEvent(
+                Type: evtType,
+                Source: nameof(EventBusTests),
+                DataJson: "null",
+                Timestamp: DateTimeOffset.UtcNow,
+                Id: Guid.NewGuid().ToString("N")
+            ));
+
+            var auditPath = Path.Combine(repoRoot, auditRoot, "security-audit.jsonl");
+            Assert.True(File.Exists(auditPath), $"Missing audit log: {auditPath}");
+            Assert.Contains(evtType, File.ReadAllText(auditPath));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("AUDIT_LOG_ROOT", prev);
+        }
+    }
+
+    [Fact]
+    public async Task Audit_root_can_be_set_via_env_var_absolute_path()
+    {
+        var repoRoot = FindRepoRoot();
+        var date = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var auditRoot = Path.Combine(repoRoot, "logs", "unit", date, "unit-eventbus-env-abs", Guid.NewGuid().ToString("N"));
+        var prev = Environment.GetEnvironmentVariable("AUDIT_LOG_ROOT");
+
+        try
+        {
+            Environment.SetEnvironmentVariable("AUDIT_LOG_ROOT", auditRoot);
+
+            var bus = new InMemoryEventBus();
+            var evtType = "evt.env.abs." + Guid.NewGuid().ToString("N");
+            bus.Subscribe(_ => throw new InvalidOperationException(new string('x', 7000)));
+            await bus.PublishAsync(new DomainEvent(
+                Type: evtType,
+                Source: nameof(EventBusTests),
+                DataJson: "null",
+                Timestamp: DateTimeOffset.UtcNow,
+                Id: Guid.NewGuid().ToString("N")
+            ));
+
+            var auditPath = Path.Combine(auditRoot, "security-audit.jsonl");
+            Assert.True(File.Exists(auditPath), $"Missing audit log: {auditPath}");
+
+            var lines = File.ReadAllLines(auditPath);
+            Assert.NotEmpty(lines);
+            using var doc = JsonDocument.Parse(lines[0]);
+            var root = doc.RootElement;
+            Assert.True(root.TryGetProperty("exception_message", out var msg));
+            Assert.True(msg.ValueKind == JsonValueKind.String);
+            Assert.True(msg.GetString()!.Length <= 4096);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("AUDIT_LOG_ROOT", prev);
+        }
+    }
+
+    [Fact]
+    public async Task Default_audit_root_is_logs_ci_date_when_no_config_present()
+    {
+        var repoRoot = FindRepoRoot();
+        var date = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var prev = Environment.GetEnvironmentVariable("AUDIT_LOG_ROOT");
+
+        try
+        {
+            Environment.SetEnvironmentVariable("AUDIT_LOG_ROOT", null);
+
+            var bus = new InMemoryEventBus();
+            var evtType = "evt.default.root." + Guid.NewGuid().ToString("N");
+            bus.Subscribe(_ => throw new InvalidOperationException("boom"));
+
+            await bus.PublishAsync(new DomainEvent(
+                Type: evtType,
+                Source: nameof(EventBusTests),
+                DataJson: "null",
+                Timestamp: DateTimeOffset.UtcNow,
+                Id: Guid.NewGuid().ToString("N")
+            ));
+
+            var auditPath = Path.Combine(repoRoot, "logs", "ci", date, "security-audit.jsonl");
+            Assert.True(File.Exists(auditPath), $"Missing audit log: {auditPath}");
+            Assert.Contains(evtType, File.ReadAllText(auditPath));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("AUDIT_LOG_ROOT", prev);
+        }
     }
 
     private static string FindRepoRoot()

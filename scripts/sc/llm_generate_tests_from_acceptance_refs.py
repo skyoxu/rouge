@@ -162,7 +162,8 @@ def main() -> int:
             results.append(GenResult(ref=ref_norm, status="skipped").__dict__)
             continue
 
-        red = bool(args.tdd_stage == "red-first" and ref_norm == primary)
+        # Strict red-first: any newly generated test file must be red in current repo state.
+        red = bool(args.tdd_stage == "red-first")
         prompt = _build_prompt(
             task_id=task_id,
             title=title,
@@ -179,7 +180,11 @@ def main() -> int:
 
         rc, trace_out, cmd = run_codex_exec(prompt=prompt, output_last_message=last_msg_path, timeout_sec=int(args.timeout_sec))
         write_text(trace_path, trace_out)
-        if rc != 0 or not last_msg_path.exists():
+        if rc != 0 and last_msg_path.exists():
+            # Codex exec may time out but still have produced a usable last message file.
+            # In that case, prefer making forward progress by attempting to parse and write the test file.
+            pass
+        elif rc != 0 or not last_msg_path.exists():
             hard_fail = True
             results.append(
                 GenResult(
@@ -230,7 +235,19 @@ def main() -> int:
         try:
             _write_file(root, ref_norm, content)
             wrote_any = True
-            results.append(GenResult(ref=ref_norm, status="ok", rc=0, prompt_path=str(prompt_path), trace_path=str(trace_path), output_path=str(last_msg_path)).__dict__)
+            status_rc = 0 if rc == 0 else int(rc)
+            status = "ok" if rc == 0 else "ok_with_codex_rc"
+            results.append(
+                GenResult(
+                    ref=ref_norm,
+                    status=status,
+                    rc=status_rc,
+                    prompt_path=str(prompt_path),
+                    trace_path=str(trace_path),
+                    output_path=str(last_msg_path),
+                    error=None if rc == 0 else f"codex_exec_nonzero_rc_but_output_used rc={rc}",
+                ).__dict__
+            )
         except Exception as exc:  # noqa: BLE001
             hard_fail = True
             results.append(GenResult(ref=ref_norm, status="fail", prompt_path=str(prompt_path), trace_path=str(trace_path), output_path=str(last_msg_path), error=f"write_failed:{exc}").__dict__)
@@ -283,4 +300,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

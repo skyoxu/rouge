@@ -18,6 +18,7 @@ public record GameConfig(
 );
 
 public record GameState(
+    int RunSeed,
     string Id,
     int Level,
     int Score,

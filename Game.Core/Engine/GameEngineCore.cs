@@ -12,6 +12,7 @@ public class GameEngineCore
     private readonly ScoreService _score;
     private readonly CombatService _combat;
     private readonly InventoryService _inventorySvc;
+    private readonly IRngService? _rng;
     private readonly IEventBus? _bus;
     private readonly ITime? _time;
 
@@ -29,11 +30,13 @@ public class GameEngineCore
         _score = new ScoreService();
         _combat = new CombatService(bus);
         _inventorySvc = new InventoryService(inventory);
+        _rng = null;
         _bus = bus;
         _time = time;
         _enemiesDefeated = 0;
 
         State = new GameState(
+            RunSeed: Guid.NewGuid().GetHashCode(),
             Id: Guid.NewGuid().ToString("N"),
             Level: 1,
             Score: 0,
@@ -44,9 +47,16 @@ public class GameEngineCore
         );
     }
 
+    public GameEngineCore(GameConfig config, Inventory inventory, IRngService rng, IEventBus? bus = null, ITime? time = null)
+        : this(config, inventory, bus, time)
+    {
+        _rng = rng ?? throw new ArgumentNullException(nameof(rng));
+    }
+
     public GameState Start()
     {
         _startUtc = DateTime.UtcNow;
+        _rng?.SetSeed(State.RunSeed);
         Publish("core.game.started", new { stateId = State.Id });
         return State;
     }
