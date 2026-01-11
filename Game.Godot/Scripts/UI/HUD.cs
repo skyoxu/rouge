@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Game.Godot.Adapters;
 using System.Text.Json;
@@ -39,11 +40,19 @@ public partial class HUD : Control
         {
             try
             {
-                _bus.Disconnect(EventBusAdapter.SignalName.DomainEventEmitted, _domainEventCallable);
+                if (_bus.IsConnected(EventBusAdapter.SignalName.DomainEventEmitted, _domainEventCallable))
+                {
+                    _bus.Disconnect(EventBusAdapter.SignalName.DomainEventEmitted, _domainEventCallable);
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                // ignore disconnect failures on teardown
+                GD.PrintErr($"[HUD] Failed to disconnect DomainEventEmitted: {ex.GetType().FullName}: {ex.Message}");
+            }
+            finally
+            {
+                _connected = false;
+                _bus = null;
             }
         }
     }
