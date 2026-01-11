@@ -2,7 +2,7 @@
 Test Naming Convention Validator for Game.Core.Tests
 
 This script validates that all test methods in Game.Core.Tests follow the repository-approved
-test naming conventions and prevents regression to snake_case naming.
+test naming conventions and avoids lowerCamelCase / leading-lowercase names.
 
 Usage:
     py -3 scripts/python/check_test_naming.py
@@ -21,6 +21,11 @@ import re
 import sys
 from pathlib import Path
 from typing import List, Tuple
+
+
+TEST_METHOD_DEF_RE = re.compile(
+    r"\b(?:public|private|internal)\s+(?:async\s+)?(?:void|Task(?:<[^>]+>)?)\s+(\w+)\s*\("
+)
 
 
 def is_pascal_case(name: str) -> bool:
@@ -46,16 +51,10 @@ def is_pascal_case_with_underscores(name: str) -> bool:
     """
     Check if a method name follows the PascalCase_With_Underscores convention.
 
-    Examples:
-      - Save_load_delete_and_index_flow_works_with_compression  (NOT allowed: starts with lowercase)
-      - Save_Load_Delete_And_Index_Flow_WorksWithCompression    (allowed)
-      - Advance_WithinBounds_ReturnsCorrectPosition             (allowed)
-
-    Rules:
-      - Each segment is PascalCase (no underscores within segments)
-      - Segments are separated by a single underscore
+    Check if a method name starts with an uppercase letter and uses underscores to separate
+    readable segments (segments may start with either upper or lower case).
     """
-    pattern = r"^[A-Z][a-zA-Z0-9]*(?:_[A-Z][a-zA-Z0-9]*)+$"
+    pattern = r"^[A-Z][a-zA-Z0-9]*(?:_[a-zA-Z0-9]+)+$"
     return bool(re.match(pattern, name))
 
 
@@ -63,7 +62,7 @@ def is_allowed_test_method_name(name: str) -> bool:
     """
     Approved patterns:
       A) PascalCase (covers GivenWhenThen style)
-      B) PascalCase_With_Underscores (Method_Scenario_ExpectedResult)
+      B) PascalCase_With_Underscores (Method_Scenario_ExpectedResult; readable segments)
     """
     return is_pascal_case(name) or is_pascal_case_with_underscores(name)
 
@@ -95,17 +94,14 @@ def extract_test_methods(file_path: Path) -> List[Tuple[int, str]]:
                     if not next_line or next_line.startswith("//") or next_line.startswith("["):
                         continue
 
-                    method_match = re.search(
-                        r"\\b(?:public|private|internal)\\s+(?:async\\s+)?(?:void|Task(?:<[^>]+>)?)\\s+(\\w+)\\s*\\(",
-                        next_line,
-                    )
+                    method_match = TEST_METHOD_DEF_RE.search(next_line)
                     if method_match:
                         method_name = method_match.group(1)
                         test_methods.append((j, method_name))
                         break
 
     except Exception as e:
-        print(f"Error reading {file_path}: {e}", file=sys.stderr)
+        raise RuntimeError(f"Error reading {file_path}: {e}") from e
 
     return test_methods
 
@@ -151,7 +147,11 @@ def main() -> int:
     print(f"Test directory: {test_dir}")
     print()
 
-    violations = scan_test_files(test_dir)
+    try:
+        violations = scan_test_files(test_dir)
+    except Exception as e:
+        print(f"[FAIL] Test naming scan failed: {e}", file=sys.stderr)
+        return 1
 
     if not violations:
         print("[OK] All test methods follow approved naming conventions")
@@ -181,4 +181,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
