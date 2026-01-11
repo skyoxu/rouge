@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any, Iterable, Sequence
@@ -62,6 +63,34 @@ def run_cmd(
     return proc.returncode or 0, out
 
 
+def resolve_dotnet_exe() -> str:
+    """
+    Resolve dotnet.exe on Windows in environments where PATH isn't populated (e.g. CI shells).
+
+    Preference order:
+      1) PATH (shutil.which)
+      2) User-scoped install under LOCALAPPDATA
+      3) Machine-wide installs under ProgramFiles
+
+    Returns the best guess executable path; may still be "dotnet" if not found.
+    """
+    found = shutil.which("dotnet")
+    if found:
+        return found
+
+    local_app = os.environ.get("LOCALAPPDATA") or ""
+    program_files = os.environ.get("ProgramFiles") or ""
+    program_files_x86 = os.environ.get("ProgramFiles(x86)") or ""
+
+    candidates = [
+        str(Path(local_app) / "Microsoft" / "dotnet" / "dotnet.exe"),
+        str(Path(program_files) / "dotnet" / "dotnet.exe"),
+        str(Path(program_files_x86) / "dotnet" / "dotnet.exe"),
+    ]
+
+    return first_existing(*candidates) or "dotnet"
+
+
 def first_existing(*candidates: str) -> str | None:
     for c in candidates:
         if c and Path(c).exists():
@@ -94,4 +123,3 @@ def iter_files(
             except OSError:
                 continue
             yield p
-
