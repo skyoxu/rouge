@@ -22,8 +22,18 @@ import xml.etree.ElementTree as ET
 
 
 def run_cmd(args, cwd=None, timeout=900_000):
-    p = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         text=True, encoding='utf-8', errors='ignore')
+    try:
+        p = subprocess.Popen(
+            args,
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding='utf-8',
+            errors='ignore',
+        )
+    except FileNotFoundError as e:
+        return 127, f"FileNotFoundError: {e}\ncmd={args}\n"
     try:
         out, _ = p.communicate(timeout=timeout/1000.0)
     except subprocess.TimeoutExpired:
@@ -35,6 +45,28 @@ def run_cmd(args, cwd=None, timeout=900_000):
 
 def ensure_dir(path):
     os.makedirs(path, exist_ok=True)
+
+
+def resolve_dotnet_exe():
+    exe = shutil.which('dotnet')
+    if exe:
+        return exe
+
+    local = os.environ.get('LOCALAPPDATA') or ''
+    if local:
+        candidate = os.path.join(local, 'Microsoft', 'dotnet', 'dotnet.exe')
+        if os.path.exists(candidate):
+            return candidate
+
+    for env_key in ('ProgramFiles', 'ProgramFiles(x86)'):
+        base = os.environ.get(env_key) or ''
+        if not base:
+            continue
+        candidate = os.path.join(base, 'dotnet', 'dotnet.exe')
+        if os.path.exists(candidate):
+            return candidate
+
+    return 'dotnet'
 
 
 def parse_cobertura(path):
@@ -72,15 +104,18 @@ def main():
     out_dir = args.out_dir or os.path.join(root, 'logs', 'unit', date)
     ensure_dir(out_dir)
 
+    dotnet = resolve_dotnet_exe()
+
     summary = {
         'solution': args.solution,
         'configuration': args.configuration,
         'out_dir': out_dir,
+        'dotnet_exe': dotnet,
         'status': 'fail',
     }
 
     # Restore
-    rc, out = run_cmd(['dotnet', 'restore', args.solution], cwd=root)
+    rc, out = run_cmd([dotnet, 'restore', args.solution], cwd=root)
     with io.open(os.path.join(out_dir, 'dotnet-restore.log'), 'w', encoding='utf-8') as f:
         f.write(out)
     summary['restore_rc'] = rc
@@ -91,7 +126,7 @@ def main():
         return 1
 
     # Test with coverage
-    rc, out = run_cmd(['dotnet', 'test', args.solution,
+    rc, out = run_cmd([dotnet, 'test', args.solution,
                        f'-c', args.configuration,
                        '--collect:XPlat Code Coverage',
                        '--logger', 'trx;LogFileName=tests.trx'], cwd=root)

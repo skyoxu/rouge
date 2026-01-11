@@ -24,4 +24,12 @@ public class InMemoryInventoryRepositoryTests
         var all = await repo.AllAsync();
         all.Should().ContainSingle(x => x.ItemId == "iron" && x.Qty == 5);
     }
+
+    [Fact]
+    public async Task GetAsync_returns_null_for_missing_item()
+    {
+        var repo = new InMemoryInventoryRepository();
+        var missing = await repo.GetAsync("missing");
+        missing.Should().BeNull();
+    }
 }

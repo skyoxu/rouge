@@ -23,6 +23,7 @@ public class GameStateManagerTests
 {
     private static GameState MakeState(int level=1, int score=0)
         => new(
+            RunSeed: 0,
             Id: Guid.NewGuid().ToString(),
             Level: level,
             Score: score,
@@ -108,6 +109,30 @@ public class GameStateManagerTests
         mgr.SetState(MakeState(), MakeConfig());
         var tooLong = new string('x', 101);
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await mgr.SaveGameAsync(tooLong));
+    }
+
+    [Fact]
+    public async Task Load_throws_when_checksum_mismatch_and_reads_uncompressed_payload()
+    {
+        var store = new InMemoryDataStore();
+        var opts = new GameStateManagerOptions(EnableCompression: false);
+        var mgr = new GameStateManager(store, opts);
+
+        var state = MakeState(level: 1);
+        var cfg = MakeConfig();
+
+        var save = new SaveData(
+            Id: "save_bad_checksum",
+            State: state,
+            Config: cfg,
+            Metadata: new SaveMetadata(DateTime.UtcNow, DateTime.UtcNow, "1.0.0", "BAD"),
+            Screenshot: null,
+            Title: "bad"
+        );
+
+        await store.SaveAsync(save.Id, JsonSerializer.Serialize(save));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await mgr.LoadGameAsync(save.Id));
     }
 }
 
