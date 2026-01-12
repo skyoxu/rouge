@@ -5,6 +5,9 @@ Updated: true
 Arch-Refs:
   - CH01
   - CH03
+Test-Refs:
+  - Game.Core.Tests/Docs/OverlayTestRefsTests.cs
+  - Game.Core.Tests/Domain/CardTests.cs
 ---
 
 本目录聚合 PRD-rouge-manager（单机单人卡牌构筑RPG：T2 最小可玩闭环）的功能纵切页面与对应测试引用（仅引用 01/02/03 章口径，不在此复制阈值/策略）。
