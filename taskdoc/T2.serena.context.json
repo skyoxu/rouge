@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-01-13T16:20:15",
+  "task_id": 2,
+  "title": "实现牌堆系统 (Deck/Hand/Discard/Exhaust)",
+  "overlay": "docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md",
+  "adrRefs": [
+    "ADR-0004",
+    "ADR-0011",
+    "ADR-0018",
+    "ADR-0021",
+    "ADR-0024"
+  ],
+  "archRefs": [
+    "CH01",
+    "CH04",
+    "CH06",
+    "CH07",
+    "CH10"
+  ],
+  "contractRefs": [
+    "core.battle.turn.player.started",
+    "core.card.played",
+    "core.card.drawn",
+    "core.card.discarded"
+  ],
+  "test_refs_declared": [
+    "Game.Core.Tests/Domain/CardPile/CardPileModelingTests.cs",
+    "Game.Core.Tests/Domain/CardPile/CardPileBattleFlowTests.cs",
+    "Game.Core.Tests/Domain/CardPile/CardPilePerfRegressionTests.cs",
+    "Game.Core.Tests/Domain/CardPile/CardPileTests.cs",
+    "Game.Core.Tests/Contracts/Rouge/RougeRunEventsContractsTests.cs"
+  ],
+  "acceptance": [
+    "在 `Game.Core/Domain/CardPile.cs` 中实现纯 C# 的牌堆建模（不得依赖任何 Godot 命名空间/类型），包含 `PileType`（DrawPile/Hand/DiscardPile/ExhaustPile）与牌堆状态；构筑期操作 `AddCard(cardDef)`、`RemoveCard(cardId)`、`UpgradeCard(cardId)` 可用单元测试验证为“操作前后返回新实例/状态正确”，并包含手牌容量上限逻辑（默认 10）；对空堆操作、重复移除、升级不存在卡牌等边界行为在单元测试中有可验证的断言覆盖。 Refs: Game.Core.Tests/Domain/CardPile/CardPileModelingTests.cs",
+    "实现战斗期牌堆迁移逻辑且语义可被测试直接观测：`Shuffle()` 调用注入的 `RngService` 对 DrawPile 洗牌并在固定 Seed 下可复现；`Draw(n)` 将牌从 DrawPile 抽到 Hand，DrawPile 不足或为空时自动将 DiscardPile 洗回至 DrawPile 后继续抽取直到达到 n 或无牌可抽；`Discard(cardId)` 将 Hand→DiscardPile；`Exhaust(cardId)` 将 Hand→ExhaustPile（战斗结束语义以 ExhaustPile 可清空为前提）；并通过现有 `Services/EventBus` 发布 `CardDrawn(cardId, drawOrder)` 与 `CardDiscarded(cardId)` 事件，事件数量与顺序可由测试断言；包含 100+ 张抽牌场景的回归用例以覆盖性能不发生明显退化。 Refs: Game.Core.Tests/Domain/CardPile/CardPileBattleFlowTests.cs Game.Core.Tests/Domain/CardPile/CardPilePerfRegressionTests.cs",
+    "提供 xUnit `CardPileTests`（使用 Fake `RngService`/Mock `IEventBus` 保证可预测随机与可断言事件发布）覆盖 Draw/Shuffle/Discard/Exhaust/Add/Remove/Upgrade 及其边界条件，并确保在 Windows 上运行 `dotnet test` 通过；如新增或变更契约/事件类型，统一落盘到 `Game.Core/Contracts/Rouge/**`；并确保以下文档路径存在，且其内容中可通过文本搜索定位到本任务的验收/契约说明与测试关联（包括保持 overlay 的 Test-Refs 与实际测试文件路径一致）：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`、`docs/architecture/overlays/PRD-rouge-manager/08/_index.md`。 Refs: Game.Core.Tests/Domain/CardPile/CardPileTests.cs Game.Core.Tests/Contracts/Rouge/RougeRunEventsContractsTests.cs"
+  ],
+  "key_code_paths": [
+    "Game.Core/Domain/CardPile.cs",
+    "Game.Core/Contracts/Rouge/Cards/CardDrawn.cs",
+    "Game.Core/Contracts/Rouge/Cards/CardDiscarded.cs"
+  ],
+  "key_test_paths": [
+    "Game.Core.Tests/Domain/CardPile/CardPileModelingTests.cs",
+    "Game.Core.Tests/Domain/CardPile/CardPileBattleFlowTests.cs",
+    "Game.Core.Tests/Domain/CardPile/CardPilePerfRegressionTests.cs",
+    "Game.Core.Tests/Domain/CardPile/CardPileTests.cs",
+    "Game.Core.Tests/Domain/CardPile/CardPileBranchCoverageTests.cs",
+    "Game.Core.Tests/Domain/CardPile/CardPileErrorHandlingTests.cs",
+    "Game.Core.Tests/Contracts/Rouge/RougeRunEventsContractsTests.cs"
+  ],
+  "notes": [
+    "This file is regenerated from current repo state to avoid stale context drift.",
+    "Contracts follow ADR-0004; event payloads are JSON (DomainEvent.DataJson).",
+    "CardPile models card instances via CardRef (instance id + definition id)."
+  ]
+}

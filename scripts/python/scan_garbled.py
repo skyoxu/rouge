@@ -54,7 +54,9 @@ def main():
 
     root = os.path.abspath(args.root)
     results = []
-    for dirpath, _, filenames in os.walk(root):
+    skip_dir_names = {'.git', '.godot', 'logs', 'build', 'demo', 'tmp', '_tmp', 'TestResults'}
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in skip_dir_names]
         for name in filenames:
             ext = os.path.splitext(name)[1].lower()
             if ext not in ALLOWED_EXTS:

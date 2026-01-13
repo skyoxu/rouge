@@ -45,7 +45,7 @@ def _iter_cs_files(root: Path) -> Iterable[Path]:
     for p in root.rglob("*.cs"):
         if not p.is_file():
             continue
-        if any(seg in {".git", ".godot", "bin", "obj", "logs", "TestResults"} for seg in p.parts):
+        if any(seg in {".git", ".godot", "bin", "obj", "logs", "TestResults", "tmp", "_tmp"} for seg in p.parts):
             continue
         yield p
 

@@ -64,6 +64,15 @@ Status: Proposed
 - **CardPlayed** (`core.card.played`)
   - 触发时机：卡牌通过校验并提交给 EffectResolver
   - 字段建议：RunId, BattleId, Turn, HeroId, CardId, Targets
+- **CardDrawn** (`core.card.drawn`)
+  - ?????? DrawPile ???? Hand ?
+  - ???RunId, BattleId, Turn, HeroId, CardInstanceId, CardDefinitionId, DrawOrder
+  - ?????`Game.Core/Contracts/Rouge/Cards/CardDrawn.cs`
+- **CardDiscarded** (`core.card.discarded`)
+  - ?????? Hand ???? DiscardPile ?
+  - ???RunId, BattleId, Turn, HeroId, CardInstanceId, CardDefinitionId
+  - ?????`Game.Core/Contracts/Rouge/Cards/CardDiscarded.cs`
+
 - **EffectsResolved** (`core.effect.resolved`)
   - 触发时机：一张卡/一次敌方 Intent 的效果指令序列完成结算
   - 字段建议：RunId, BattleId, SourceType, Commands, DeltaSummary

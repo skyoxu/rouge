@@ -26,6 +26,12 @@ BINARY_EXT = {
     '.zip','.7z','.rar','.gz','.tar','.tgz',
     '.dll','.exe','.pdb','.pck','.import','.ttf','.otf',
     '.db','.sqlite','.sav',
+    '.docx',
+    '.pyc','.pyd',
+    '.nupkg','.snupkg',
+    '.lib',
+    '.cache',
+    '.tests',
     '.bak'
 }
 
@@ -37,6 +43,18 @@ EXCLUDE_PATTERNS = [
     'Tests.Godot/addons/gdUnit4/src/ui/settings/',
     'gitlog/export-logs.zip',
 ]
+
+# Exclude build/vendor/temporary directories from UTF-8 validation.
+# These commonly contain binary artifacts that may be small enough to trip the
+# "heuristic small files" fallback in is_text_file().
+EXCLUDE_DIR_FRAGMENTS = (
+    '/__pycache__/',
+    '/.dotnet/',
+    '/.venv/',
+    '/bin/',
+    '/obj/',
+    '/TestResults/',
+)
 
 
 def run_cmd(args: List[str]) -> str:
@@ -61,6 +79,8 @@ def is_text_file(path: str) -> bool:
     ext = ext.lower()
     norm = path.replace('\\','/')
     if any(p in norm for p in EXCLUDE_PATTERNS):
+        return False
+    if any(seg in norm for seg in EXCLUDE_DIR_FRAGMENTS):
         return False
     if ext in BINARY_EXT:
         return False
@@ -122,6 +142,20 @@ def main():
             if '/build' in rel or rel.startswith('build'):
                 continue
             if '/.godot' in rel or rel.startswith('.godot'):
+                continue
+            if '/tmp' in rel or rel.startswith('tmp'):
+                continue
+            if '/_tmp' in rel or rel.startswith('_tmp'):
+                continue
+            if rel == '__pycache__' or rel.startswith('__pycache__/') or '/__pycache__/' in rel:
+                continue
+            if rel == '.dotnet' or rel.startswith('.dotnet/') or '/.dotnet/' in rel:
+                continue
+            if rel == '.venv' or rel.startswith('.venv/') or '/.venv/' in rel:
+                continue
+            if rel == 'bin' or rel.startswith('bin/') or '/bin/' in rel:
+                continue
+            if rel == 'obj' or rel.startswith('obj/') or '/obj/' in rel:
                 continue
 
             for name in filenames:

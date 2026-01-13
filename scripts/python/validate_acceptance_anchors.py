@@ -31,7 +31,8 @@ from typing import Any
 
 
 REFS_RE = re.compile(r"\bRefs\s*:\s*(.+)$", flags=re.IGNORECASE)
-XUNIT_MARKER_RE = re.compile(r"^\s*\[\s*(Fact|Theory)\s*\]\s*$")
+# Accept both `[Fact]` and `[Fact(...)]` / `[Theory(...)]` forms.
+XUNIT_MARKER_RE = re.compile(r"^\s*\[\s*(Fact|Theory)(?:\s*\([^)]*\))?\s*\]\s*$")
 GDUNIT_MARKER_RE = re.compile(r"^\s*func\s+test_", flags=re.IGNORECASE)
 
 

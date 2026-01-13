@@ -64,14 +64,14 @@
         "subtasks": [
           {
             "id": "1",
-            "title": "实现卡牌堆基础数据结构与不可变操作",
-            "description": "创建 Game.Core/Domain/CardPile.cs，实现统一的 CardPile 类与 PileType 枚举，支持 DrawPile/Hand/DiscardPile/ExhaustPile 四种堆类型。实现基础的不可变性设计（使用 record 类型或不可变集合），包括 AddCard、RemoveCard、UpgradeCard 等构筑时操作。",
+            "title": "实现卡牌堆基础数据结构与核心操作",
+            "description": "创建 Game.Core/Domain/CardPile.cs，实现统一的 CardPile 类与 PileType 枚举，支持 DrawPile/Hand/DiscardPile/ExhaustPile 四种堆类型。实现构筑期操作 AddCard/RemoveCard/UpgradeCard，并用 xUnit 单元测试验证状态正确性、边界行为与手牌容量上限（默认 10）。",
             "dependencies": [
               "1"
             ],
-            "details": "- 创建 PileType 枚举（DrawPile/Hand/DiscardPile/ExhaustPile）\n- 设计 CardPile 类：不可变集合存储卡牌列表、PileType 标识符、容量限制\n- 实现基础方法：AddCard(cardDef) 返回新实例、RemoveCard(cardId) 返回新实例、UpgradeCard(cardId) 替换卡牌定义\n- 手牌容量限制逻辑（默认 10 张）\n- 使用 xUnit + NSubstitute 编写单元测试：验证加牌、移除、升级的不可变性与状态正确性\n- 覆盖边界情况：空堆操作、重复移除、升级非存在卡牌",
+            "details": "- 创建 PileType 枚举（DrawPile/Hand/DiscardPile/ExhaustPile）\n- 设计 CardPile 类：明确四类堆状态与容量限制（默认手牌上限 10）\n- 实现基础方法：AddCard(cardDef)、RemoveCard(cardId)、UpgradeCard(cardId)（构筑期）\n- 使用 xUnit 编写单元测试：验证加牌、移除、升级的状态正确性与边界行为\n- 覆盖边界情况：空堆操作、重复移除、升级不存在卡牌\n",
             "status": "pending",
-            "testStrategy": "xUnit 单元测试：CardPileTests 验证 AddCard/RemoveCard/UpgradeCard 逻辑、容量限制、不可变性；边界测试覆盖空堆、重复操作、无效 ID"
+            "testStrategy": "xUnit 单元测试：CardPileTests 验证 AddCard/RemoveCard/UpgradeCard 逻辑、容量限制与边界行为。"
           },
           {
             "id": "2",
@@ -89,9 +89,7 @@
           "ADR-0004",
           "ADR-0011",
           "ADR-0018",
-          "ADR-0020",
           "ADR-0021",
-          "ADR-0022",
           "ADR-0024"
         ],
         "archRefs": [
