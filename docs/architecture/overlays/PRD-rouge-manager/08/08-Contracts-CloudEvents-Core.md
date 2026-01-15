@@ -1,21 +1,29 @@
 ---
 PRD-ID: PRD-rouge-manager
 Title: CloudEvents Core 契约更新
-Arch-Refs:
-  - CH01
-  - CH03
+Status: Proposed
 ADR-Refs:
   - ADR-0004
   - ADR-0005
   - ADR-0003
+Arch-Refs:
+  - CH01
+  - CH03
 Test-Refs:
   - Game.Core.Tests/Services/EventBusTests.cs
   - Tests.Godot/tests/Adapters/test_event_bus_adapter.gd
-Contracts-Refs:
-  - Game.Core/Contracts/DomainEvent.cs
-  - Game.Core/Services/EventBus.cs
-Status: Proposed
 ---
+
+## Scope
+- 本页说明事件系统的核心概念与公共约束，便于讨论与复用。
+
+## Non-goals
+- 不把细节写成实现手册；以最小信息支持对豐为准。
+
+## References
+- ADR-Refs: ADR-0004, ADR-0005, ADR-0003
+- Arch-Refs: CH01, CH03
+- Related: `_index.md`
 
 本页为功能纵切（08 章）对应“CloudEvents Core”契约的变更登记与验收要点（仅引用 01/02/03 章口径，不复制阈值/策略）。
 

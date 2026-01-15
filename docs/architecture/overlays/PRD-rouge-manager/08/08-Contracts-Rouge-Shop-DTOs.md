@@ -1,19 +1,28 @@
 ---
 PRD-ID: PRD-rouge-manager
 Title: Rouge DTO：Shop Inventory & Pricing（商店库存与定价）
+Status: Proposed
+ADR-Refs:
+  - ADR-0020
+  - ADR-0021
 Arch-Refs:
   - CH01
   - CH05
   - CH06
-ADR-Refs:
-  - ADR-0020
-  - ADR-0021
 Test-Refs:
   - Game.Core.Tests/Contracts/RougeShopDtoContractsTests.cs
-Contracts-Refs:
-  - Game.Core/Contracts/Rouge/Shop/ShopInventory.cs
-Status: Proposed
 ---
+
+## Scope
+- 本页定义商店相关的 DTO 概念与详细字段说明，便于检索与演进。
+
+## Non-goals
+- 不写定价策略或平衡参数；详细规则以其他参考文档为准。
+
+## References
+- ADR-Refs: ADR-0020, ADR-0021
+- Arch-Refs: CH01, CH05, CH06
+- Related: `_index.md`
 
 本页记录 PRD-rouge-manager 的 Shop（商店节点）相关 DTO 契约，用于 Core 与适配层/UI 之间的数据交换（不依赖 Godot API，可 xUnit 单测）。
 

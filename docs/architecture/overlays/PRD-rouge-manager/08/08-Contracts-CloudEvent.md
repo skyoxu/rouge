@@ -1,23 +1,30 @@
 ---
 PRD-ID: PRD-rouge-manager
 Title: CloudEvent 契约更新（事件封装与字段）
-Arch-Refs:
-  - CH01
-  - CH03
+Status: Proposed
 ADR-Refs:
   - ADR-0004
   - ADR-0005
   - ADR-0020
   - ADR-0022
+Arch-Refs:
+  - CH01
+  - CH03
 Test-Refs:
   - Game.Core.Tests/Services/EventBusTests.cs
   - Tests.Godot/tests/Adapters/test_event_bus_adapter.gd
-Contracts-Refs:
-  - Game.Core/Contracts/DomainEvent.cs
-  - Game.Core/Services/EventBus.cs
-  - Game.Godot/Adapters/EventBusAdapter.cs
-Status: Proposed
 ---
+
+## Scope
+- 本页说明事件封装的对象结构与关键字段约束，便于对齐。
+
+## Non-goals
+- 不复制代码实现；不写扩展架构方案。
+
+## References
+- ADR-Refs: ADR-0004, ADR-0005, ADR-0020, ADR-0022
+- Arch-Refs: CH01, CH03
+- Related: `_index.md`
 
 本页为功能纵切（08 章）对应“CloudEvent（DomainEvent）”契约更新的记录与验收口径。
 

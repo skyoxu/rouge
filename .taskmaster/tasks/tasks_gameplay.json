@@ -4,7 +4,7 @@
     "story_id": "PRD-ROUGE-T2-VS-0001",
     "title": "设计并实现卡牌领域模型 (CardDefinition/CardInstance)",
     "description": "在 Game.Core/Domain 中创建卡牌核心数据结构,支持静态定义与运行时实例分离\n\n创建 Game.Core/Domain/Card.cs:\n- CardDefinition: 卡牌静态配置(ID、名称、消耗、目标规则、效果指令列表、文本key、稀有度、职业标签)\n- CardInstance: 运行时卡牌实例(引用 CardDefinition、临时费用变化、回合内标记、升级状态)\n- TargetRule 枚举(SingleEnemy/AllEnemies/SingleAlly/AllAllies/Random)\n- CardType 枚举(Attack/Defense/Skill)\n效果指令使用 List<EffectCommand> 预留接口。使用 record 类型保证不可变性。",
-    "status": "pending",
+    "status": "done",
     "priority": "P1",
     "layer": "core",
     "depends_on": [],
@@ -64,7 +64,7 @@
     "story_id": "PRD-ROUGE-T2-VS-0001",
     "title": "实现牌堆系统 (Deck/Hand/Discard/Exhaust)",
     "description": "实现卡牌堆操作逻辑,支持抽牌、弃牌、洗牌、移除、升级替换\n\n创建 Game.Core/Domain/CardPile.cs:\n- DrawPile/Hand/DiscardPile/ExhaustPile 类(或统一 CardPile 类用 PileType 区分)\n- 操作方法:\n  - Draw(n): 抽 n 张牌,抽牌堆空时自动洗回弃牌堆\n  - Discard(cardId): 手牌 → 弃牌堆\n  - Exhaust(cardId): 移至消耗堆(战斗结束移除)\n  - Shuffle(): 洗牌(调用 RngService)\n  - AddCard(cardDef): 构筑时添加卡\n  - RemoveCard(cardId): 构筑时移除卡\n  - UpgradeCard(cardId): 替换为升级版ID\n使用现有 Services/EventBus 发布 CardDrawn/CardDiscarded 事件。\n\n参考实现（demo/）：\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/SimpleCardPile.cs\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/SimpleCardPileManager.cs\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/CardManager.cs\n\n实现建议：\n- Core 只建模“牌堆状态 + 变更操作”，UI/输入驱动放到 Adapter/Scenes；不要让 Core 依赖 Godot Node。\n- 洗牌/抽牌要可测：RngService 注入、用 seed 固定测试用例。\n- 所有跨堆迁移（hand→discard 等）建议统一走一个内部 Move(cardId, from, to) 以减少分支与漏更新。",
-    "status": "pending",
+    "status": "done",
     "priority": "P1",
     "layer": "core",
     "depends_on": [

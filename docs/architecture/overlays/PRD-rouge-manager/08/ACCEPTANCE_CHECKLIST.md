@@ -2,23 +2,22 @@
 PRD-ID: PRD-rouge-manager
 Title: PRD-rouge-manager 功能纵切实现验收清单（Godot + C#）
 Status: Template
+ADR-Refs:
+  - ADR-0018
+  - ADR-0019
+  - ADR-0004
+  - ADR-0020
+  - ADR-0021
+  - ADR-0024
+  - ADR-0006
+  - ADR-0005
+  - ADR-0003
+  - ADR-0015
+  - ADR-0011
 Arch-Refs:
   - CH01
   - CH03
-ADR-Refs:
-  - ADR-0018  # Godot 4.5 + C# 技术栈
-  - ADR-0019  # Godot 安全基线
-  - ADR-0004  # 事件总线与契约
-  - ADR-0020  # 契约文件位置标准
-  - ADR-0021  # C# 领域层架构
-  - ADR-0024  # Godot 测试策略
-  - ADR-0006  # 数据存储
-  - ADR-0005  # 质量门禁
-  - ADR-0003  # 可观测性与发布健康
-  - ADR-0015  # 性能预算
-  - ADR-0011  # Windows-only 平台与 CI
 Test-Refs:
-  # 具体项目应将占位路径替换为真实测试文件（或在实现落地前保持最小集）
   - Game.Core.Tests/Services/EventBusTests.cs
   - Game.Core.Tests/State/GameStateMachineTests.cs
   - Tests.Godot/tests/Scenes/Smoke/test_main_scene_smoke.gd
@@ -29,6 +28,17 @@ Test-Refs:
   - logs/ci/<date>/ci-pipeline-summary.json
   - logs/e2e/<date>/smoke/selfcheck-summary.json
 ---
+
+## Scope
+- 本页是交付前自检清单（Template），用于防止遗漏同类产出。
+
+## Non-goals
+- 不替代自动化门禁脚本的确定性证据；不把阈值口径复制到此页。
+
+## References
+- ADR-Refs: ADR-0018, ADR-0019, ADR-0004, ADR-0020, ADR-0021, ADR-0024, ADR-0006, ADR-0005, ADR-0003, ADR-0015, ADR-0011
+- Arch-Refs: CH01, CH03
+- Related: `_index.md`
 
 > 说明：本清单用于 rouge（Godot 4.5 + C#）下的 “PRD-rouge-manager / T2 最小可玩闭环（MVP Run）” 功能纵切验收骨架。
 

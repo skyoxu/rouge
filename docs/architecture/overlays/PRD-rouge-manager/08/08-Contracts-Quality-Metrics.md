@@ -1,21 +1,28 @@
 ---
 PRD-ID: PRD-rouge-manager
 Title: 质量指标（Quality Metrics）契约更新
-Arch-Refs:
-  - CH01
-  - CH03
+Status: Proposed
 ADR-Refs:
   - ADR-0004
   - ADR-0005
+Arch-Refs:
+  - CH01
+  - CH03
 Test-Refs:
   - scripts/python/quality_gates.py
   - scripts/ci/quality_gate.ps1
-Contracts-Refs:
-  - scripts/python/quality_gates.py
-  - scripts/python/task_links_validate.py
-  - scripts/ci/quality_gate.ps1
-Status: Proposed
 ---
+
+## Scope
+- 本页说明该纵切的质量指标与门禁依据的落点（引用 Base/ADR）。
+
+## Non-goals
+- 不复制具体阈值；不写门禁执行脚本细节。
+
+## References
+- ADR-Refs: ADR-0004, ADR-0005
+- Arch-Refs: CH01, CH03
+- Related: `_index.md`
 
 本页为功能纵切（08 章）对应“质量指标”契约更新的记录与验收口径。
 

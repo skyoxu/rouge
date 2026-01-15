@@ -1,23 +1,31 @@
 ---
 PRD-ID: PRD-rouge-manager
 Title: 外链白名单（AllowedDomains / ALLOWED_EXTERNAL_HOSTS）契约调整
-Arch-Refs:
-  - CH01
-  - CH03
+Status: Proposed
 ADR-Refs:
   - ADR-0019
   - ADR-0004
   - ADR-0005
+Arch-Refs:
+  - CH01
+  - CH03
 Test-Refs:
   - Tests.Godot/tests/Integration/Security/test_security_http_allowed_audit.gd
   - Tests.Godot/tests/Integration/Security/test_security_http_audit.gd
   - Tests.Godot/tests/Integration/Security/test_security_http_block_signal.gd
   - Tests.Godot/tests/Integration/Security/test_security_http_client.gd
-Contracts-Refs:
-  - Game.Godot/Scripts/Security/SecurityHttpClient.cs
-  - Game.Godot/Scripts/Security/SecurityAudit.cs
-Status: Proposed
 ---
+
+## Scope
+- 本页记录该纵切需要的外链与主机白名单口径（便于审计）。
+
+## Non-goals
+- 不写详细网络实现；不写外网依赖的引入方案。
+
+## References
+- ADR-Refs: ADR-0019, ADR-0004, ADR-0005
+- Arch-Refs: CH01, CH03
+- Related: `_index.md`
 
 本页为功能纵切（08 章）对应“外链白名单（AllowedDomains / ALLOWED_EXTERNAL_HOSTS）”契约的变更说明与验收约束。
 

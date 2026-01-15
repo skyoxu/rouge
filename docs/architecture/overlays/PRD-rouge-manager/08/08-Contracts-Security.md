@@ -1,24 +1,31 @@
 ---
 PRD-ID: PRD-rouge-manager
 Title: 安全事件与策略契约更新（Security Contracts）
-Arch-Refs:
-  - CH01
-  - CH03
+Status: Proposed
 ADR-Refs:
   - ADR-0019
   - ADR-0004
   - ADR-0005
+Arch-Refs:
+  - CH01
+  - CH03
 Test-Refs:
   - Tests.Godot/tests/Scenes/Smoke/test_main_scene_smoke.gd
   - Tests.Godot/tests/Security/Hard/test_db_open_denied_writes_audit_log.gd
   - Tests.Godot/tests/Security/Hard/test_db_path_rejection.gd
   - Tests.Godot/tests/Integration/Security/test_security_http_audit.gd
-Contracts-Refs:
-  - Game.Godot/Scripts/Security/SecurityAudit.cs
-  - Game.Godot/Scripts/Security/SecurityHttpClient.cs
-  - Game.Godot/Adapters/SqliteDataStore.cs
-Status: Proposed
 ---
+
+## Scope
+- 本页说明该纵切中安全口径的落点，只引用 Base/ADR，避免重复。
+
+## Non-goals
+- 不复制策略与阈值；不超越本页责任范围写其他模块的规范。
+
+## References
+- ADR-Refs: ADR-0019, ADR-0004, ADR-0005
+- Arch-Refs: CH01, CH03
+- Related: `_index.md`
 
 本页为功能纵切（08 章）对应“Security Contracts”变更登记与验收要点（仅引用 01/02/03 章口径，不复制阈值/策略）。
 
