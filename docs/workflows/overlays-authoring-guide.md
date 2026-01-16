@@ -66,7 +66,7 @@ docs/
 推荐命令（Windows）：
 
 ```bat
-py -3 scripts/python/generate_contracts_catalog.py --prd-id PRD-rouge-manager
+py -3 scripts/python/generate_overlay_08_audit.py --prd-id PRD-rouge-manager
 ```
 
 ## 常见误用（必须避免）
@@ -74,4 +74,3 @@ py -3 scripts/python/generate_contracts_catalog.py --prd-id PRD-rouge-manager
 - 把 overlays 当成任务清单或排期文档。
 - 在 08 页复制 Base/ADR 的阈值与策略（只允许引用）。
 - `_index.md` 不更新导致目录失效，逼迫读者全文搜索。
-

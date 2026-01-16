@@ -1,17 +1,20 @@
-# Overlay 08 Catalog（契约页目录）生成与使用指南
+# Contracts Catalog（代码契约目录）生成与使用指南
 
-本指南只解决一件事：**让 `docs/architecture/overlays/<PRD-ID>/08/` 自己可维护、可检索、可避免误用**。
+本指南只解决一件事：**快速盘点 `Game.Core/Contracts/**` 现有的代码契约，形成可对照的目录**。
 
-这里的“Catalog/契约页目录”指的是 overlays/08 下 `08-Contracts-*.md` 这一类**文档页**的目录与审计输出。
-它不生成、也不修改任何 `Game.Core/Contracts/**` 的代码契约（代码契约的建设与回填不在本阶段讨论）。
+注意：
+
+- 这是“对照/浏览/审计留痕”的工具，不是门禁统计的一部分。
+- 它不会修改任何代码或文档。
+- overlays 是否回填契约信息、何时回填，以你的整体节奏为准；本脚本不推动、不绑定该节奏。
 
 ## 输出与留痕（SSoT：logs/**）
 
 脚本会把报告输出到：
 
-- `logs/ci/<YYYY-MM-DD>/overlay-08-audit/summary.json`
-- `logs/ci/<YYYY-MM-DD>/overlay-08-audit/summary.log`
-- `logs/ci/<YYYY-MM-DD>/overlay-08-audit/catalog.md`
+- `logs/ci/<YYYY-MM-DD>/contracts-catalog/contracts_inventory.json`
+- `logs/ci/<YYYY-MM-DD>/contracts-catalog/catalog.md`
+- `logs/ci/<YYYY-MM-DD>/contracts-catalog/summary.log`
 
 这些产物用于排障、审计与归档，默认不要求入库。
 
@@ -20,24 +23,28 @@
 在仓库根目录运行：
 
 ```bat
-py -3 scripts/python/generate_contracts_catalog.py --prd-id PRD-rouge-manager
+py -3 scripts/python/generate_contracts_catalog.py
 ```
 
-常见场景：
+如果你把契约根目录放在其他位置，可指定：
 
-- 你改了任意 `docs/architecture/overlays/PRD-rouge-manager/08/*.md`，想确认：
-  - 每页 Front-Matter 是否包含最小 schema（PRD-ID/Title/Status/ADR-Refs/Arch-Refs/Test-Refs）
-  - `_index.md` 的目录是否仍可用（无坏链接）
-  - 文档中是否出现替换字符（U+FFFD，通常意味着编码或复制问题）
+```bat
+py -3 scripts/python/generate_contracts_catalog.py --contracts-root Game.Core/Contracts
+```
 
-## 约束
+## 目录内容说明
 
-- 本脚本只审计 overlays/08 的文档结构与链接，不做任务文件或代码契约的读写与同步。
+`contracts_inventory.json` 会把 `Game.Core/Contracts/**` 的 C# 文件做简单归类：
 
-## 生成产物与版本控制规则
+- **Domain Events**：文件内包含 `public const string EventType = "..."` 的类型
+- **DTO/Value Types**：`public record/class/enum` 且不包含 `EventType`
+- **Interfaces**：`public interface ...`
 
-- 生成产物默认写入 `logs/ci/<YYYY-MM-DD>/...`，作为 CI/本地审计证据。
-- 如果你确实希望把“某个 PRD 的契约目录”放进 `docs/` 供团队查阅：
-  - 建议写入 `docs/workflows/generated/`（默认被 `.gitignore` 忽略）。
-  - 不建议把带业务项目名/事件列表的目录文档作为模板仓的长期文档入口，以免误导后续新项目。
+并额外报告 `EventType` 的重复定义（仅提示，不作为 gate）。
+
+## 相关但不同的工具（避免混淆）
+
+- overlays/08 文档结构自检：`py -3 scripts/python/generate_overlay_08_audit.py --prd-id PRD-rouge-manager`
+- overlays ↔ Contracts 回链校验（引用的契约文件是否存在）：`py -3 scripts/python/validate_contracts.py`
+- Tasks/Views ↔ Contracts 的对照矩阵（更偏“计划/差距分析”）：`py -3 scripts/python/generate_contracts_plan_report.py`
 

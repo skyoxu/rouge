@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Overlay 08 catalog/audit generator.
+Contracts catalog generator (code inventory).
 
-This script audits docs/architecture/overlays/<PRD-ID>/08/*.md for:
-  - Required Front-Matter keys (schema consistency)
-  - Broken intra-folder links to *.md
-  - Replacement character U+FFFD (often indicates encoding/copy issues)
+This script inventories *code contracts* under Game.Core/Contracts/** and writes
+human-friendly + machine-readable artifacts under logs/**.
 
-It also generates a lightweight catalog.md for human browsing.
+It is intentionally NOT a gate. It is a compare/reference utility to:
+  - browse current event types and DTOs quickly
+  - support later overlay backfill (after contracts are finalized)
+  - support reviews without treating docs/overlays as SSoT
 
 Outputs (default):
-  logs/ci/<YYYY-MM-DD>/overlay-08-audit/summary.json
-  logs/ci/<YYYY-MM-DD>/overlay-08-audit/summary.log
-  logs/ci/<YYYY-MM-DD>/overlay-08-audit/catalog.md
+  logs/ci/<YYYY-MM-DD>/contracts-catalog/contracts_inventory.json
+  logs/ci/<YYYY-MM-DD>/contracts-catalog/catalog.md
+  logs/ci/<YYYY-MM-DD>/contracts-catalog/summary.log
 """
 
 from __future__ import annotations
@@ -21,78 +22,22 @@ from __future__ import annotations
 import argparse
 import json
 import re
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
-REQUIRED_FM_KEYS = ("PRD-ID", "Title", "Status", "ADR-Refs", "Arch-Refs", "Test-Refs")
-ALLOWED_STATUS = {"Active", "Proposed", "Template"}
-
-
-@dataclass(frozen=True)
-class MdPage:
-    path: Path
-    title: str
-    status: str
-    scope_hint: str
+EVENT_TYPE_CONST_RE = re.compile(r'public\s+const\s+string\s+EventType\s*=\s*"([^"]+)"\s*;')
+NAMESPACE_FILE_RE = re.compile(r"^\s*namespace\s+([A-Za-z0-9_.]+)\s*;\s*$", re.MULTILINE)
+NAMESPACE_BLOCK_RE = re.compile(r"^\s*namespace\s+([A-Za-z0-9_.]+)\s*\{\s*$", re.MULTILINE)
+PUBLIC_TYPE_RE = re.compile(
+    r"\bpublic\s+(?:sealed\s+)?(?:partial\s+)?(record|class|enum|interface)\s+([A-Za-z_][A-Za-z0-9_]*)",
+    re.MULTILINE,
+)
 
 
 def read_text_utf8_sig(path: Path) -> str:
     return path.read_bytes().decode("utf-8-sig", errors="replace")
-
-
-def split_front_matter(text: str) -> tuple[str, str] | None:
-    if not text.startswith("---"):
-        return None
-    lines = text.splitlines(True)
-    end = None
-    for i in range(1, len(lines)):
-        if lines[i].strip() == "---":
-            end = i
-            break
-    if end is None:
-        return None
-    fm = "".join(lines[: end + 1])
-    body = "".join(lines[end + 1 :])
-    return fm, body
-
-
-def fm_has_key(fm: str, key: str) -> bool:
-    return bool(re.search(r"^" + re.escape(key) + r"\s*:", fm, re.M))
-
-
-def fm_get_scalar(fm: str, key: str) -> str | None:
-    m = re.search(r"^" + re.escape(key) + r"\s*:\s*(.+?)\s*$", fm, re.M)
-    if not m:
-        return None
-    return m.group(1).strip()
-
-
-def extract_scope_hint(body: str) -> str:
-    # Heuristic: first bullet under "## Scope".
-    lines = body.splitlines()
-    in_scope = False
-    for ln in lines:
-        if ln.strip() == "## Scope":
-            in_scope = True
-            continue
-        if in_scope:
-            if ln.startswith("## "):
-                return ""
-            m = re.match(r"^\s*-\s*(.+?)\s*$", ln)
-            if m:
-                return m.group(1).strip()
-    return ""
-
-
-def find_md_links(text: str) -> set[str]:
-    # Minimal patterns for local md links: (foo.md) and `foo.md`
-    out = set(re.findall(r"\(([^)]+\.md)\)", text))
-    out |= set(re.findall(r"`([^`]+\.md)`", text))
-    # Ignore globs like `08/*.md` used in guidelines.
-    return {x for x in out if "*" not in x and "?" not in x}
 
 
 def ensure_out_dir(out_dir: Path) -> None:
@@ -100,113 +45,180 @@ def ensure_out_dir(out_dir: Path) -> None:
 
 
 def write_json(path: Path, obj: Any) -> None:
-    path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+    path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def write_text(path: Path, text: str) -> None:
-    if not text.endswith("\n"):
-        text += "\n"
-    path.write_text(text, encoding="utf-8", newline="\n")
+    path.write_text(text, encoding="utf-8")
+
+
+def detect_namespace(text: str) -> str:
+    m = NAMESPACE_FILE_RE.search(text)
+    if m:
+        return m.group(1)
+    m = NAMESPACE_BLOCK_RE.search(text)
+    if m:
+        return m.group(1)
+    return ""
+
+
+def first_public_type(text: str) -> Optional[dict[str, str]]:
+    m = PUBLIC_TYPE_RE.search(text)
+    if not m:
+        return None
+    return {"kind": m.group(1), "name": m.group(2)}
+
+
+def event_type_value(text: str) -> Optional[str]:
+    m = EVENT_TYPE_CONST_RE.search(text)
+    return m.group(1) if m else None
+
+
+def rel_posix(repo_root: Path, path: Path) -> str:
+    return path.relative_to(repo_root).as_posix()
+
+
+def inventory_contracts(repo_root: Path, contracts_root: Path) -> dict[str, Any]:
+    cs_files = sorted(contracts_root.rglob("*.cs"))
+
+    events: list[dict[str, Any]] = []
+    dtos: list[dict[str, Any]] = []
+    interfaces: list[dict[str, Any]] = []
+    unknown: list[dict[str, Any]] = []
+
+    event_types_seen: dict[str, str] = {}
+    duplicates: list[dict[str, Any]] = []
+
+    for cs in cs_files:
+        text = read_text_utf8_sig(cs)
+        ns = detect_namespace(text)
+        first_type = first_public_type(text) or {"kind": "", "name": cs.stem}
+        evt = event_type_value(text)
+
+        item = {
+            "path": rel_posix(repo_root, cs),
+            "namespace": ns,
+            "type_kind": first_type["kind"],
+            "type_name": first_type["name"],
+        }
+
+        if evt:
+            item["event_type"] = evt
+            events.append(item)
+            if evt in event_types_seen:
+                duplicates.append({"event_type": evt, "first": event_types_seen[evt], "second": item["path"]})
+            else:
+                event_types_seen[evt] = item["path"]
+            continue
+
+        if first_type["kind"] == "interface":
+            interfaces.append(item)
+            continue
+
+        if first_type["kind"] in {"record", "class", "enum"}:
+            dtos.append(item)
+            continue
+
+        unknown.append(item)
+
+    events_sorted = sorted(events, key=lambda x: (x.get("event_type", ""), x.get("path", "")))
+    dtos_sorted = sorted(dtos, key=lambda x: (x.get("namespace", ""), x.get("type_name", ""), x.get("path", "")))
+    interfaces_sorted = sorted(interfaces, key=lambda x: (x.get("namespace", ""), x.get("type_name", ""), x.get("path", "")))
+
+    return {
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "contracts_root": rel_posix(repo_root, contracts_root),
+        "totals": {
+            "cs_files": len(cs_files),
+            "events": len(events_sorted),
+            "dtos": len(dtos_sorted),
+            "interfaces": len(interfaces_sorted),
+            "unknown": len(unknown),
+            "duplicate_event_types": len(duplicates),
+        },
+        "events": events_sorted,
+        "dtos": dtos_sorted,
+        "interfaces": interfaces_sorted,
+        "unknown": unknown,
+        "duplicate_event_types": duplicates,
+    }
+
+
+def render_catalog_md(inv: dict[str, Any]) -> str:
+    lines: list[str] = []
+    lines.append("# Contracts Catalog (Code Inventory)")
+    lines.append("")
+    lines.append(f"- Generated: {inv['generated_at']}")
+    lines.append(f"- Root: `{inv['contracts_root']}`")
+    lines.append("")
+    totals = inv["totals"]
+    lines.append("## Totals")
+    lines.append(f"- cs_files: {totals['cs_files']}")
+    lines.append(f"- events: {totals['events']}")
+    lines.append(f"- dtos: {totals['dtos']}")
+    lines.append(f"- interfaces: {totals['interfaces']}")
+    lines.append(f"- duplicate_event_types: {totals['duplicate_event_types']}")
+    lines.append("")
+
+    lines.append("## Domain Events")
+    if not inv["events"]:
+        lines.append("- (none)")
+    else:
+        for e in inv["events"]:
+            lines.append(f"- `{e['event_type']}` -> `{e['path']}`")
+    lines.append("")
+
+    lines.append("## DTO / Value Types")
+    if not inv["dtos"]:
+        lines.append("- (none)")
+    else:
+        for d in inv["dtos"]:
+            kind = d.get("type_kind") or "type"
+            lines.append(f"- `{d['type_name']}` ({kind}) -> `{d['path']}`")
+    lines.append("")
+
+    lines.append("## Interfaces")
+    if not inv["interfaces"]:
+        lines.append("- (none)")
+    else:
+        for it in inv["interfaces"]:
+            lines.append(f"- `{it['type_name']}` -> `{it['path']}`")
+    lines.append("")
+
+    if inv.get("duplicate_event_types"):
+        lines.append("## Duplicate EventType (Warning)")
+        for dup in inv["duplicate_event_types"]:
+            lines.append(f"- `{dup['event_type']}`: `{dup['first']}` vs `{dup['second']}`")
+        lines.append("")
+
+    return "\n".join(lines) + "\n"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--prd-id", default="PRD-rouge-manager", help="Overlay PRD-ID directory name (default: PRD-rouge-manager)")
-    parser.add_argument(
-        "--out-dir",
-        default="",
-        help="Optional output directory (default: logs/ci/<date>/overlay-08-audit)",
-    )
+    parser.add_argument("--contracts-root", default="Game.Core/Contracts", help="Contracts root directory (default: Game.Core/Contracts)")
+    parser.add_argument("--out-dir", default="", help="Optional output directory (default: logs/ci/<date>/contracts-catalog)")
     args = parser.parse_args()
 
-    overlay_dir = Path("docs/architecture/overlays") / args.prd_id / "08"
-    md_files = sorted(overlay_dir.glob("*.md"))
-
-    if not overlay_dir.exists():
-        raise SystemExit(f"overlay dir not found: {overlay_dir}")
+    repo_root = Path(__file__).resolve().parents[2]
+    contracts_root = (repo_root / args.contracts_root).resolve()
+    if not contracts_root.exists():
+        raise SystemExit(f"contracts root not found: {contracts_root}")
 
     date = datetime.now().strftime("%Y-%m-%d")
-    out_dir = Path(args.out_dir) if args.out_dir else (Path("logs/ci") / date / "overlay-08-audit")
+    out_dir = Path(args.out_dir) if args.out_dir else (repo_root / "logs" / "ci" / date / "contracts-catalog")
     ensure_out_dir(out_dir)
 
-    missing_front_matter: list[dict[str, Any]] = []
-    broken_links: list[dict[str, Any]] = []
-    replacement_chars: list[dict[str, Any]] = []
-    bad_status: list[dict[str, Any]] = []
-    pages: list[MdPage] = []
-
-    for p in md_files:
-        text = read_text_utf8_sig(p)
-        if "\ufffd" in text:
-            for i, ln in enumerate(text.splitlines(), 1):
-                if "\ufffd" in ln:
-                    replacement_chars.append({"file": str(p).replace("\\", "/"), "line": i, "text": ln[:200]})
-
-        fm_split = split_front_matter(text)
-        if fm_split is None:
-            missing_front_matter.append({"file": str(p).replace("\\", "/"), "missing": list(REQUIRED_FM_KEYS)})
-            continue
-
-        fm, body = fm_split
-        missing_keys = [k for k in REQUIRED_FM_KEYS if not fm_has_key(fm, k)]
-        if missing_keys:
-            missing_front_matter.append({"file": str(p).replace("\\", "/"), "missing": missing_keys})
-
-        title = fm_get_scalar(fm, "Title") or p.name
-        status = fm_get_scalar(fm, "Status") or ""
-        if status not in ALLOWED_STATUS:
-            bad_status.append({"file": str(p).replace("\\", "/"), "status": status})
-            status = status if status else "Proposed"
-
-        scope_hint = extract_scope_hint(body)
-        pages.append(MdPage(path=p, title=title, status=status, scope_hint=scope_hint))
-
-        for t in sorted(find_md_links(text)):
-            name = Path(t).name
-            if name.endswith(".md") and not (overlay_dir / name).exists():
-                broken_links.append({"file": str(p).replace("\\", "/"), "link": t})
-
-    catalog_lines: list[str] = []
-    catalog_lines.append(f"# Overlay 08 Catalog ({args.prd_id})")
-    catalog_lines.append("")
-    catalog_lines.append(f"- dir: `{overlay_dir.as_posix()}`")
-    catalog_lines.append(f"- generated_at: `{datetime.now().isoformat(timespec='seconds')}`")
-    catalog_lines.append("")
-    catalog_lines.append("## Pages")
-    for page in sorted(pages, key=lambda x: (x.status, x.path.name)):
-        hint = f" - {page.scope_hint}" if page.scope_hint else ""
-        catalog_lines.append(f"- `{page.path.name}` ({page.status}): {page.title}{hint}")
-
-    write_text(out_dir / "catalog.md", "\n".join(catalog_lines) + "\n")
-
-    report = {
-        "status": "ok" if not (missing_front_matter or broken_links or replacement_chars or bad_status) else "warn",
-        "overlay_dir": overlay_dir.as_posix(),
-        "md_files": len(md_files),
-        "required_front_matter_keys": list(REQUIRED_FM_KEYS),
-        "missing_front_matter": missing_front_matter,
-        "bad_status": bad_status,
-        "broken_links": broken_links,
-        "replacement_chars": replacement_chars,
-        "out_dir": out_dir.as_posix(),
-    }
-
-    write_json(out_dir / "summary.json", report)
-
-    summary_lines = [
-        f"OVERLAY_08_AUDIT status={report['status']}",
-        f"dir={report['overlay_dir']}",
-        f"md_files={report['md_files']}",
-        f"missing_front_matter={len(missing_front_matter)}",
-        f"bad_status={len(bad_status)}",
-        f"broken_links={len(broken_links)}",
-        f"replacement_chars={len(replacement_chars)}",
-        f"out={out_dir.as_posix()}",
-    ]
-    write_text(out_dir / "summary.log", "\n".join(summary_lines) + "\n")
-
-    return 0 if report["status"] == "ok" else 2
+    inv = inventory_contracts(repo_root, contracts_root)
+    write_json(out_dir / "contracts_inventory.json", inv)
+    write_text(out_dir / "catalog.md", render_catalog_md(inv))
+    write_text(
+        out_dir / "summary.log",
+        f"CONTRACTS_CATALOG_DONE events={inv['totals']['events']} dtos={inv['totals']['dtos']} interfaces={inv['totals']['interfaces']} out={out_dir.as_posix()}\n",
+    )
+    return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
