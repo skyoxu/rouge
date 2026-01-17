@@ -45,6 +45,6 @@ py -3 scripts/python/generate_contracts_catalog.py --contracts-root Game.Core/Co
 ## 相关但不同的工具（避免混淆）
 
 - overlays/08 文档结构自检：`py -3 scripts/python/generate_overlay_08_audit.py --prd-id PRD-rouge-manager`
-- overlays ↔ Contracts 回链校验（引用的契约文件是否存在）：`py -3 scripts/python/validate_contracts.py`
-- Tasks/Views ↔ Contracts 的对照矩阵（更偏“计划/差距分析”）：`py -3 scripts/python/generate_contracts_plan_report.py`
+- overlays <-> Contracts 回链校验（引用的契约文件是否存在）：`py -3 scripts/python/validate_contracts.py`
+- Tasks/Views <-> Contracts 的对照矩阵（更偏“计划/差距分析”）：`py -3 scripts/python/generate_contracts_plan_report.py`
 

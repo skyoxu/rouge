@@ -198,7 +198,7 @@ def main() -> int:
         "## Pages",
     ]
     for p in pages:
-        hint = f" — {p.scope_hint}" if p.scope_hint else ""
+        hint = f" - {p.scope_hint}" if p.scope_hint else ""
         status = f"[{p.status}] " if p.status else ""
         catalog_lines.append(f"- {status}`{p.path.name}`: {p.title}{hint}")
     write_text(out_dir / "catalog.md", "\n".join(catalog_lines) + "\n")
@@ -234,4 +234,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

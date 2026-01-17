@@ -17,6 +17,8 @@
 
 每个 PRD-ID 一套 overlays（建议只维护一个 08 目录）：
 
+- 这里的 PRD-ID 仅作为目录键与检索入口，不要求与 PRD 文档强绑定。
+
 ```text
 docs/
   architecture/
@@ -53,7 +55,7 @@ docs/
 
 ## Status 三态（必须收敛）
 
-- `Active`：当前 PRD 真正在用、需要被阅读/遵循的页
+- `Active`：当前 overlays 套件真正在用、需要被阅读/遵循的页
 - `Proposed`：存在但允许不完整/演进中的页
 - `Template`：模板页，不代表当前 PRD 的真实口径
 
