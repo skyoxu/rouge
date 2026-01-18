@@ -78,6 +78,7 @@ Overlay 用于落地“具体 PRD 的功能纵切”，08 章只描述纵切（�
 常用命令（Windows）：
 
 - 生成/更新 Tasks（可选）：`npx task-master parse-prd .taskmaster\\docs\\prd.txt -n <num>`
+- BMAD（可选，Windows）：`py -3 scripts/python/run_bmad.py -- --version`（避免 PowerShell 执行策略阻止 `npm.ps1`）
 - 校验任务/回链：`py -3 scripts\\python\\task_links_validate.py`
 
 ---

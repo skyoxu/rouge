@@ -20,6 +20,7 @@ SKIP_DIR_NAMES = {
     "build",
     "logs",
     "tmp",
+    "_tmp",
     "TestResults",
 }
 

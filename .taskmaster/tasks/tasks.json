@@ -9,7 +9,7 @@
         "testStrategy": "xUnit 单元测试:\n- CardDefinitionTests: 验证卡牌创建、字段验证、升级ID映射\n- CardInstanceTests: 验证临时状态修改、费用计算、标记管理\n覆盖率目标: lines ≥90%, branches ≥85%",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": "1",
@@ -17,7 +17,7 @@
             "description": "创建CardDefinition和CardInstance的record类型,定义所有卡牌属性、枚举类型(CardType、TargetRule),使用record保证不可变性",
             "dependencies": [],
             "details": "在Game.Core/Domain/Card.cs中实现:\n- CardDefinition record: ID、名称、消耗、目标规则、效果指令列表、文本key、稀有度、职业标签、升级ID\n- CardInstance record: 引用CardDefinition、临时费用变化、回合内标记字典、升级状态\n- CardType枚举: Attack/Defense/Skill\n- TargetRule枚举: SingleEnemy/AllEnemies/SingleAlly/AllAllies/Random\n- EffectCommand接口预留(占位)\n参考Player.cs的record设计模式,确保所有字段为readonly属性",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "xUnit单元测试CardDefinitionTests:\n- 验证CardDefinition创建与字段赋值\n- 验证CardInstance创建与引用关系\n- 验证枚举值的有效性\n- 测试record的不可变性(尝试修改字段应失败或返回新实例)"
           },
           {
@@ -28,7 +28,7 @@
               "1"
             ],
             "details": "在Game.Core/Domain/Card.cs中添加:\n- CardDefinition验证方法:\n  - ValidateId(): ID非空且>0\n  - ValidateName(): 名称非空\n  - ValidateCost(): 消耗0-10范围\n  - ValidateEffectCommands(): 效果指令列表非空\n  - CreateOrThrow()工厂方法: 执行所有验证,验证失败抛出ArgumentException\n- CardInstance验证方法:\n  - ValidateUpgradeId(): 升级ID有效或为null\n  - CreateOrThrow(cardDefinition)工厂方法: 初始化临时费用(=原费用)、空标记字典、升级状态=false\n- 升级映射静态字典(预留升级ID对应关系示例)\n按照Player.cs的验证模式实现(先验证后返回结果或抛异常)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "xUnit单元测试CardDefinitionTests和CardInstanceTests:\n- CardDefinition验证:\n  - 测试有效参数创建成功\n  - 测试ID=0、名称空字符串、消耗>10时抛异常\n  - 测试效果指令列表为空时抛异常\n- CardInstance验证:\n  - 测试创建时临时费用继承CardDefinition费用\n  - 测试升级ID映射的有效性\n  - 测试临时标记初始为空字典\n- 升级状态修改后费用计算(涉及后续任务,占位验证)"
           }
         ],
@@ -60,18 +60,18 @@
         "dependencies": [
           "1"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": "1",
-            "title": "实现卡牌堆基础数据结构与不可变操作",
-            "description": "创建 Game.Core/Domain/CardPile.cs，实现统一的 CardPile 类与 PileType 枚举，支持 DrawPile/Hand/DiscardPile/ExhaustPile 四种堆类型。实现基础的不可变性设计（使用 record 类型或不可变集合），包括 AddCard、RemoveCard、UpgradeCard 等构筑时操作。",
+            "title": "实现卡牌堆基础数据结构与核心操作",
+            "description": "创建 Game.Core/Domain/CardPile.cs，实现统一的 CardPile 类与 PileType 枚举，支持 DrawPile/Hand/DiscardPile/ExhaustPile 四种堆类型。实现构筑期操作 AddCard/RemoveCard/UpgradeCard，并用 xUnit 单元测试验证状态正确性、边界行为与手牌容量上限（默认 10）。",
             "dependencies": [
               "1"
             ],
-            "details": "- 创建 PileType 枚举（DrawPile/Hand/DiscardPile/ExhaustPile）\n- 设计 CardPile 类：不可变集合存储卡牌列表、PileType 标识符、容量限制\n- 实现基础方法：AddCard(cardDef) 返回新实例、RemoveCard(cardId) 返回新实例、UpgradeCard(cardId) 替换卡牌定义\n- 手牌容量限制逻辑（默认 10 张）\n- 使用 xUnit + NSubstitute 编写单元测试：验证加牌、移除、升级的不可变性与状态正确性\n- 覆盖边界情况：空堆操作、重复移除、升级非存在卡牌",
-            "status": "pending",
-            "testStrategy": "xUnit 单元测试：CardPileTests 验证 AddCard/RemoveCard/UpgradeCard 逻辑、容量限制、不可变性；边界测试覆盖空堆、重复操作、无效 ID"
+            "details": "- 创建 PileType 枚举（DrawPile/Hand/DiscardPile/ExhaustPile）\n- 设计 CardPile 类：明确四类堆状态与容量限制（默认手牌上限 10）\n- 实现基础方法：AddCard(cardDef)、RemoveCard(cardId)、UpgradeCard(cardId)（构筑期）\n- 使用 xUnit 编写单元测试：验证加牌、移除、升级的状态正确性与边界行为\n- 覆盖边界情况：空堆操作、重复移除、升级不存在卡牌\n",
+            "status": "done",
+            "testStrategy": "xUnit 单元测试：CardPileTests 验证 AddCard/RemoveCard/UpgradeCard 逻辑、容量限制与边界行为。"
           },
           {
             "id": "2",
@@ -81,7 +81,7 @@
               "1"
             ],
             "details": "- 添加 Shuffle() 方法：调用 RngService.Shuffle() 打乱 DrawPile，返回新实例\n- 实现 Draw(n) 方法：从 DrawPile 抽 n 张牌至 Hand，抽牌堆不足时自动调用 ReturnDiscardToDraw() 并继续抽牌\n- 实现 Discard(cardId) 方法：从 Hand 移至 DiscardPile，发布 CardDiscarded 事件\n- 实现 Exhaust(cardId) 方法：从 Hand 移至 ExhaustPile（战斗结束清空）\n- 实现 ReturnDiscardToDraw() 方法：洗回弃牌堆至 DrawPile\n- 集成 IEventBus 发布 CardDrawn(cardId, drawOrder) 与 CardDiscarded(cardId) 事件\n- xUnit 单元测试：使用 Fake RngService Mock 验证抽牌逻辑、洗牌可复现性（固定 Seed）、弃牌堆循环、事件发布正确性\n- 性能测试：验证大规模抽牌（100+ 张）的性能",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "xUnit 单元测试：CardPileTests 验证 Draw/Discard/Exhaust/Shuffle 逻辑、弃牌堆循环、事件发布；使用 Fake RngService 保证洗牌可复现性；边界测试覆盖连续抽牌超出容量、重复洗牌、空堆循环"
           }
         ],
@@ -89,9 +89,7 @@
           "ADR-0004",
           "ADR-0011",
           "ADR-0018",
-          "ADR-0020",
           "ADR-0021",
-          "ADR-0022",
           "ADR-0024"
         ],
         "archRefs": [

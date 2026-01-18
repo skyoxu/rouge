@@ -1,19 +1,30 @@
 ---
 PRD-ID: PRD-rouge-manager
 Title: Rouge Run 事件（Rouge Run Events）契约更新
-Arch-Refs:
-  - CH01
-  - CH03
+Status: Proposed
 ADR-Refs:
   - ADR-0004
   - ADR-0005
   - ADR-0020
   - ADR-0021
+Arch-Refs:
+  - CH01
+  - CH03
 Test-Refs:
   - Game.Core.Tests/Services/EventBusTests.cs
   - Tests.Godot/tests/Adapters/test_event_bus_adapter.gd
-Status: Proposed
 ---
+
+## Scope
+- 本页列出跑局过程中的事件类型与其用途分类，便于检索与讨论。
+
+## Non-goals
+- 不作为实现源码的唯一依据；具体字段以代码为准。
+
+## References
+- ADR-Refs: ADR-0004, ADR-0005, ADR-0020, ADR-0021
+- Arch-Refs: CH01, CH03
+- Related: `_index.md`
 
 本页为功能纵切（08 章）对应“最小可玩闭环（MVP Run）”的领域事件清单建议与验收口径。
 
@@ -64,6 +75,15 @@ Status: Proposed
 - **CardPlayed** (`core.card.played`)
   - 触发时机：卡牌通过校验并提交给 EffectResolver
   - 字段建议：RunId, BattleId, Turn, HeroId, CardId, Targets
+- **CardDrawn** (`core.card.drawn`)
+  - ?????? DrawPile ???? Hand ?
+  - ???RunId, BattleId, Turn, HeroId, CardInstanceId, CardDefinitionId, DrawOrder
+  - ?????`Game.Core/Contracts/Rouge/Cards/CardDrawn.cs`
+- **CardDiscarded** (`core.card.discarded`)
+  - ?????? Hand ???? DiscardPile ?
+  - ???RunId, BattleId, Turn, HeroId, CardInstanceId, CardDefinitionId
+  - ?????`Game.Core/Contracts/Rouge/Cards/CardDiscarded.cs`
+
 - **EffectsResolved** (`core.effect.resolved`)
   - 触发时机：一张卡/一次敌方 Intent 的效果指令序列完成结算
   - 字段建议：RunId, BattleId, SourceType, Commands, DeltaSummary

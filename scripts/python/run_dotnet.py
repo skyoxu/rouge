@@ -137,7 +137,9 @@ def main():
     # Copy artifacts (.trx and coverage.cobertura.xml)
     trx_files = []
     cov_files = []
+    skip_dirs = {'.git', '.godot', 'logs', 'build', 'demo', 'tmp', '_tmp', 'bin', 'obj', '__pycache__'}
     for cur_root, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in skip_dirs]
         for name in files:
             if name.lower().endswith('.trx'):
                 src = os.path.join(cur_root, name)

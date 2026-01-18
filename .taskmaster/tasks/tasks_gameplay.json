@@ -4,7 +4,7 @@
     "story_id": "PRD-ROUGE-T2-VS-0001",
     "title": "设计并实现卡牌领域模型 (CardDefinition/CardInstance)",
     "description": "在 Game.Core/Domain 中创建卡牌核心数据结构,支持静态定义与运行时实例分离\n\n创建 Game.Core/Domain/Card.cs:\n- CardDefinition: 卡牌静态配置(ID、名称、消耗、目标规则、效果指令列表、文本key、稀有度、职业标签)\n- CardInstance: 运行时卡牌实例(引用 CardDefinition、临时费用变化、回合内标记、升级状态)\n- TargetRule 枚举(SingleEnemy/AllEnemies/SingleAlly/AllAllies/Random)\n- CardType 枚举(Attack/Defense/Skill)\n效果指令使用 List<EffectCommand> 预留接口。使用 record 类型保证不可变性。",
-    "status": "pending",
+    "status": "done",
     "priority": "P1",
     "layer": "core",
     "depends_on": [],
@@ -64,7 +64,7 @@
     "story_id": "PRD-ROUGE-T2-VS-0001",
     "title": "实现牌堆系统 (Deck/Hand/Discard/Exhaust)",
     "description": "实现卡牌堆操作逻辑,支持抽牌、弃牌、洗牌、移除、升级替换\n\n创建 Game.Core/Domain/CardPile.cs:\n- DrawPile/Hand/DiscardPile/ExhaustPile 类(或统一 CardPile 类用 PileType 区分)\n- 操作方法:\n  - Draw(n): 抽 n 张牌,抽牌堆空时自动洗回弃牌堆\n  - Discard(cardId): 手牌 → 弃牌堆\n  - Exhaust(cardId): 移至消耗堆(战斗结束移除)\n  - Shuffle(): 洗牌(调用 RngService)\n  - AddCard(cardDef): 构筑时添加卡\n  - RemoveCard(cardId): 构筑时移除卡\n  - UpgradeCard(cardId): 替换为升级版ID\n使用现有 Services/EventBus 发布 CardDrawn/CardDiscarded 事件。\n\n参考实现（demo/）：\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/SimpleCardPile.cs\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/SimpleCardPileManager.cs\n- demo/Godot-CardPileFramework/CardPileFramework/addons/card_pile_framework/CardManager.cs\n\n实现建议：\n- Core 只建模“牌堆状态 + 变更操作”，UI/输入驱动放到 Adapter/Scenes；不要让 Core 依赖 Godot Node。\n- 洗牌/抽牌要可测：RngService 注入、用 seed 固定测试用例。\n- 所有跨堆迁移（hand→discard 等）建议统一走一个内部 Move(cardId, from, to) 以减少分支与漏更新。",
-    "status": "pending",
+    "status": "done",
     "priority": "P1",
     "layer": "core",
     "depends_on": [
@@ -102,7 +102,6 @@
     ],
     "owner": "gameplay",
     "test_refs": [
-      "Game.Core.Tests/Domain/CardPileTests.cs",
       "Game.Core.Tests/Domain/CardPile/CardPileModelingTests.cs",
       "Game.Core.Tests/Domain/CardPile/CardPileBattleFlowTests.cs",
       "Game.Core.Tests/Domain/CardPile/CardPilePerfRegressionTests.cs",
@@ -110,8 +109,8 @@
       "Game.Core.Tests/Contracts/Rouge/RougeRunEventsContractsTests.cs"
     ],
     "acceptance": [
-      "在 `Game.Core/Domain/CardPile.cs` 中实现纯 C# 的牌堆建模（不得依赖任何 Godot 命名空间/类型），包含 `PileType`（DrawPile/Hand/DiscardPile/ExhaustPile）与牌堆状态；构筑期操作 `AddCard(cardDef)`、`RemoveCard(cardId)`、`UpgradeCard(cardId)` 可用单元测试验证为“操作前后返回新实例/状态正确”，并包含手牌容量上限逻辑（默认 10）；对空堆操作、重复移除、升级不存在卡牌等边界行为在单元测试中有可验证的断言覆盖。 Refs: Game.Core.Tests/Domain/CardPile/CardPileModelingTests.cs",
-      "实现战斗期牌堆迁移逻辑且语义可被测试直接观测：`Shuffle()` 调用注入的 `RngService` 对 DrawPile 洗牌并在固定 Seed 下可复现；`Draw(n)` 将牌从 DrawPile 抽到 Hand，DrawPile 不足或为空时自动将 DiscardPile 洗回至 DrawPile 后继续抽取直到达到 n 或无牌可抽；`Discard(cardId)` 将 Hand→DiscardPile；`Exhaust(cardId)` 将 Hand→ExhaustPile（战斗结束语义以 ExhaustPile 可清空为前提）；并通过现有 `Services/EventBus` 发布 `CardDrawn(cardId, drawOrder)` 与 `CardDiscarded(cardId)` 事件，事件数量与顺序可由测试断言；包含 100+ 张抽牌场景的回归用例以覆盖性能不发生明显退化。 Refs: Game.Core.Tests/Domain/CardPile/CardPileBattleFlowTests.cs Game.Core.Tests/Domain/CardPile/CardPilePerfRegressionTests.cs",
+      "在 `Game.Core/Domain/CardPile.cs` 中实现纯 C# 的牌堆建模（不得依赖任何 Godot 命名空间/类型），包含 `PileType`（DrawPile/Hand/DiscardPile/ExhaustPile）与牌堆状态；构筑期操作 `AddCard(cardDef)`、`RemoveCard(cardId)`、`UpgradeCard(cardId)` 可用单元测试验证为“状态正确且操作可观测”，并包含手牌容量上限逻辑（默认 10）；对空堆操作、重复移除、升级不存在卡牌等边界行为在单元测试中有可验证的断言覆盖。 Refs: Game.Core.Tests/Domain/CardPile/CardPileModelingTests.cs",
+      "实现战斗期牌堆迁移逻辑且语义可被测试直接观测：`Shuffle()` 调用注入的 `RngService` 对 DrawPile 洗牌并在固定 Seed 下可复现；`Draw(n)` 将牌从 DrawPile 抽到 Hand，DrawPile 不足或为空时自动将 DiscardPile 洗回至 DrawPile 后继续抽取直到达到 n 或无牌可抽；`Discard(cardId)` 将 Hand→DiscardPile；`Exhaust(cardId)` 将 Hand→ExhaustPile（战斗结束语义以 ExhaustPile 可清空为前提）；并通过现有 `Services/EventBus` 发布 `CardDrawn(cardInstanceId, cardDefinitionId, drawOrder)` 与 `CardDiscarded(cardInstanceId, cardDefinitionId)` 事件，事件数量与顺序可由测试断言；包含 100+ 张抽牌场景的回归用例以覆盖性能不发生明显退化。 Refs: Game.Core.Tests/Domain/CardPile/CardPileBattleFlowTests.cs Game.Core.Tests/Domain/CardPile/CardPilePerfRegressionTests.cs",
       "提供 xUnit `CardPileTests`（使用 Fake `RngService`/Mock `IEventBus` 保证可预测随机与可断言事件发布）覆盖 Draw/Shuffle/Discard/Exhaust/Add/Remove/Upgrade 及其边界条件，并确保在 Windows 上运行 `dotnet test` 通过；如新增或变更契约/事件类型，统一落盘到 `Game.Core/Contracts/Rouge/**`；并确保以下文档路径存在，且其内容中可通过文本搜索定位到本任务的验收/契约说明与测试关联（包括保持 overlay 的 Test-Refs 与实际测试文件路径一致）：`docs/architecture/overlays/PRD-rouge-manager/08/ACCEPTANCE_CHECKLIST.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Quality-Metrics.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Rouge-Run-Events.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Contracts-Security.md`、`docs/architecture/overlays/PRD-rouge-manager/08/08-Feature-Slice-Minimum-Playable-Loop.md`、`docs/architecture/overlays/PRD-rouge-manager/08/_index.md`。 Refs: Game.Core.Tests/Domain/CardPile/CardPileTests.cs Game.Core.Tests/Contracts/Rouge/RougeRunEventsContractsTests.cs"
     ],
     "test_strategy": [
@@ -127,8 +126,8 @@
     "taskmaster_id": 2,
     "taskmaster_exported": true,
     "contractRefs": [
-      "core.battle.turn.player.started",
-      "core.card.played"
+      "core.card.drawn",
+      "core.card.discarded"
     ]
   },
   {

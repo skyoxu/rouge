@@ -1,36 +1,43 @@
 ---
 PRD-ID: PRD-rouge-manager
-Story-ID: PRD-ROUGE-T2-VS-0001
 Title: 功能纵切 — 最小可玩闭环（MVP Run）
 Status: Active
 ADR-Refs:
-  - ADR-0018  # Godot runtime & distribution
-  - ADR-0011  # Windows-only platform & CI
-  - ADR-0004  # Event bus & contracts (CloudEvents)
-  - ADR-0020  # Contract location standardization
-  - ADR-0021  # C# domain layer architecture
-  - ADR-0024  # Godot test strategy
-  - ADR-0006  # Data storage (SQLite)
-  - ADR-0005  # Quality gates
-  - ADR-0015  # Performance budgets
-  - ADR-0003  # Observability & release health
-  - ADR-0019  # Godot security baseline
+  - ADR-0018
+  - ADR-0011
+  - ADR-0004
+  - ADR-0020
+  - ADR-0021
+  - ADR-0024
+  - ADR-0006
+  - ADR-0005
+  - ADR-0015
+  - ADR-0003
+  - ADR-0019
+Arch-Refs: []
 Test-Refs:
-  # Core 领域逻辑（xUnit）
   - Game.Core.Tests/Services/EventBusTests.cs
   - Game.Core.Tests/State/GameStateMachineTests.cs
-  # 场景与 UI（GdUnit4）
   - Tests.Godot/tests/Scenes/Smoke/test_main_scene_smoke.gd
   - Tests.Godot/tests/Integration/test_screen_navigation_flow.gd
   - Tests.Godot/tests/Adapters/test_event_bus_adapter.gd
-  # 安全/审计（GdUnit4）
   - Tests.Godot/tests/Integration/Security/test_security_http_allowed_audit.gd
   - Tests.Godot/tests/Integration/Security/test_security_http_audit.gd
   - Tests.Godot/tests/Security/Hard/test_db_open_denied_writes_audit_log.gd
-  # CI / Smoke 汇总
   - logs/ci/<date>/ci-pipeline-summary.json
   - logs/e2e/<date>/smoke/selfcheck-summary.json
 ---
+
+## Scope
+- 本页定义最小可玩闭环的纵切验收骨架，用于统一口径。
+
+## Non-goals
+- 不复制 Base/ADR 的阈值口径；不写具体实现步骤。
+
+## References
+- ADR-Refs: ADR-0018, ADR-0011, ADR-0004, ADR-0020, ADR-0021, ADR-0024, ADR-0006, ADR-0005, ADR-0015, ADR-0003, ADR-0019
+- Arch-Refs: []
+- Related: `_index.md`
 
 本页仅作为“功能纵切（08 章）”对 Rouge 项目的 **T2 最小可玩闭环（MVP Run）** 的实现约束与测试挂钩索引：
 

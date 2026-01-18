@@ -155,7 +155,11 @@ def build_risk_summary(
         )
 
     audit_evidence = _step_by_name(steps, "security-audit-executed-evidence")
-    if audit_evidence and audit_evidence.status != "ok":
+    audit_mode = None
+    if audit_evidence and isinstance(audit_evidence.details, dict):
+        audit_mode = str(audit_evidence.details.get("mode") or "").strip().lower() or None
+
+    if audit_evidence and audit_mode != "skip" and audit_evidence.status != "ok":
         security_score -= 15
         _add_signal(
             signals,

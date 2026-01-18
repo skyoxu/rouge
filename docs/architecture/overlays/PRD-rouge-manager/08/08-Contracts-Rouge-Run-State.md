@@ -1,3 +1,28 @@
+---
+PRD-ID: PRD-rouge-manager
+Title: Rouge Run State (DTOs)
+Status: Proposed
+ADR-Refs:
+  - ADR-0006
+  - ADR-0020
+  - ADR-0021
+Arch-Refs:
+  - CH01
+  - CH03
+Test-Refs: []
+---
+
+## Scope
+- 本页定义跑局存档相关的 DTO 概念与数据字段说明，便于进化和检索。
+
+## Non-goals
+- 不写读写流程的实现细节；不把门禁阐值复制到此页。
+
+## References
+- ADR-Refs: ADR-0006, ADR-0020, ADR-0021
+- Arch-Refs: CH01, CH03
+- Related: `_index.md`
+
 # Rouge 跑局存档 DTO 契约（Run State）
 
 ## 目的与边界

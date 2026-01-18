@@ -48,6 +48,7 @@ SKIP_DIRS = {
     "logs",
     "obj",
     "tmp",
+    "_tmp",
 }
 
 

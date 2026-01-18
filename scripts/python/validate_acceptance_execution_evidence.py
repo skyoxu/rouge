@@ -12,7 +12,8 @@ from typing import Any
 
 
 REFS_RE = re.compile(r"\bRefs\s*:\s*(.+)$", flags=re.IGNORECASE)
-CS_FACT_RE = re.compile(r"^\s*\[\s*(Fact|Theory)\s*\]\s*$")
+# Accept both `[Fact]` and `[Fact(...)]` / `[Theory(...)]` forms.
+CS_FACT_RE = re.compile(r"^\s*\[\s*(Fact|Theory)(?:\s*\([^)]*\))?\s*\]\s*$")
 CS_METHOD_RE = re.compile(r"^\s*public\s+(?:async\s+)?(?:Task(?:<[^>]+>)?|void)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(")
 CS_CLASS_RE = re.compile(r"^\s*public\s+(?:sealed\s+|static\s+|partial\s+)*class\s+([A-Za-z_][A-Za-z0-9_]*)\b")
 GD_TEST_FUNC_RE = re.compile(r"^\s*func\s+(test_[A-Za-z0-9_]+)\s*\(", flags=re.IGNORECASE)
@@ -219,6 +220,10 @@ def is_test_executed(bound: BoundTest, *, trx_names: set[str], gdunit_names: set
     if bound.kind == "gd":
         return bound.method_or_func in gdunit_names
     if bound.kind == "cs":
+        # xUnit's TRX adapter may use Fact(DisplayName=...) as `testName`, so prefer
+        # a strict token prefix match when available (DisplayName convention: "ACC:T<id>.<n> <text>").
+        if bound.anchor and any(n.startswith(bound.anchor + " ") or n == bound.anchor for n in trx_names):
+            return True
         if bound.class_name:
             suffix = f".{bound.class_name}.{bound.method_or_func}"
             return any(n.endswith(suffix) or (suffix in n) for n in trx_names)

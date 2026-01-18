@@ -94,6 +94,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 dev-debug.log
+
+# BMAD project assets (installed/bootstrapped locally; may contain user-specific settings)
+.bmad/
+_bmad/
+_bmad-output/
+.bmad-method/
+.bmad-core/
 # Dependency directories
 node_modules/
 # Environment variables
