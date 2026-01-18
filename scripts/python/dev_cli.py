@@ -134,6 +134,25 @@ def cmd_run_smoke_strict(args: argparse.Namespace) -> int:
     ])
 
 
+def cmd_run_bmad(args: argparse.Namespace) -> int:
+    """Run BMAD CLI via cmd-safe wrapper (avoid PowerShell npm.ps1)."""
+
+    bmad_args = list(getattr(args, "bmad_args", []) or [])
+    if bmad_args and bmad_args[0] == "--":
+        bmad_args = bmad_args[1:]
+
+    if not bmad_args:
+        bmad_args = ["--help"]
+
+    return run([
+        "py",
+        "-3",
+        "scripts/python/run_bmad.py",
+        "--",
+        *bmad_args,
+    ])
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Dev CLI for Godot+C# template (AI-friendly entrypoint)",
@@ -171,6 +190,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_sm.add_argument("--godot-bin", required=True)
     p_sm.add_argument("--timeout-sec", type=int, default=5)
     p_sm.set_defaults(func=cmd_run_smoke_strict)
+
+    # bmad
+    p_bmad = sub.add_parser("bmad", help="run BMAD CLI via cmd-safe wrapper")
+    p_bmad.add_argument("bmad_args", nargs=argparse.REMAINDER)
+    p_bmad.set_defaults(func=cmd_run_bmad)
 
     return parser
 
